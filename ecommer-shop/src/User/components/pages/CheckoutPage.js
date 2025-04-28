@@ -1,4 +1,3 @@
-// src/pages/CheckoutPage.jsx
 import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { useOrders } from "../../context/OrderContext";
@@ -11,30 +10,59 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
 
   const total = cartItems.reduce(
-    (acc, item) => acc + item.productPrice * item.quantity,
-    0,
+    (acc, item) => acc + item.productPrice * item.quantity * 1000,
+    0
   );
+ // console.log(total);
 
   const handlePlaceOrder = () => {
     const newOrder = {
-      id: Date.now(), // hoặc dùng uuid nếu cần
+      id: Date.now(),
       items: cartItems,
       total,
       paymentMethod,
       createdAt: new Date().toISOString(),
     };
 
-    addOrder(newOrder); // 👉 lưu vào OrderContext
+    addOrder(newOrder);
 
-    if (paymentMethod === "cod") {
-      alert("Đặt hàng thành công! Bạn sẽ thanh toán khi nhận hàng.");
-    } else {
-      alert("Vui lòng quét mã để chuyển khoản và xác nhận đã thanh toán.");
-    }
-
-    // (Tùy chọn) Xóa giỏ hàng sau khi đặt hàng
+    alert("Đặt hàng thành công! Bạn sẽ thanh toán khi nhận hàng.");
     setCartItems([]);
     navigate("/home");
+  };
+
+  const handleCheckOut = () => {
+    const order = {
+      items: cartItems,
+      description: "ZaloPay demo",
+      amount: total,
+    };
+    console.log(order.amount);
+
+    fetch("http://localhost:8080/api/order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(order),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        window.location.href = data.order_url; // chuyển hướng qua trang thanh toán QR
+      })
+      .catch((error) => {
+        console.log("Error", error);
+      });
+  };
+
+  const handleConfirmOrder = (e) => {
+    e.preventDefault();
+    if (paymentMethod === "cod") {
+      handlePlaceOrder();
+    } else if (paymentMethod === "qr") {
+      handleCheckOut();
+    }
   };
 
   return (
@@ -51,20 +79,17 @@ const CheckoutPage = () => {
             <div>
               <p className="font-medium">{item.productName}</p>
               <p className="text-sm text-gray-500 text-left">
-                {item.quantity} x $
-                {typeof item.productPrice === "number"
-                  ? item.productPrice.toFixed(2)
-                  : Number(item.productPrice).toFixed(2)}
+                {item.quantity} x ${item.productPrice.toFixed(3)}
               </p>
             </div>
             <div className="text-right font-medium">
-              ${(item.productPrice * item.quantity).toFixed(2)}
+              ${(item.productPrice * item.quantity).toFixed(3)}
             </div>
           </div>
         ))}
         <div className="flex justify-between mt-4 font-semibold text-lg">
           <span>Total:</span>
-          <span>${total.toFixed(2)}</span>
+          <span>${total.toFixed(3)}</span>
         </div>
       </div>
 
@@ -90,12 +115,12 @@ const CheckoutPage = () => {
               checked={paymentMethod === "qr"}
               onChange={() => setPaymentMethod("qr")}
             />
-            Quét mã để chuyển khoản
+            Thanh toán bằng ZaloPay
           </label>
         </div>
       </div>
 
-      {/* Nếu chọn quét mã thì hiển thị mã QR */}
+      {/* QR code hiển thị nếu chọn qr */}
       {paymentMethod === "qr" && (
         <div className="mb-6 text-center">
           <p className="mb-2">Vui lòng quét mã bên dưới để thanh toán:</p>
@@ -111,7 +136,7 @@ const CheckoutPage = () => {
       )}
 
       <button
-        onClick={handlePlaceOrder}
+        onClick={handleConfirmOrder}
         className="bg-black text-white w-full py-3 rounded-full hover:bg-white hover:text-black border hover:border-black transition-all font-semibold"
       >
         Xác nhận đặt hàng

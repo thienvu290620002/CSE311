@@ -33,7 +33,7 @@ const OrdersPage = () => {
               ))}
             </ul>
             <p className="font-semibold">
-              Tổng cộng: ${order.total.toFixed(2)}
+              Tổng cộng: {order.total.toFixed(2)} VND
             </p>
           </div>
         ))}

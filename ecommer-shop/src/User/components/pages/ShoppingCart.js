@@ -8,8 +8,8 @@ const ShoppingCart = () => {
   const increaseQuantity = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
-      ),
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+      )
     );
   };
 
@@ -18,15 +18,15 @@ const ShoppingCart = () => {
       prev.map((item) =>
         item.id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
-          : item,
-      ),
+          : item
+      )
     );
   };
 
   const removeFromCart = (id) => {
     if (
       window.confirm(
-        "Are you sure you want to remove this item from your cart?",
+        "Are you sure you want to remove this item from your cart?"
       )
     ) {
       setCartItems((prev) => prev.filter((item) => item.id !== id));
@@ -35,7 +35,7 @@ const ShoppingCart = () => {
 
   const total = cartItems.reduce(
     (acc, item) => acc + item.productPrice * item.quantity,
-    0,
+    0
   );
 
   return (
@@ -83,10 +83,9 @@ const ShoppingCart = () => {
                               {item.productName}
                             </p>
                             <span className="text-xs">
-                              $
                               {typeof item.productPrice === "number"
-                                ? item.productPrice.toFixed(2)
-                                : Number(item.productPrice).toFixed(2)}
+                                ? item.productPrice.toFixed(3)
+                                : Number(item.productPrice).toFixed(3)}
                             </span>
                           </div>
                         </div>
@@ -119,7 +118,7 @@ const ShoppingCart = () => {
 
                         {/* Total Price */}
                         <div className="p-4 flex justify-center">
-                          ${(item.productPrice * item.quantity).toFixed(2)}
+                          {(item.productPrice * item.quantity).toFixed(3)}
                         </div>
 
                         {/* Remove from Cart Button */}
@@ -162,7 +161,7 @@ const ShoppingCart = () => {
                       placeholder="Coupon code"
                     />
                     <p className="mt-6 font-semibold">
-                      Total: ${total.toFixed(2)}
+                      Total: {total.toFixed(3)}
                     </p>
 
                     <Link
