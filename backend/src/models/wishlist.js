@@ -9,17 +9,16 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       WishList.belongsTo(models.User, { foreignKey: "userId", as: "user" });
-      WishList.hasMany(models.WishListItem, {
-        foreignKey: "wishListId",
-        sourceKey: "wishListId",
-        as: "wishlistItems",
+      WishList.belongsTo(models.Product, {
+        foreignKey: "productId",
+        as: "productWishLists",
       });
     }
   }
   WishList.init(
     {
-      wishListId: DataTypes.STRING,
       userId: DataTypes.STRING,
+      productId: DataTypes.STRING,
     },
     {
       sequelize,

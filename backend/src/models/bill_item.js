@@ -23,8 +23,10 @@ module.exports = (sequelize, DataTypes) => {
     {
       billItemId: DataTypes.STRING,
       billId: DataTypes.STRING,
-      quanity: DataTypes.INTEGER,
+      quantity: DataTypes.INTEGER,
       productId: DataTypes.STRING,
+      discount: DataTypes.DOUBLE, // Discount cho từng sản phẩm
+      totalPrice: DataTypes.DOUBLE, // Giá trị sau giảm giá của sản phẩm
     },
     {
       sequelize,
