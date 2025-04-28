@@ -1,0 +1,356 @@
+import React, { useContext, useEffect, useState } from "react";
+import { UserContext } from "../../context/UserContext";
+import { useOrders } from "../../context/OrderContext";
+import { useWishlist } from "../../context/WishlistContext";
+import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+const Profile = () => {
+  const { user, setUser } = useContext(UserContext);
+  const { orders } = useOrders();
+  const { wishItems, setWishItems } = useWishlist();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const [newUserData, setNewUserData] = useState({
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    address: user?.address || "",
+    phoneNumber: user?.phoneNumber || "",
+    gender: user?.gender || "",
+    image: user?.image || "",
+  });
+
+  useEffect(() => {
+    if (isEditing && user) {
+      setNewUserData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        address: user.address || "",
+        phoneNumber: user.phoneNumber || "",
+        gender: user.gender || "",
+        image: user.image || "",
+      });
+    }
+  }, [isEditing, user]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewUserData({ ...newUserData, [name]: value });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewUserData({ ...newUserData, image: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+  };
+
+  const handleUpdateProfile = () => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const updatedUsers = users.map((u) =>
+      u.email === user.email ? { ...u, ...newUserData } : u,
+    );
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setUser(newUserData);
+    localStorage.setItem("user", JSON.stringify(newUserData));
+    setIsEditing(false);
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId),
+    );
+  };
+
+  if (!user) {
+    return <p className="text-center mt-10">Bạn chưa đăng nhập</p>;
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-100 overflow-x-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-md p-6 space-y-6">
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Tài khoản</h2>
+        <ul className="space-y-3 text-gray-600">
+          <li>
+            <div
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
+                activeTab === "dashboard" ? "text-blue-600 font-semibold" : ""
+              }`}
+            >
+              <FaUser /> Dashboard
+            </div>
+          </li>
+          <li>
+            <div
+              onClick={() => setActiveTab("orders")}
+              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
+                activeTab === "orders" ? "text-blue-600 font-semibold" : ""
+              }`}
+            >
+              <FaBox /> Đơn hàng
+            </div>
+          </li>
+          <li>
+            <div
+              onClick={() => setActiveTab("wishlist")}
+              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
+                activeTab === "wishlist" ? "text-blue-600 font-semibold" : ""
+              }`}
+            >
+              <FaHeart /> Yêu thích
+            </div>
+          </li>
+          <li>
+            <div
+              onClick={handleLogout}
+              className="flex items-center gap-2 cursor-pointer text-red-500 hover:text-red-600"
+            >
+              <FaSignOutAlt /> Đăng xuất
+            </div>
+          </li>
+        </ul>
+      </aside>
+
+      {/* Content */}
+      <div className="bg-white shadow-lg rounded-xl p-8 max-w-screen-lg w-full mx-auto">
+        {activeTab === "dashboard" && (
+          <>
+            <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+              Thông tin người dùng
+            </h2>
+
+            <div className="flex justify-center mb-5">
+              <img
+                src={
+                  newUserData.image ||
+                  user.image ||
+                  "/images/default-avatar.png"
+                }
+                alt="Avatar"
+                className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
+              />
+            </div>
+
+            {isEditing && (
+              <div className="mb-4 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="mx-auto"
+                />
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <label className="font-medium w-1/4 text-lg">Họ tên:</label>
+                {isEditing ? (
+                  <div className="flex mt-2 w-3/4">
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={newUserData.firstName}
+                      onChange={handleInputChange}
+                      placeholder="Họ"
+                      className="flex-1 p-3 border rounded-md text-sm"
+                    />
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={newUserData.lastName}
+                      onChange={handleInputChange}
+                      placeholder="Tên"
+                      className="flex-1 p-3 border rounded-md text-sm"
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-lg">
+                    {user.firstName} {user.lastName}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-start">
+                <label className="font-medium w-1/4 text-lg">Địa chỉ:</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="address"
+                    value={newUserData.address}
+                    onChange={handleInputChange}
+                    className="flex-1 p-3 border rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="mt-1 text-lg">{user.address}</p>
+                )}
+              </div>
+
+              <div className="flex items-start">
+                <label className="font-medium w-1/4 text-lg">
+                  Số điện thoại:
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    value={newUserData.phoneNumber}
+                    onChange={handleInputChange}
+                    className="flex-1 p-3 border rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="mt-1 text-lg">{user.phoneNumber}</p>
+                )}
+              </div>
+
+              <div className="flex items-start">
+                <label className="font-medium w-1/4 text-lg">Giới tính:</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="gender"
+                    value={newUserData.gender}
+                    onChange={handleInputChange}
+                    className="flex-1 p-3 border rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="mt-1 text-lg">{user.gender}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-start flex-wrap">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleUpdateProfile}
+                    className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-sm"
+                  >
+                    Lưu thay đổi
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-500 text-sm"
+                  >
+                    Hủy
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm"
+                >
+                  Chỉnh sửa
+                </button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Đơn hàng tab */}
+        {activeTab === "orders" && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4 text-center">
+              Đơn hàng của bạn
+            </h2>
+            {orders.length === 0 ? (
+              <p className="text-center">Bạn chưa có đơn hàng nào.</p>
+            ) : (
+              orders
+                .slice() // clone mảng
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map((order) => (
+                  <div
+                    key={order.id}
+                    className="border rounded-lg p-4 mb-4 shadow"
+                  >
+                    <p className="text-sm text-gray-500">
+                      Mã đơn: #{order.id} -{" "}
+                      {new Date(order.createdAt).toLocaleString()}
+                    </p>
+                    <p className="mb-2">
+                      Phương thức:{" "}
+                      {order.paymentMethod === "cod"
+                        ? "Thanh toán khi nhận hàng"
+                        : "Chuyển khoản"}
+                    </p>
+                    <ul className="mb-2">
+                      {order.items.map((item) => (
+                        <li key={item.id} className="text-sm">
+                          {item.quantity} x {item.productName} ($
+                          {typeof item.productPrice === "number"
+                            ? item.productPrice.toFixed(2)
+                            : Number(item.productPrice).toFixed(2)}
+                          )
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="font-semibold">
+                      Tổng cộng: ${order.total.toFixed(2)}
+                    </p>
+                  </div>
+                ))
+            )}
+          </div>
+        )}
+
+        {/* Wishlist tab có thể thêm sau nếu muốn */}
+        {activeTab === "wishlist" && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4 text-center">
+              Danh sách yêu thích
+            </h2>
+            {wishItems && wishItems.length > 0 ? (
+              wishItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between border-b py-3"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={item.image}
+                      alt={item.productName}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="text-left">
+                      <p className="font-semibold">{item.productName}</p>
+                      <p className="text-sm text-gray-600">
+                        ${item.productPrice}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeFromWishlist(item.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center">
+                Bạn chưa thêm sản phẩm nào vào yêu thích.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Profile;
