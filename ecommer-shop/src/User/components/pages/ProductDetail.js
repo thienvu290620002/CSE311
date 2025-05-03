@@ -30,7 +30,7 @@ const ProductDetail = () => {
           productId: "1",
           productName: "Caravaggio Read Wall Light",
           productPrice: 60,
-          originalPrice: 59,
+          originalPrice: 59000,
           sale: true,
           rating: 2,
           descriptions:
@@ -48,7 +48,7 @@ const ProductDetail = () => {
           id: 2,
           productId: "2",
           productName: "Bouquet Flower Vase",
-          productPrice: 59,
+          productPrice: 59000,
           originalPrice: null,
           sale: false,
           rating: 4,

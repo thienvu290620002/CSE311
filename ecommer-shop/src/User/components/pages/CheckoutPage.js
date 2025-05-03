@@ -13,7 +13,7 @@ const CheckoutPage = () => {
     (acc, item) => acc + item.productPrice * item.quantity * 1000,
     0
   );
- // console.log(total);
+  console.log(total);
 
   const handlePlaceOrder = () => {
     const newOrder = {

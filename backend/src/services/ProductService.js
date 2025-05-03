@@ -120,6 +120,34 @@ let deleteProductByID = (productId) => {
     }
   });
 };
+let getProductById = (productId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!productId) {
+        return resolve({
+          errCode: 1,
+          errMessage: "Missing required parameter!",
+        });
+      }
+
+      //    console.log("Looking for product with ID:", productId);
+
+      let product = await db.Product.findOne({
+        where: { id: productId },
+      });
+      //   console.log(product);
+
+      if (product) {
+        resolve({ errCode: 0, data: product });
+      } else {
+        resolve({ errCode: 2, errMessage: "Product not found" });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 let getProductByBillItem = (productId) => {
   return new Promise(async (resolve, reject) => {
     // console.log(productId);
@@ -154,7 +182,7 @@ let getProductByBillItem = (productId) => {
 let getBillItemByBill = (billId) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(billId);
+      // console.log(billId);
 
       if (!billId) {
         resolve({
@@ -195,4 +223,5 @@ module.exports = {
   deleteProductByID: deleteProductByID,
   getProductByBillItem: getProductByBillItem,
   getBillItemByBill: getBillItemByBill,
+  getProductById: getProductById,
 };

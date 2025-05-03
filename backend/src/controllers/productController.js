@@ -54,6 +54,20 @@ let updateProduct = async (req, res) => {
     });
   }
 };
+let getProductById = async (req, res) => {
+  try {
+    const productId = req.query.id;
+    let infor = await ProductService.getProductById(productId);
+    return res.status(200).json(infor);
+  } catch (e) {
+    console.log(e);
+    return res.status(200).json({
+      error: -1,
+      errMessage: "Message from server",
+    });
+  }
+};
+
 let getProductByBillItem = async (req, res) => {
   try {
     console.log(req.body);
@@ -68,6 +82,7 @@ let getProductByBillItem = async (req, res) => {
     });
   }
 };
+
 let getBillItemByBill = async (req, res) => {
   try {
     let infor = await ProductService.getBillItemByBill(req.query.id);
@@ -88,4 +103,5 @@ module.exports = {
   deleteProductByID: deleteProductByID,
   getProductByBillItem: getProductByBillItem,
   getBillItemByBill: getBillItemByBill,
+  getProductById: getProductById,
 };
