@@ -10,67 +10,51 @@ const ProductDetail = () => {
   const { addToWishlist } = useWishlist(); // Add to wishlist function
   const [activeTab, setActiveTab] = useState("description");
 
-  const [products, setProducts] = useState([]); // All products
+  const [products, setProducts] = useState([]);
   const [product, setProduct] = useState(null); // Single product
   const [selectedImage, setSelectedImage] = useState(null); // Selected image state
 
   useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/get-product-by-id?id=${id}`
+        );
 
-    if (storedProducts) {
-      const productsData = JSON.parse(storedProducts);
-      setProducts(productsData); // Set all products
-      const foundProduct = productsData.find((p) => p.id === parseInt(id));
-      setProduct(foundProduct); // Set the found product
-      setSelectedImage(foundProduct?.image); // Set the selected image
-    } else {
-      const defaultProducts = [
-        {
-          id: 1,
-          productId: "1",
-          productName: "Caravaggio Read Wall Light",
-          productPrice: 60,
-          originalPrice: 59000,
-          sale: true,
-          rating: 2,
-          descriptions:
-            "A stylish and functional wall-mounted reading light, perfect for bedrooms and cozy reading corners.",
-          size: "20cm x 15cm x 12cm",
-          image: "/images/img_product1.png",
-          image1: "/images/img1_product1.png",
-          image2: "/images/img2_product1.png",
-          quantity: 5,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 2,
-          productId: "2",
-          productName: "Bouquet Flower Vase",
-          productPrice: 59000,
-          originalPrice: null,
-          sale: false,
-          rating: 4,
-          descriptions:
-            "A beautifully crafted ceramic vase designed to showcase fresh or dried flowers elegantly.",
-          size: "Height 25cm, Diameter 10cm",
-          image: "/images/img_product2.png",
-          image1: "/images/img1_product2.png",
-          image2: "/images/img2_product2.png",
-          quantity: 20,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        // Add other default products here
-      ];
-      setProducts(defaultProducts); // Set default products
-      const foundProduct = defaultProducts.find((p) => p.id === parseInt(id));
-      setProduct(foundProduct); // Set found product
-      setSelectedImage(foundProduct?.image); // Set selected image
-    }
+        if (!response.ok) {
+          throw new Error("Sản phẩm không tồn tại");
+        }
+        const result = await response.json();
+
+        setProduct(result.data);
+        setSelectedImage(result.data.image);
+      } catch (error) {
+        console.error("Lỗi khi lấy sản phẩm:", error.message);
+      }
+    };
+
+    fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/get-all-product"
+        );
+        if (!response.ok) {
+          throw new Error("Không thể lấy danh sách sản phẩm");
+        }
+        const result = await response.json();
+        console.log("Tất cả sản phẩm:", result);
+        setProducts(result); // Đảm bảo API trả về { data: [...] }
+      } catch (error) {
+        console.error("Lỗi khi lấy tất cả sản phẩm:", error.message);
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
 
   const handleAddToCart = (product) => {
     const { quantity, ...productInfo } = product;
@@ -97,6 +81,9 @@ const ProductDetail = () => {
       <p className="text-center text-red-500 mt-10">Sản phẩm không tồn tại.</p>
     );
   }
+  // swal({
+  //   icon: "success",
+  // });
 
   return (
     <div>
@@ -187,10 +174,9 @@ const ProductDetail = () => {
                 ))}
               </div>
 
-              {/* <p className="mt-3 text-xl font-semibold">{product.productPrice}</p> */}
               <span className="text-red-600 font-bold text-xl mr-1">
+                {product.productPrice.toLocaleString("vi-VN")}
                 <sup className="text-[10px] align-middle">₫</sup>
-                {product.productPrice}.000
               </span>
 
               <div className="mt-2 pt-2 border-t border-gray">
@@ -259,6 +245,7 @@ const ProductDetail = () => {
                   >
                     Add To Cart
                   </button>
+
                   <button type="button" className="p-4 bg-white rounded-full">
                     <button
                       className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
@@ -459,8 +446,8 @@ const ProductDetail = () => {
                       {product.size}
                     </p>
                     <p className="text-center mb-2">
-                      <span className="font-medium text-black">Price:</span> $
-                      {product.productPrice}
+                      <span className="font-medium text-black">Price:</span> ₫
+                      {product.productPrice.toLocaleString("vi-VN")}
                     </p>
                     <p className="text-center mb-2">
                       <span className="font-medium text-black">In Stock:</span>{" "}
@@ -542,125 +529,132 @@ const ProductDetail = () => {
               </div>
 
               <ul className="mt-8 lg:grid grid-cols-4 gap-7">
-                {products.slice(0, 4).map((product) => (
-                  <li
-                    key={product.id}
-                    className="mt-6 md:mt-0 text-center group relative"
-                    onClick={(e) => e.stopPropagation()} // Ngừng sự kiện click ở đây
-                  >
-                    <div className="relative">
-                      {/* Sale Banner */}
-                      {product.sale && (
-                        <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
-                          -{product.salePercentage}%
-                        </span>
-                      )}
+                {/* {products.slice(0, 4).map((product) => ( */}
+                {Array.isArray(products) &&
+                  products.slice(0, 4).map((product) => (
+                    <li
+                      key={product.id}
+                      className="mt-6 md:mt-0 text-center group relative"
+                      onClick={(e) => e.stopPropagation()} // Ngừng sự kiện click ở đây
+                    >
+                      <div className="relative">
+                        {/* Sale Banner */}
+                        {product.sale && (
+                          <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
+                            -{product.salePercentage}%
+                          </span>
+                        )}
 
-                      {/* Product Image */}
-                      <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                        <Link to={`/productdetail/${product.id}`}>
-                          <img
-                            className="block size-full object-cover"
-                            src={product.image}
-                            alt={product.productName}
-                          />
-                        </Link>
-                      </div>
-
-                      <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
-                        <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
-                          <button
-                            className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddToWishlist(product);
-                            }}
-                          >
+                        {/* Product Image */}
+                        <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
+                          <Link to={`/productdetail/${product.id}`}>
                             <img
-                              src="../images/ico_heart.png"
-                              className="image size-4 rouded-full"
-                              alt=""
+                              className="block size-full object-cover"
+                              src={product.image}
+                              alt={product.productName}
                             />
-                          </button>
-                        </li>
-                        <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-100">
-                          <button
-                            type="button"
-                            className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                          >
-                            <img
-                              src="../images/ico_reload.png"
-                              className="image size-4 rouded-full"
-                              alt=""
-                            />
-                          </button>
-                        </li>
-                        <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
-                          <button
-                            type="button"
-                            className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                          >
-                            <img
-                              src="../images/ico_search.png"
-                              className="image size-4 rouded-full"
-                              alt=""
-                            />
-                          </button>
-                        </li>
-                      </ul>
+                          </Link>
+                        </div>
 
-                      {/* Star Rating */}
-                      <div className="flex justify-center items-center gap-1 mt-5">
-                        {[...Array(5)].map((_, index) => (
-                          <img
-                            key={index}
-                            className="size-4"
-                            src={
-                              index < product.rating
-                                ? "/images/ico_star_active.png"
-                                : "/images/ico_star_gray.png"
-                            }
-                            alt="star"
-                          />
-                        ))}
-                      </div>
-
-                      {/* Product Name + Price */}
-                      <h3 className="text-15 mt-2">{product.productName}</h3>
-                      <div className="mt-2 relative h-7 overflow-hidden">
-                        <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
-                          <div className="flex items-center justify-center font-bold text-15 text-center">
-                            <span
-                              className={product.sale ? "text-red-600" : ""}
+                        <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
+                          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
+                            <button
+                              className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddToWishlist(product);
+                              }}
                             >
-                              {product.sale && product.originalPrice && (
-                                <>
-                                  <span className="line-through text-lightGray mr-1">
-                                    <sup className="text-[10px] align-middle">
-                                      ₫
-                                    </sup>
-                                    {product.originalPrice}.000
-                                  </span>
-                                  -{" "}
-                                </>
-                              )}
-                              <sup className="text-[10px] align-middle">₫</sup>
-                              {product.productPrice}.000
-                            </span>
-                          </div>
+                              <img
+                                src="../images/ico_heart.png"
+                                className="image size-4 rouded-full"
+                                alt=""
+                              />
+                            </button>
+                          </li>
+                          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-100">
+                            <button
+                              type="button"
+                              className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
+                            >
+                              <img
+                                src="../images/ico_reload.png"
+                                className="image size-4 rouded-full"
+                                alt=""
+                              />
+                            </button>
+                          </li>
+                          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
+                            <button
+                              type="button"
+                              className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
+                            >
+                              <img
+                                src="../images/ico_search.png"
+                                className="image size-4 rouded-full"
+                                alt=""
+                              />
+                            </button>
+                          </li>
+                        </ul>
 
-                          {/* Add to Cart Button */}
-                          <button
-                            onClick={() => handleAddToCart(product)} // Đảm bảo bạn gọi hàm đúng cách với đối số là sản phẩm
-                            className="mt-2 text-sm text-black font-bold"
-                          >
-                            Add to Cart
-                          </button>
+                        {/* Star Rating */}
+                        <div className="flex justify-center items-center gap-1 mt-5">
+                          {[...Array(5)].map((_, index) => (
+                            <img
+                              key={index}
+                              className="size-4"
+                              src={
+                                index < product.rating
+                                  ? "/images/ico_star_active.png"
+                                  : "/images/ico_star_gray.png"
+                              }
+                              alt="star"
+                            />
+                          ))}
+                        </div>
+
+                        {/* Product Name + Price */}
+                        <h3 className="text-15 mt-2">{product.productName}</h3>
+                        <div className="mt-2 relative h-7 overflow-hidden">
+                          <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
+                            <div className="flex items-center justify-center font-bold text-15 text-center">
+                              <span
+                                className={product.sale ? "text-red-600" : ""}
+                              >
+                                {product.sale && product.originalPrice && (
+                                  <>
+                                    <span className="line-through text-lightGray mr-1">
+                                      <sup className="text-[10px] align-middle">
+                                        ₫
+                                      </sup>
+                                      {product.originalPrice.toLocaleString(
+                                        "vi-VN"
+                                      )}
+                                    </span>
+                                    -{" "}
+                                  </>
+                                )}
+
+                                {product.productPrice.toLocaleString("vi-VN")}
+                                <sup className="text-[10px] align-middle">
+                                  ₫
+                                </sup>
+                              </span>
+                            </div>
+
+                            {/* Add to Cart Button */}
+                            <button
+                              onClick={() => handleAddToCart(product)} // Đảm bảo bạn gọi hàm đúng cách với đối số là sản phẩm
+                              className="mt-2 text-sm text-black font-bold"
+                            >
+                              Add to Cart
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  ))}
               </ul>
             </div>
           </section>

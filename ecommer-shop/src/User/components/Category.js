@@ -2,108 +2,25 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import axios from "axios";
 
 const Category = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      setProducts([
-        {
-          id: 1,
-          productId: "1",
-          productName: "Caravaggio Read Wall Light",
-          productPrice: 60,
-          originalPrice: 59,
-          sale: true,
-          rating: 2,
-          descriptions:
-            "A stylish and functional wall-mounted reading light, perfect for bedrooms and cozy reading corners.",
-          size: "20cm x 15cm x 12cm",
-          image: "/images/img_product1.png",
-          image1: "/images/img1_product1.png",
-          image2: "/images/img2_product1.png",
-          quantity: 5,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 2,
-          productId: "2",
-          productName: "Bouquet Flower Vase",
-          productPrice: 59,
-          originalPrice: null,
-          sale: false,
-          rating: 4,
-          descriptions:
-            "A beautifully crafted ceramic vase designed to showcase fresh or dried flowers elegantly.",
-          size: "Height 25cm, Diameter 10cm",
-          image: "/images/img_product2.png",
-          image1: "/images/img1_product2.png",
-          image2: "/images/img2_product2.png",
-          quantity: 20,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 3,
-          productId: "3",
-          productName: "Egg Dining Table",
-          productPrice: 100.0,
-          originalPrice: null,
-          sale: false,
-          rating: 5,
-          descriptions:
-            "A modern and elegant dining table with a smooth oval surface, perfect for family meals and gatherings.",
-          size: "180cm x 90cm x 75cm",
-          image: "/images/img_product3.png",
-          image1: "/images/img1_product3.png",
-          quantity: 10,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 4,
-          productId: "4",
-          productName: "Century Starburst Clock",
-          productPrice: 55,
-          originalPrice: 60,
-          sale: true,
-          rating: 4,
-          descriptions:
-            "A vintage-inspired wall clock with a sunburst design, bringing retro charm to any room.",
-          size: "50cm diameter",
-          image: "/images/img_product.webp",
-          quantity: 15,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 5,
-          productId: "5",
-          productName: "Cubic Plinth",
-          productPrice: 135,
-          originalPrice: 200,
-          sale: true,
-          rating: 2,
-          descriptions:
-            "A minimalist cubic plinth, ideal for displaying art, plants, or decorative items in a modern interior.",
-          size: "40cm x 40cm x 40cm",
-          image: "/images/img_product.webp",
-          quantity: 5,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-      ]);
-    }
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/get-all-product"
+        );
+
+        setProducts(response.data || []);
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách sản phẩm:", error);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   const { addToCart } = useCart(); // Lấy hàm addToCart từ context
@@ -139,13 +56,11 @@ const Category = () => {
           <ul className="mt-10 md:grid grid-cols-3 gap-10 cursor-pointer">
             {[
               { img: "/images/img_collection.jpg", label: "Living Room" },
-              { img: "/images/img_collection2.webp", label: "Bed room" },
-              { img: "/images/img_collection3.webp", label: "Bath room" },
+              { img: "/images/img_collection2.jpg", label: "Bed room" },
+              { img: "/images/img_collection3.jpg", label: "Bath room" },
             ].map((item, index) => (
               <li key={index} className="mt-6 md:mt-0">
-                <Link
-                  to={`/category/${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                >
+                <Link to={"/shop"}>
                   <div className="rounded-[20px] overflow-hidden relative group">
                     <img
                       className="w-full h-auto"
@@ -218,7 +133,7 @@ const Category = () => {
                       >
                         <img
                           src="../images/ico_heart.png"
-                          className="image size-4 rouded-full"
+                          className="image size-4 rounded-full"
                           alt=""
                         />
                       </button>
@@ -230,26 +145,27 @@ const Category = () => {
                       >
                         <img
                           src="../images/ico_reload.png"
-                          className="image size-4 rouded-full"
+                          className="image size-4 rounded-full"
                           alt=""
                         />
                       </button>
                     </li>
                     <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
-                      <button
-                        type="button"
-                        className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                      >
-                        <img
-                          src="../images/ico_search.png"
-                          className="image size-4 rouded-full"
-                          alt=""
-                        />
-                      </button>
+                      <Link to={`/productdetail/${product.id}`}>
+                        <button
+                          type="button"
+                          className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
+                        >
+                          <img
+                            src="../images/ico_search.png"
+                            className="image size-4 rounded-full"
+                            alt=""
+                          />
+                        </button>
+                      </Link>
                     </li>
                   </ul>
 
-                  {/* Star Rating */}
                   <div className="flex justify-center items-center gap-1 mt-5">
                     {[...Array(5)].map((_, index) => (
                       <img
@@ -265,7 +181,6 @@ const Category = () => {
                     ))}
                   </div>
 
-                  {/* Product Name + Price */}
                   <h3 className="text-15 mt-2">{product.productName}</h3>
                   <div className="mt-2 relative h-7 overflow-hidden">
                     <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
@@ -277,13 +192,13 @@ const Category = () => {
                                 <sup className="text-[10px] align-middle">
                                   ₫
                                 </sup>
-                                {product.originalPrice}.000
+                                {product.originalPrice.toLocaleString("vi-VN")}
                               </span>
                               -{" "}
                             </>
                           )}
                           <sup className="text-[10px] align-middle">₫</sup>
-                          {product.productPrice}.000
+                          {product.productPrice.toLocaleString("vi-VN")}
                         </span>
                       </div>
 
@@ -310,13 +225,13 @@ const Category = () => {
 
           <ul className="md:grid grid-cols-4 gap-10 mt-11">
             {[
-              { label: "Bathroom", img: "/images/img_category.webp" },
-              { label: "Chair", img: "/images/img_category2.webp" },
-              { label: "Decor", img: "/images/img_category3.webp" },
-              { label: "Lamp", img: "/images/img_category4.webp" },
+              { label: "Bathroom", img: "/images/img_category.jpg" },
+              { label: "Chair", img: "/images/img_category2.jpg" },
+              { label: "Decor", img: "/images/img_category3.jpg" },
+              { label: "Lamp", img: "/images/img_category4.jpg" },
             ].map((cat, index) => (
               <li key={index} className="mt-6 md:mt-0">
-                <Link to="#">
+                <Link to="/shop">
                   <div className="rounded-lg overflow-hidden group">
                     <img
                       className="image transform group-hover:scale-110 transition-transform duration-300"

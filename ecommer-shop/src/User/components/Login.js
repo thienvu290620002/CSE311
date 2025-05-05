@@ -31,13 +31,13 @@ const Login = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
     const foundUser = users.find(
-      (u) => u.email === email && u.password === password && u.role === role,
+      (u) => u.email === email && u.password === password && u.role === role
     );
 
     if (foundUser) {
       localStorage.setItem("user", JSON.stringify(foundUser));
       setUser(foundUser);
-      navigate("/home");
+      navigate("/shopping-cart");
     } else {
       setError("Email, password hoặc role không đúng");
     }

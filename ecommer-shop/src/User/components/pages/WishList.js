@@ -1,13 +1,41 @@
 import React from "react";
 import { useWishlist } from "../../context/WishlistContext";
-
+import swal from "sweetalert";
 const WishList = () => {
   const { wishItems, setWishItems } = useWishlist();
 
+  // const removeFromWishlist = (productId) => {
+  //   swal({
+  //     title: "Are you sure?",
+  //     text: "Do you really want to remove this item from your cart?",
+  //     icon: "warning",
+  //     buttons: ["Cancel", "Yes, remove it"],
+  //     dangerMode: true,
+  //   })
+  //   setWishItems((prevItems) =>
+  //     prevItems.filter((item) => item.id !== productId)
+  //   );
+  // };
   const removeFromWishlist = (productId) => {
-    setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId),
-    );
+    swal({
+      title: "Are you sure?",
+      text: "Do you really want to remove this item from your wishlist?",
+      icon: "warning",
+      buttons: ["Cancel", "Yes, remove it"],
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        setWishItems((prevItems) =>
+          prevItems.filter((item) => item.id !== productId)
+        );
+
+        swal("Removed!", "The item has been removed from your wishlist.", {
+          icon: "success",
+        });
+      } else {
+        swal("Cancelled", "The item is still in your wishlist.");
+      }
+    });
   };
 
   return (
@@ -43,7 +71,7 @@ const WishList = () => {
                     <span>{item.productName}</span>
                   </td>
                   <td className="py-3 px-4 text-gray-800">
-                    {item.productPrice} $
+                    {item.productPrice.toLocaleString("vi-VN")} ₫
                   </td>
                   <td className="py-3 px-4 text-red-600">
                     <button

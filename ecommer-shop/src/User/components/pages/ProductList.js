@@ -1,107 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useWishlist } from "../../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      setProducts([
-        {
-          id: 1,
-          productId: "1",
-          productName: "Caravaggio Read Wall Light",
-          productPrice: 60,
-          originalPrice: 59,
-          sale: true,
-          rating: 2,
-          descriptions:
-            "A stylish and functional wall-mounted reading light, perfect for bedrooms and cozy reading corners.",
-          size: "20cm x 15cm x 12cm",
-          image: "/images/img_product1.png",
-          image1: "/images/img1_product1.png",
-          image2: "/images/img2_product1.png",
-          quantity: 5,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 2,
-          productId: "2",
-          productName: "Bouquet Flower Vase",
-          productPrice: 59,
-          originalPrice: null,
-          sale: false,
-          rating: 4,
-          descriptions:
-            "A beautifully crafted ceramic vase designed to showcase fresh or dried flowers elegantly.",
-          size: "Height 25cm, Diameter 10cm",
-          image: "/images/img_product2.png",
-          image1: "/images/img1_product2.png",
-          image2: "/images/img2_product2.png",
-          quantity: 20,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 3,
-          productId: "3",
-          productName: "Egg Dining Table",
-          productPrice: 100.0,
-          originalPrice: null,
-          sale: false,
-          rating: 5,
-          descriptions:
-            "A modern and elegant dining table with a smooth oval surface, perfect for family meals and gatherings.",
-          size: "180cm x 90cm x 75cm",
-          image: "/images/img_product3.png",
-          image1: "/images/img1_product3.png",
-          quantity: 10,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 4,
-          productId: "4",
-          productName: "Century Starburst Clock",
-          productPrice: 55,
-          originalPrice: 60,
-          sale: true,
-          rating: 4,
-          descriptions:
-            "A vintage-inspired wall clock with a sunburst design, bringing retro charm to any room.",
-          size: "50cm diameter",
-          image: "/images/img_product.webp",
-          quantity: 15,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: 5,
-          productId: "5",
-          productName: "Cubic Plinth",
-          productPrice: 135,
-          originalPrice: 200,
-          sale: true,
-          rating: 2,
-          descriptions:
-            "A minimalist cubic plinth, ideal for displaying art, plants, or decorative items in a modern interior.",
-          size: "40cm x 40cm x 40cm",
-          image: "/images/img_product.webp",
-          quantity: 5,
-          categoryType: "",
-          createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z",
-        },
-      ]);
-    }
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/get-all-product"
+        );
+        const data = await response.json();
+        console.log(data);
+
+        setProducts(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -117,11 +37,11 @@ const ProductList = () => {
         return sorted.sort((a, b) => b.productPrice - a.productPrice); // High to low
       case "3":
         return sorted.sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
         ); // Old to New
       case "4":
         return sorted.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         ); // New to Old
       default:
         return products;
@@ -132,7 +52,7 @@ const ProductList = () => {
     .filter((product) => {
       // Lọc theo category (nếu có)
       if (selectedCategory) {
-        return product.categoryType === selectedCategory;
+        return product.categoryType.toUpperCase() === selectedCategory;
       }
       return true; // Nếu không có category nào được chọn, không cần lọc theo category
     })
@@ -148,22 +68,30 @@ const ProductList = () => {
 
   // Tính số lượng sản phẩm còn hàng và hết hàng
   const inStockCount = products.filter(
-    (product) => product.quantity > 0,
+    (product) => product.quantity > 0
   ).length;
   const outOfStockCount = products.filter(
-    (product) => product.quantity === 0,
+    (product) => product.quantity === 0
   ).length;
 
-  const [setWishlist] = useState([]);
+  const { addToWishlist } = useWishlist();
 
   const handleAddToWishlist = (product) => {
-    console.log(product);
-    setWishlist((prevWishlist) => {
-      if (prevWishlist.find((item) => item.id === product.id)) {
-        return prevWishlist; // Sản phẩm đã có trong wishlist rồi
-      }
-      return [...prevWishlist, product]; // Thêm sản phẩm vào wishlist
-    });
+    addToWishlist(product);
+  };
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const { addToCart } = useCart(); // Lấy hàm addToCart từ context
+
+  const handleAddToCart = (product) => {
+    // Tách quantity tồn kho ra
+    const { quantity, ...productInfo } = product;
+
+    // Gửi bản sao không chứa quantity tồn kho
+    addToCart(productInfo);
   };
 
   return (
@@ -191,27 +119,27 @@ const ProductList = () => {
                 <div>
                   <h2 className="text-lg font-semibold">Category</h2>
                   <ul className="mt-4 space-y-3">
-                    {["Bathroom", "Chair", "Decor", "Lamp", "Table"].map(
-                      (category) => (
-                        <li key={category}>
-                          <Link
-                            to="#"
-                            className={`font-medium text-sm transition-all ${selectedCategory === category ? "text-black" : "text-lightGray hover:text-black"}`}
-                            onClick={() => {
-                              setSelectedCategory(category);
-                            }}
-                          >
-                            {category} (
-                            {
-                              products.filter(
-                                (product) => product.categoryType === category,
-                              ).length
-                            }
-                            )
-                          </Link>
-                        </li>
-                      ),
-                    )}
+                    {["CHAIR", "DECOR", "LAMP", "TABLE"].map((category) => (
+                      <li key={category}>
+                        <Link
+                          to="#"
+                          className={`font-medium text-sm transition-all ${selectedCategory === category ? "text-black" : "text-lightGray hover:text-black"}`}
+                          onClick={() => {
+                            setSelectedCategory(category);
+                          }}
+                        >
+                          {category} (
+                          {
+                            products.filter(
+                              (product) =>
+                                product.categoryType &&
+                                product.categoryType.toUpperCase() === category
+                            ).length
+                          }
+                          )
+                        </Link>
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
@@ -272,23 +200,24 @@ const ProductList = () => {
                 </div>
 
                 <ul className="mt-8 lg:grid grid-cols-4 gap-7">
-                  {sortProducts(filteredProducts, sortOption).map((product) => (
-                    <li
-                      key={product.id}
-                      className="mt-6 md:mt-0 text-center group relative"
-                    >
-                      <Link to={`/productdetail/${product.id}`}>
-                        {product.sale && (
-                          <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
-                            -30%
-                          </span>
-                        )}
+                  {sortProducts(filteredProducts, sortOption)
+                    .slice(
+                      (currentPage - 1) * itemsPerPage,
+                      currentPage * itemsPerPage
+                    )
+                    .map((product) => (
+                      <li
+                        key={product.id}
+                        className="mt-6 md:mt-0 text-center group relative"
+                      >
                         <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                          <img
-                            className="block size-full object-cover"
-                            src={product.image}
-                            alt={product.productName}
-                          />
+                          <Link to={`/productdetail/${product.id}`}>
+                            <img
+                              className="block size-full object-cover"
+                              src={product.image}
+                              alt={product.productName}
+                            />
+                          </Link>
                         </div>
 
                         <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
@@ -302,7 +231,7 @@ const ProductList = () => {
                             >
                               <img
                                 src="../images/ico_heart.png"
-                                className="image size-4 rouded-full"
+                                className="image size-4 rounded-full"
                                 alt=""
                               />
                             </button>
@@ -314,7 +243,7 @@ const ProductList = () => {
                             >
                               <img
                                 src="../images/ico_reload.png"
-                                className="image size-4 rouded-full"
+                                className="image size-4 rounded-full"
                                 alt=""
                               />
                             </button>
@@ -326,7 +255,7 @@ const ProductList = () => {
                             >
                               <img
                                 src="../images/ico_search.png"
-                                className="image size-4 rouded-full"
+                                className="image size-4 rounded-full"
                                 alt=""
                               />
                             </button>
@@ -349,7 +278,7 @@ const ProductList = () => {
                         </div>
 
                         <h3 className="text-15 mt-2">{product.productName}</h3>
-                        <div className="mt-2 relative h-5 overflow-hidden">
+                        <div className="mt-2 relative h-7 overflow-hidden">
                           <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
                             <div className="flex items-center justify-center font-bold text-15 text-center">
                               <span
@@ -358,73 +287,79 @@ const ProductList = () => {
                                 {product.sale && product.originalPrice && (
                                   <>
                                     <span className="line-through text-lightGray mr-1">
-                                      {product.originalPrice}$
+                                      <sup className="text-[10px] align-middle">
+                                        ₫
+                                      </sup>
+                                      {product.originalPrice / 1000}.000
                                     </span>
                                     -{" "}
                                   </>
                                 )}
-                                {product.productPrice}$
+                                <sup className="text-[10px] align-middle">
+                                  ₫
+                                </sup>
+                                {product.productPrice / 1000}.000
                               </span>
                             </div>
-                            <button className="uppercase text-xs font-medium tracking-widest relative mt-1 before:absolute before:bottom-0 before:w-0 before:h-[1px] before:bg-black before:left-0 hover:before:w-full before:transition-all before:duration-500">
+                            <button
+                              className="uppercase text-xs font-medium tracking-widest relative mt-1 before:absolute before:bottom-0 before:w-0 before:h-[1px] before:bg-black before:left-0 hover:before:w-full before:transition-all before:duration-500"
+                              onClick={() => handleAddToCart(product)}
+                            >
                               Add to cart
                             </button>
                           </div>
                         </div>
-                      </Link>
-                    </li>
-                  ))}
+                      </li>
+                    ))}
                 </ul>
 
                 <div className="mt-10">
-                  <ul className="flex items-center justify-center gap-2">
+                  <ul className="flex items-center justify-center gap-2 mt-6">
                     <li>
-                      <button className="grid place-items-center size-10 rounded-full border border-lightGray">
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="grid place-items-center size-10 rounded-full border border-lightGray"
+                      >
                         <img
                           className="size-4"
                           src="./images/ico_chevron_left.png"
-                          alt=""
+                          alt="prev"
                         />
                       </button>
                     </li>
+
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li key={i + 1}>
+                        <button
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`grid place-items-center size-10 rounded-full border border-lightGray transition-all ${
+                            currentPage === i + 1
+                              ? "bg-black text-white"
+                              : "hover:bg-black hover:text-white"
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      </li>
+                    ))}
+
                     <li>
-                      <Link
-                        to={"/home"}
-                        className="grid place-items-center size-10 rounded-full border border-lightGray hover:text-white hover:bg-black transition-all bg-black text-white"
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        className="grid place-items-center size-10 rounded-full border border-lightGray"
                       >
-                        1
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="grid place-items-center size-10 rounded-full border border-lightGray hover:text-white hover:bg-black transition-all"
-                        to="#none"
-                      >
-                        2
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="grid place-items-center size-10 rounded-full border border-lightGray hover:text-white hover:bg-black transition-all"
-                        to="#none"
-                      >
-                        3
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="grid place-items-center size-10 rounded-full border border-lightGray hover:text-white hover:bg-black transition-all"
-                        to="#none"
-                      >
-                        4
-                      </Link>
-                    </li>
-                    <li>
-                      <button className="grid place-items-center size-10 rounded-full border border-lightGray">
                         <img
                           className="size-4"
                           src="./images/ico_chevron_right.png"
-                          alt=""
+                          alt="next"
                         />
                       </button>
                     </li>

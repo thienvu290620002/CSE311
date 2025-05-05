@@ -11,27 +11,27 @@ const Footer = () => {
             <h3 className="font-bold text-lg mb-4">About Us</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/shops" className="hover:underline">
+                <Link to="/shop" className="hover:underline">
                   Our Shops
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:underline">
+                <Link to="/about-us" className="hover:underline">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link to="/artists" className="hover:underline">
+                <Link to="/about-us" className="hover:underline">
                   Artists
                 </Link>
               </li>
               <li>
-                <Link to="/local-giving" className="hover:underline">
+                <Link to="/about-us" className="hover:underline">
                   Local Giving
                 </Link>
               </li>
               <li>
-                <Link to="/press" className="hover:underline">
+                <Link to="/about-us" className="hover:underline">
                   Press
                 </Link>
               </li>

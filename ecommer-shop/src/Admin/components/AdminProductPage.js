@@ -8,7 +8,7 @@ const AdminProductPage = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/getAllProduct")
+    fetch("http://localhost:8080/api/get-all-product")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((error) => console.error("Error fetching products:", error));
@@ -57,8 +57,8 @@ const AdminProductPage = () => {
     if (editingId !== null) {
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === editingId ? { ...formData, id: editingId } : p,
-        ),
+          p.id === editingId ? { ...formData, id: editingId } : p
+        )
       );
       setEditingId(null);
     } else {
@@ -88,29 +88,27 @@ const AdminProductPage = () => {
       id: Date.now(), // Tự động set ID duy nhất
       ...newUser,
     };
-  
+
     const updatedUsers = [...users, newUserWithId];
     setUsers(updatedUsers);
     localStorage.setItem("users", JSON.stringify(updatedUsers));
   };
-  
 
   const [addingUser, setAddingUser] = useState(false);
-const [newUser, setNewUser] = useState({
-  firstName: "",
-  lastName: "",
-  gender: "",
-  email: "",
-  password: "",
-  role: "user",
-  address: "",
-  phoneNumber: "",
-});
-
+  const [newUser, setNewUser] = useState({
+    firstName: "",
+    lastName: "",
+    gender: "",
+    email: "",
+    password: "",
+    role: "user",
+    address: "",
+    phoneNumber: "",
+  });
 
   const handleEditUser = (editedUser) => {
     const updatedUsers = users.map((user) =>
-      user.id === editedUser.id ? editedUser : user,
+      user.id === editedUser.id ? editedUser : user
     );
     setUsers(updatedUsers);
     localStorage.setItem("users", JSON.stringify(updatedUsers));
@@ -418,15 +416,13 @@ const [newUser, setNewUser] = useState({
             </h1>
 
             <div className="flex justify-end mb-4">
-  <button
-    onClick={() => setAddingUser(true)}
-    className="px-4 py-2 bg-green text-black rounded hover:bg-green-700"
-  >
-    + Thêm người dùng
-  </button>
-</div>
-
-
+              <button
+                onClick={() => setAddingUser(true)}
+                className="px-4 py-2 bg-green text-black rounded hover:bg-green-700"
+              >
+                + Thêm người dùng
+              </button>
+            </div>
 
             {/* Bảng danh sách người dùng */}
             <table className="min-w-full table-auto border border-gray-200 mb-6">
@@ -456,16 +452,17 @@ const [newUser, setNewUser] = useState({
                   <tr key={user.id} className="border-t border-gray-200">
                     <td className="px-4 py-2 whitespace-nowrap">{user.id}</td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      {user.firstName ? user.firstName: ""} {user.lastName ? user.lastName : "Chưa có"}
+                      {user.firstName ? user.firstName : ""}{" "}
+                      {user.lastName ? user.lastName : "Chưa có"}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      {user.gender ? user.gender: "Chưa có"}
+                      {user.gender ? user.gender : "Chưa có"}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       {user.email}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      {user.address ? user.address:"Chưa có"}
+                      {user.address ? user.address : "Chưa có"}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       {user.phoneNumber ? user.phoneNumber : "Chưa có"}
@@ -582,66 +579,67 @@ const [newUser, setNewUser] = useState({
               </div>
             )}
 
-{addingUser && (
-  <div className="bg-white p-6 mt-4 rounded-xl shadow-md">
-    <h2 className="text-xl font-semibold mb-4">Thêm người dùng mới</h2>
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        handleAddUser(newUser);
-        setNewUser({
-          firstName: "",
-          lastName: "",
-          gender: "",
-          email: "",
-          password: "",
-          address: "",
-          phoneNumber: "",
-        });
-        setAddingUser(false);
-      }}
-      className="grid grid-cols-2 gap-4"
-    >
-      <input
-        type="email"
-        value={newUser.email}
-        onChange={(e) =>
-          setNewUser({ ...newUser, email: e.target.value })
-        }
-        placeholder="Email"
-        className="border p-2 rounded col-span-2"
-        required
-      />
-      <input
-        type="text"
-        value={newUser.password}
-        onChange={(e) =>
-          setNewUser({ ...newUser, password: e.target.value })
-        }
-        placeholder="Password"
-        className="border p-2 rounded col-span-2"
-        required
-      />
-      
-      <div className="col-span-2 flex justify-end space-x-2">
-        <button
-          type="button"
-          onClick={() => setAddingUser(false)}
-          className="px-4 py-2 bg-gray-300 rounded text-red-500"
-        >
-          Hủy
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-green text-black rounded"
-        >
-          Lưu
-        </button>
-      </div>
-    </form>
-  </div>
-)}
+            {addingUser && (
+              <div className="bg-white p-6 mt-4 rounded-xl shadow-md">
+                <h2 className="text-xl font-semibold mb-4">
+                  Thêm người dùng mới
+                </h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAddUser(newUser);
+                    setNewUser({
+                      firstName: "",
+                      lastName: "",
+                      gender: "",
+                      email: "",
+                      password: "",
+                      address: "",
+                      phoneNumber: "",
+                    });
+                    setAddingUser(false);
+                  }}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, email: e.target.value })
+                    }
+                    placeholder="Email"
+                    className="border p-2 rounded col-span-2"
+                    required
+                  />
+                  <input
+                    type="text"
+                    value={newUser.password}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, password: e.target.value })
+                    }
+                    placeholder="Password"
+                    className="border p-2 rounded col-span-2"
+                    required
+                  />
 
+                  <div className="col-span-2 flex justify-end space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setAddingUser(false)}
+                      className="px-4 py-2 bg-gray-300 rounded text-red-500"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-green text-black rounded"
+                    >
+                      Lưu
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         )}
       </div>

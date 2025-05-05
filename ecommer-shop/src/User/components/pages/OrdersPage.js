@@ -27,13 +27,13 @@ const OrdersPage = () => {
             <ul className="mb-2">
               {order.items.map((item) => (
                 <li key={item.id} className="text-sm">
-                  {item.quantity} x {item.productName} ($
-                  {item.productPrice.toFixed(2)})
+                  {item.quantity} x {item.productName} (
+                  {item.productPrice.toLocaleString("vi-VN")}) ₫
                 </li>
               ))}
             </ul>
             <p className="font-semibold">
-              Tổng cộng: {order.total.toFixed(2)} VND
+              Tổng cộng: {order.total.toLocaleString("vi-VN")} ₫
             </p>
           </div>
         ))}

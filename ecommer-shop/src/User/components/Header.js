@@ -1,101 +1,27 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import axios from "axios";
 
 const Header = () => {
-  const products = [
-    {
-      id: 1,
-      productId: "1",
-      productName: "Caravaggio Read Wall Light",
-      productPrice: 60,
-      originalPrice: 59,
-      sale: true,
-      rating: 2,
-      descriptions:
-        "A stylish and functional wall-mounted reading light, perfect for bedrooms and cozy reading corners.",
-      size: "20cm x 15cm x 12cm",
-      image: "/images/img_product1.png",
-      image1: "/images/img1_product1.png",
-      image2: "/images/img2_product1.png",
-      quantity: 5,
-      categoryType: "",
-      createdAt: "2025-01-01T00:00:00Z",
-      updatedAt: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: 2,
-      productId: "2",
-      productName: "Bouquet Flower Vase",
-      productPrice: 59,
-      originalPrice: null,
-      sale: false,
-      rating: 4,
-      descriptions:
-        "A beautifully crafted ceramic vase designed to showcase fresh or dried flowers elegantly.",
-      size: "Height 25cm, Diameter 10cm",
-      image: "/images/img_product2.png",
-      image1: "/images/img1_product2.png",
-      image2: "/images/img2_product2.png",
-      quantity: 20,
-      categoryType: "",
-      createdAt: "2025-01-01T00:00:00Z",
-      updatedAt: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: 3,
-      productId: "3",
-      productName: "Egg Dining Table",
-      productPrice: 100.0,
-      originalPrice: null,
-      sale: false,
-      rating: 5,
-      descriptions:
-        "A modern and elegant dining table with a smooth oval surface, perfect for family meals and gatherings.",
-      size: "180cm x 90cm x 75cm",
-      image: "/images/img_product3.png",
-      image1: "/images/img1_product3.png",
-      quantity: 10,
-      categoryType: "",
-      createdAt: "2025-01-01T00:00:00Z",
-      updatedAt: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: 4,
-      productId: "4",
-      productName: "Century Starburst Clock",
-      productPrice: 55,
-      originalPrice: 60,
-      sale: true,
-      rating: 4,
-      descriptions:
-        "A vintage-inspired wall clock with a sunburst design, bringing retro charm to any room.",
-      size: "50cm diameter",
-      image: "/images/img_product.webp",
-      quantity: 15,
-      categoryType: "",
-      createdAt: "2025-01-01T00:00:00Z",
-      updatedAt: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: 5,
-      productId: "5",
-      productName: "Cubic Plinth",
-      productPrice: 135,
-      originalPrice: 200,
-      sale: true,
-      rating: 2,
-      descriptions:
-        "A minimalist cubic plinth, ideal for displaying art, plants, or decorative items in a modern interior.",
-      size: "40cm x 40cm x 40cm",
-      image: "/images/img_product.webp",
-      quantity: 5,
-      categoryType: "",
-      createdAt: "2025-01-01T00:00:00Z",
-      updatedAt: "2025-01-01T00:00:00Z",
-    },
-  ];
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/get-all-product"
+        );
+
+        setProducts(response.data || []);
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách sản phẩm:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
@@ -111,7 +37,7 @@ const Header = () => {
         return prevItems.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item,
+            : item
         );
       } else {
         return [...prevItems, { ...product, quantity: 1 }];
@@ -128,7 +54,7 @@ const Header = () => {
       setFiltered([]);
     } else {
       const results = products.filter((item) =>
-        item.productName.toLowerCase().includes(value.toLowerCase()),
+        item.productName.toLowerCase().includes(value.toLowerCase())
       );
       setFiltered(results);
     }
@@ -155,35 +81,36 @@ const Header = () => {
           </div>
 
           {filtered.length > 0 && (
-            <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-2 rounded-xl shadow-lg max-h-96 overflow-y-auto p-2 space-y-3 animate-fade-in z-50">
+            <ul className="absolute top-full left-0 w-full bg-white border border-gray-200 mt-2 rounded-xl shadow-xl max-h-96 overflow-y-auto z-50 p-2 space-y-2">
               {filtered.map((item) => (
                 <li
                   key={item.id}
-                  className="hover:bg-amber-50 transition-all rounded-lg"
+                  className="flex items-center justify-between gap-4 p-2 hover:bg-amber-50 transition rounded-lg"
                 >
                   <Link
                     to={`/ProductDetail/${item.id}`}
-                    className="flex items-center gap-4 p-3"
+                    className="flex items-center gap-4 flex-1"
                   >
-                    <div className="w-24 h-24 flex-shrink-0">
+                    <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
                       <img
                         src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover rounded-lg shadow"
+                        alt={item.productName}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-semibold text-gray-800 line-clamp-2">
-                        {item.name}
+                      <h4 className="text-sm font-semibold text-gray-800 line-clamp-2">
+                        {item.productName}
                       </h4>
-                      <p className="text-sm text-gray-500">View details</p>
+                      <p className="text-xs text-gray-500 mt-1">View details</p>
                     </div>
                   </Link>
+
                   <button
                     onClick={() => addToCart(item)}
-                    className="mt-2 text-sm text-blue-600"
+                    className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition"
                   >
-                    Add to Cart
+                    Add
                   </button>
                 </li>
               ))}

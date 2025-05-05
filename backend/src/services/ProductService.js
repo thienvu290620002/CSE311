@@ -133,7 +133,7 @@ let getProductById = (productId) => {
       //    console.log("Looking for product with ID:", productId);
 
       let product = await db.Product.findOne({
-        where: { id: productId },
+        where: { productId: productId },
       });
       //   console.log(product);
 

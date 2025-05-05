@@ -1,10 +1,31 @@
 import React from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import swal from "sweetalert";
+import { useNavigate } from "react-router-dom";
+// const ShoppingCart = () => {
+//   const { cartItems, setCartItems } = useCart();
 
+//   const increaseQuantity = (id) => {
+//     setCartItems((prev) =>
+//       prev.map((item) =>
+//         item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+//       )
+//     );
+//   };
+
+//   const decreaseQuantity = (id) => {
+//     setCartItems((prev) =>
+//       prev.map((item) =>
+//         item.id === id && item.quantity > 1
+//           ? { ...item, quantity: item.quantity - 1 }
+//           : item
+//       )
+//     );
+//   };
 const ShoppingCart = () => {
   const { cartItems, setCartItems } = useCart();
-
+  const navigate = useNavigate(); // Thêm hook này để điều hướng
   const increaseQuantity = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
@@ -22,19 +43,50 @@ const ShoppingCart = () => {
       )
     );
   };
-
-  const removeFromCart = (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to remove this item from your cart?"
-      )
-    ) {
-      setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const handleCheckoutClick = () => {
+    if (cartItems.length === 0) {
+      swal({
+        icon: "warning",
+        title: "There are no products to checkout!",
+        text: "Please add products to cart before checkout.",
+      });
+    } else {
+      navigate("/checkout"); // Nếu có sản phẩm, điều hướng tới trang thanh toán
     }
   };
 
+  // const removeFromCart = (id) => {
+  //   if (
+  //     window.confirm(
+  //       "Are you sure you want to remove this item from your cart?"
+  //     )
+  //   ) {
+  //     setCartItems((prev) => prev.filter((item) => item.id !== id));
+  //   }
+  // };
+  const removeFromCart = (id) => {
+    swal({
+      title: "Are you sure?",
+      text: "Do you really want to remove this item from your cart?",
+      icon: "warning",
+      buttons: ["Cancel", "Yes, remove it"],
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        setCartItems((prev) => prev.filter((item) => item.id !== id));
+
+        swal("Removed!", "The item has been removed from your cart.", {
+          icon: "success",
+        });
+      } else {
+        swal("Cancelled", "Your item is still in the cart.");
+      }
+    });
+  };
+
   const total = cartItems.reduce(
-    (acc, item) => acc + item.productPrice * item.quantity,
+    (acc, item) =>
+      acc + item.productPrice.toLocaleString("vi-VN") * item.quantity,
     0
   );
 
@@ -84,9 +136,10 @@ const ShoppingCart = () => {
                             </p>
                             <span className="text-xs">
                               {typeof item.productPrice === "number"
-                                ? item.productPrice.toFixed(3)
+                                ? item.productPrice.toLocaleString("vi-VN")
                                 : Number(item.productPrice).toFixed(3)}
                             </span>
+                            {/* <span className="text-xs">{formatPrice(item.productPrice)} ₫</span> */}
                           </div>
                         </div>
 
@@ -118,7 +171,9 @@ const ShoppingCart = () => {
 
                         {/* Total Price */}
                         <div className="p-4 flex justify-center">
-                          {(item.productPrice * item.quantity).toFixed(3)}
+                          {(item.productPrice * item.quantity).toLocaleString(
+                            "vi-VN"
+                          )}
                         </div>
 
                         {/* Remove from Cart Button */}
@@ -142,7 +197,7 @@ const ShoppingCart = () => {
                 <div className="col-span-2">
                   <div className="p-7 bg-[#f7f4ef] rounded-lg">
                     <h3 className="uppercase font-medium text-sm">
-                      FREE SHIPPING ON ORDERS $100.00
+                      FREE SHIPPING ON ORDERS ₫100.00
                     </h3>
                     <p className="text-sm mt-2">
                       Congratulations, you've got free shipping!
@@ -164,12 +219,18 @@ const ShoppingCart = () => {
                       Total: {total.toFixed(3)}
                     </p>
 
-                    <Link
+                    {/* <Link
                       to="/checkout"
                       className="flex items-center justify-center h-[50px] mt-6 bg-black w-full text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
                     >
                       Check out
-                    </Link>
+                    </Link> */}
+                    <button
+                      onClick={handleCheckoutClick}
+                      className="flex items-center justify-center h-[50px] mt-6 bg-black w-full text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg-white border hover:border-black hover:text-black transition-all"
+                    >
+                      Payment
+                    </button>
                   </div>
                 </div>
               </div>

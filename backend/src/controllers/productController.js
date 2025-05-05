@@ -57,6 +57,8 @@ let updateProduct = async (req, res) => {
 let getProductById = async (req, res) => {
   try {
     const productId = req.query.id;
+    // console.log(productId);
+
     let infor = await ProductService.getProductById(productId);
     return res.status(200).json(infor);
   } catch (e) {
@@ -70,7 +72,7 @@ let getProductById = async (req, res) => {
 
 let getProductByBillItem = async (req, res) => {
   try {
-    console.log(req.body);
+    //   console.log(req.body);
 
     let infor = await ProductService.getProductByBillItem(req.query.id);
     return res.status(200).json(infor);

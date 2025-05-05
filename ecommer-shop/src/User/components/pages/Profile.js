@@ -60,7 +60,7 @@ const Profile = () => {
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const updatedUsers = users.map((u) =>
-      u.email === user.email ? { ...u, ...newUserData } : u,
+      u.email === user.email ? { ...u, ...newUserData } : u
     );
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUser(newUserData);
@@ -70,7 +70,7 @@ const Profile = () => {
 
   const removeFromWishlist = (productId) => {
     setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId),
+      prevItems.filter((item) => item.id !== productId)
     );
   };
 
@@ -300,7 +300,7 @@ const Profile = () => {
                       ))}
                     </ul>
                     <p className="font-semibold">
-                      Tổng cộng: ${order.total.toFixed(2)}
+                      Tổng cộng: {order.total.toFixed(2)}₫
                     </p>
                   </div>
                 ))
