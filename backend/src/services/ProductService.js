@@ -10,12 +10,15 @@ let createNewProduct = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
       await db.Product.create({
+        // id: data.id,
         productId: data.productId,
         productName: data.productName,
         productPrice: data.productPrice,
+        // productPrice: parseInt(data.productPrice), // Nếu là số
         descriptions: data.descriptions,
         size: data.size,
         image: data.image,
+        // quantity: parseInt(data.quantity),
         quantity: data.quantity,
         categoryType: data.categoryType,
       });

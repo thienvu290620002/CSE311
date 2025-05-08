@@ -3,37 +3,77 @@ import UserService from "../services/UserService";
 
 let getAllUser = async (req, res) => {
   try {
-    let data = await UserService.getAllUser();
-    //console.log(data);
-    // return res.status(200).json(data);
-    return res.render("displayCRUD.ejs", {
-      dataTable: data,
+    const users = await db.User.findAll({
+      // chỉ lấy role là user   // where: { roleId: "user" },
+      attributes: { exclude: ["password"] }, // ẩn mật khẩu
+    });
+
+    return res.status(200).json({
+      errCode: 0,
+      message: "OK",
+      users: users,
     });
   } catch (error) {
-    return res.status(200).json({
-      errCode: -1,
-      errMessage: " Error from Server",
+    return res.status(500).json({
+      errCode: 1,
+      message: "Something went wrong",
     });
   }
 };
+
+// let createNewUser = async (req, res) => {
+//   try {
+//     let data = await UserService.createNewUser(req.body);
+//     return res.status(200).json({
+//       errCode: 0,
+//       message: "User created successfully",
+//     });
+//   } catch (error) {
+//     console.error(error); // Ghi lỗi để kiểm tra chi tiết
+//     return res.status(500).json({
+//       errCode: -1,
+//       errMessage: "Error from Server",
+//     });
+//   }
+// };
 let createNewUser = async (req, res) => {
   try {
-    let data = await UserService.createNewUser(req.body);
-    //console.log(data);
-    return res.status(200).json(data);
-  } catch (error) {
+    // Kiểm tra xem roleId có trong body không, nếu không có thì gán mặc định là 'user'
+    const { roleId, ...restData } = req.body;
+    const finalRoleId = !roleId || roleId === "" ? "user" : roleId;
+    // Gán roleId mặc định là 'user'
+
+    // Tạo người dùng mới với roleId là 'user' nếu không có giá trị roleId
+    let data = await UserService.createNewUser({
+      ...restData,
+      roleId: finalRoleId, // Gán roleId cuối cùng
+    });
+
+    if (data.error) {
+      return res.status(400).json({
+        errCode: 1,
+        errMessage: data.message,
+      });
+    }
+
     return res.status(200).json({
+      errCode: 0,
+      message: data.message,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
       errCode: -1,
-      errMessage: " Error from Server",
+      errMessage: "Error from Server",
     });
   }
 };
 
-let deleteUserCRUD = async (req, res) => {
+let deleteUserByID = async (req, res) => {
   try {
     // console.log(req.body.userId, "ssss");
-
-    let data = await UserService.deleteUserByID(req.body.userId);
+    let userId = req.query.id;
+    let data = await UserService.deleteUserByID(userId);
     //console.log(data);
     return res.status(200).json(data);
   } catch (error) {
@@ -44,7 +84,7 @@ let deleteUserCRUD = async (req, res) => {
   }
 };
 
-let updateUserCRUD = async (req, res) => {
+let updateUserData = async (req, res) => {
   try {
     let data = req.body;
     //console.log(data);
@@ -179,8 +219,8 @@ let deleteWishlist = async (req, res) => {
 module.exports = {
   getAllUser: getAllUser,
   createNewUser: createNewUser,
-  deleteUserCRUD: deleteUserCRUD,
-  updateUserCRUD: updateUserCRUD,
+  deleteUserByID: deleteUserByID,
+  updateUserData: updateUserData,
   getBillByUserID: getBillByUserID,
   getWishListByUserID: getWishListByUserID,
   handleLogin: handleLogin,

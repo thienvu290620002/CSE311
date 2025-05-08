@@ -1,647 +1,441 @@
-import React, { useContext, useEffect, useState } from "react";
-import { FaBox, FaUsers, FaSignOutAlt } from "react-icons/fa";
-import { useOrders } from "../../User/context/OrderContext";
-import { UserContext } from "../../User/context/UserContext";
-import { useNavigate } from "react-router-dom";
-
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import swal from "sweetalert";
+import ReactPaginate from "react-paginate";
 const AdminProductPage = () => {
   const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    fetch("http://localhost:8080/api/get-all-product")
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((error) => console.error("Error fetching products:", error));
-  }, []);
-
-  console.log(products);
-
-  const [users, setUsers] = useState(() => {
-    const storedUsers = localStorage.getItem("users");
-    return storedUsers ? JSON.parse(storedUsers) : [];
-  });
-
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [productId, setProductId] = useState(null);
   const [formData, setFormData] = useState({
     productName: "",
     productPrice: "",
     quantity: "",
     image: "",
+    categoryType: "",
+    descriptions: "",
   });
+  const [categoryFilter, setCategoryFilter] = useState(""); // state for category filter
 
-  const [editingId, setEditingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const handleInput = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  //Seperate page
+  const itemsPerPage = 5;
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageCount = Math.ceil(filteredProducts.length / itemsPerPage);
+  const currentItems = filteredProducts.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
-  const { orders } = useOrders();
-  const [orderDetails, setOrderDetails] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Mở/đóng modal chi tiết đơn hàng
-  const openOrderDetails = (order) => {
-    setOrderDetails(order);
-    setIsModalOpen(true);
+  const handlePageClick = ({ selected }) => {
+    setCurrentPage(selected);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setOrderDetails(null);
+  const formRef = useRef(null);
+
+  const fetchProducts = () => {
+    fetch("http://localhost:8080/api/get-all-product")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+        setFilteredProducts(data); // Set the filteredProducts to all products initially
+      })
+      .catch((error) => console.error("Error fetching products:", error));
   };
 
   useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
-  }, [products]);
+    fetchProducts();
+  }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editingId !== null) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingId ? { ...formData, id: editingId } : p
-        )
-      );
-      setEditingId(null);
-    } else {
-      setProducts((prev) => [
-        ...prev,
-        { ...formData, id: Date.now(), createdAt: new Date().toISOString() },
-      ]);
-    }
+  const handleEdit = (product) => {
+    setFormData({
+      productName: product.productName,
+      productPrice: product.productPrice,
+      quantity: product.quantity,
+      image: product.image,
+      categoryType: product.categoryType,
+      descriptions: product.descriptions,
+      size: product.size,
+    });
+    setProductId(product.id);
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setProductId(null);
     setFormData({
       productName: "",
       productPrice: "",
       quantity: "",
       image: "",
+      categoryType: "",
+      descriptions: "",
+      size: "",
     });
   };
 
-  const handleEdit = (product) => {
-    setFormData(product);
-    setEditingId(product.id);
-  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
 
-  const handleDelete = (id) =>
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    if (name === "productPrice") {
+      const rawValue = value.replace(/\D/g, ""); // Xoá tất cả ký tự không phải số
+      const formatted = new Intl.NumberFormat("vi-VN").format(rawValue);
 
-  const handleAddUser = (newUser) => {
-    const newUserWithId = {
-      id: Date.now(), // Tự động set ID duy nhất
-      ...newUser,
-    };
-
-    const updatedUsers = [...users, newUserWithId];
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-  };
-
-  const [addingUser, setAddingUser] = useState(false);
-  const [newUser, setNewUser] = useState({
-    firstName: "",
-    lastName: "",
-    gender: "",
-    email: "",
-    password: "",
-    role: "user",
-    address: "",
-    phoneNumber: "",
-  });
-
-  const handleEditUser = (editedUser) => {
-    const updatedUsers = users.map((user) =>
-      user.id === editedUser.id ? editedUser : user
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-
-    // Cập nhật nếu đang chỉnh người dùng hiện tại
-    const currentUser = JSON.parse(localStorage.getItem("user"));
-    if (currentUser && currentUser.id === editedUser.id) {
-      localStorage.setItem("user", JSON.stringify(editedUser));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: rawValue, // Lưu giá trị raw (dạng số) để gửi backend
+        formattedPrice: formatted, // Thêm field hiển thị nếu cần
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
-  const handleDeleteUser = (id) => {
-    const updatedUsers = users.filter((user) => user.id !== id);
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+
+    const newProduct = {
+      ...formData,
+      productId: Date.now(),
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await axios.post(
+        "http://localhost:8080/api/create-new-product",
+        newProduct
+      );
+
+      setProducts((prev) => [...prev, newProduct]);
+      setFormData({
+        productName: "",
+        productPrice: "",
+        quantity: "",
+        image: "",
+        categoryType: "",
+        descriptions: "",
+        size: "",
+      });
+
+      fetchProducts();
+
+      // ✅ Success notification
+      swal("Success!", "Product has been added successfully.", "success");
+    } catch (error) {
+      console.error("Error adding product:", error);
+      // ❌ Error notification
+      swal("Error", "Failed to add product. Please try again.", "error");
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    if (productId) {
+      try {
+        await axios.post("http://localhost:8080/api/update-product", {
+          ...formData,
+          id: productId,
+        });
+        fetchProducts();
+        setProductId(null);
+        setFormData({
+          productName: "",
+          productPrice: "",
+          quantity: "",
+          image: "",
+          categoryType: "",
+          descriptions: "",
+          size: "",
+        });
+        // ✅ Success notification
+        swal("Success!", "Product has been updatedd successfully.", "success");
+      } catch (error) {
+        console.error("Error update product:", error);
+        // ❌ Error notification
+        swal("Error", "Failed to update product. Please try again.", "error");
+      }
+    }
   };
 
-  const { setUser } = useContext(UserContext);
-  const navigate = useNavigate();
+  const handleDelete = async (id) => {
+    swal({
+      title: "Are you sure?",
+      text: "This will permanently delete the product!",
+      icon: "warning",
+      buttons: ["Cancel", "Delete"],
+      dangerMode: true,
+    }).then(async (willDelete) => {
+      if (willDelete) {
+        try {
+          await axios.get("http://localhost:8080/api/delete-product-by-id", {
+            params: { productId: id },
+          });
+          fetchProducts();
+          swal("Deleted!", "Product was successfully deleted.", {
+            icon: "success",
+          });
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          swal("Error!", "Failed to delete product. Please try again.", {
+            icon: "error",
+          });
+        }
+      } else {
+        swal("Cancelled", "The product is still in the list.");
+      }
+    });
+  };
 
-  const [editingUser, setEditingUser] = useState(null);
+  // Filter products based on selected category
+  const handleCategoryFilterChange = (e) => {
+    const selectedCategory = e.target.value;
+    setCategoryFilter(selectedCategory);
+    if (selectedCategory === "") {
+      setFilteredProducts(products); // If no category selected, show all products
+    } else {
+      setFilteredProducts(
+        products.filter((product) => product.categoryType === selectedCategory)
+      );
+    }
+  };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 overflow-x-hidden">
-      {/* Sidebar */}
-      <aside className="w-80 bg-white shadow-md p-6 space-y-6">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">Admin Panel</h2>
-        <ul className="space-y-3 text-gray-600">
-          <li>
-            <div
-              onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                activeTab === "dashboard" ? "text-blue-600 font-semibold" : ""
-              }`}
-            >
-              <FaBox /> Dashboard
-            </div>
-          </li>
-          <li>
-            <div
-              onClick={() => setActiveTab("products")}
-              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                activeTab === "products" ? "text-blue-600 font-semibold" : ""
-              }`}
-            >
-              <FaBox /> Quản lý sản phẩm
-            </div>
-          </li>
-          <li>
-            <div
-              onClick={() => setActiveTab("users")}
-              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                activeTab === "users" ? "text-blue-600 font-semibold" : ""
-              }`}
-            >
-              <FaUsers /> Quản lý người dùng
-            </div>
-          </li>
-          <li>
-            <div
-              onClick={handleLogout}
-              className="flex items-center gap-2 cursor-pointer text-red-500 hover:text-red-600"
-            >
-              <FaSignOutAlt /> Đăng xuất
-            </div>
-          </li>
-        </ul>
-      </aside>
+    <div>
+      <div className="p-6 max-w-6xl mx-auto">
+        <h1 className="text-4xl font-semibold text-center text-gray-800 mb-8">
+          Product Management
+        </h1>
 
-      {/* Main Content */}
-      <div className="bg-white shadow-lg rounded-xl p-8 w-[852] w-full mx-auto">
-        {activeTab === "dashboard" && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 text-center">
-              Dashboard
-            </h2>
+        {/* Category filter */}
 
-            {/* Sắp xếp đơn hàng theo thời gian tạo, đơn hàng mới nhất lên trên */}
-            {orders.length > 0 ? (
-              [...orders] // Tạo một bản sao của mảng orders để không thay đổi mảng gốc
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sắp xếp theo thời gian
-                .map((order) => (
-                  <div
-                    key={order.id}
-                    className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md shadow-md"
-                  >
-                    <div className="text-sm">
-                      <p>
-                        <strong>Mã đơn:</strong> #{order.id} -{" "}
-                        {new Date(order.createdAt).toLocaleString()}
-                      </p>
-                      <p>
-                        <strong>Phương thức:</strong>{" "}
-                        {order.paymentMethod === "cod"
-                          ? "Thanh toán khi nhận hàng"
-                          : "Chuyển khoản"}
-                      </p>
-                      <ul className="list-none ml-6 my-2">
-                        {order.items.map((item, index) => (
-                          <li key={index}>
-                            <span>
-                              {item.quantity} x {item.productName}
-                            </span>
-                            <span className="text-gray-600">
-                              ($
-                              {typeof item.productPrice === "number"
-                                ? item.productPrice.toFixed(2)
-                                : Number(item.productPrice).toFixed(2)}
-                              )
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <p>
-                        <strong>Tổng cộng:</strong>{" "}
-                        <span className="text-green-700 font-semibold">
-                          ${order.total.toFixed(2)}
-                        </span>
-                      </p>
+        <div className="mb-6 flex justify-start">
+          <p className="mt-2 mr-3"> Filter</p>
+
+          <select
+            onChange={handleCategoryFilterChange}
+            value={categoryFilter}
+            className="border px-4 py-2 rounded-md"
+          >
+            <option value="">All Categories</option>
+            <option value="chair">Chair</option>
+            <option value="lamp">Lamp</option>
+            <option value="decor">Decor</option>
+          </select>
+        </div>
+
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg border  mx-auto max-w-6xl">
+          <table className="min-w-full table-fixed border border-gray-300 border-collapse rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-gray-200 text-gray-600">
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Image
+                </th>
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Name
+                </th>
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Price
+                </th>
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Quantity
+                </th>
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Category
+                </th>
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Size
+                </th>
+                <th className="border border-gray-300 px-6 py-3 text-center">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((product) => (
+                <tr
+                  key={product.productId || product.id}
+                  className="hover:bg-gray-50 transition duration-200"
+                >
+                  <td className="border border-gray-300 px-6 py-4 text-center">
+                    <img
+                      src={product.image}
+                      alt={product.productName}
+                      className="w-16 h-16 object-cover rounded-md mx-auto"
+                    />
+                  </td>
+                  <td className="border border-gray-300 px-6 py-4">
+                    {product.productName}
+                  </td>
+                  <td className="border border-gray-300 px-6 py-4  text-center">
+                    {product.productPrice.toLocaleString("en-US")}₫
+                  </td>
+                  <td className="border border-gray-300 px-6 py-4 text-center">
+                    {product.quantity}
+                  </td>
+                  <td className="border border-gray-300 px-6 py-4 text-center">
+                    {product.categoryType}
+                  </td>
+                  <td className="border border-gray-300 px-6 py-4 text-center">
+                    {product.size}
+                  </td>
+                  <td className="border border-gray-300 px-6 py-4 text-center">
+                    <div className="flex justify-center gap-2">
                       <button
-                        onClick={() => openOrderDetails(order)}
-                        className="mt-4 text-blue-600 hover:underline"
+                        onClick={() => handleEdit(product)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500"
                       >
-                        Xem chi tiết
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
+                      >
+                        Delete
                       </button>
                     </div>
-                  </div>
-                ))
-            ) : (
-              <p className="text-center text-gray-500">
-                Không có đơn hàng nào.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Modal Chi Tiết Đơn Hàng */}
-        {isModalOpen && orderDetails && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-gray p-6 rounded-lg max-w-2xl w-full">
-              <h2 className="text-2xl font-semibold mb-4">
-                Chi tiết đơn hàng #{orderDetails.id}
-              </h2>
-              <p>
-                <strong>Phương thức thanh toán:</strong>{" "}
-                {orderDetails.paymentMethod === "cod"
-                  ? "Thanh toán khi nhận hàng"
-                  : "Chuyển khoản"}
-              </p>
-              <ul className="list-none ml-6 my-2">
-                {orderDetails.items.map((item, index) => (
-                  <li key={index}>
-                    <span>
-                      {item.quantity} x {item.productName}
-                    </span>
-                    <span className="text-gray-600">
-                      ($
-                      {typeof item.productPrice === "number"
-                        ? item.productPrice.toFixed(2)
-                        : Number(item.productPrice).toFixed(2)}
-                      )
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p>
-                <strong>Tổng cộng:</strong>{" "}
-                <span className="text-green-700 font-semibold">
-                  ${orderDetails.total.toFixed(2)}
-                </span>
-              </p>
-              <button
-                onClick={closeModal}
-                className="mt-4 bg-red-600 text-white px-4 py-2 rounded"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "products" && (
-          <div>
-            {/* <h2 className="text-2xl font-semibold mb-4 text-center">
-          Quản lý sản phẩm
-        </h2> */}
-            {/* Thêm component quản lý sản phẩm ở đây */}
-            <div className="p-6 max-w-6xl mx-auto">
-              <h1 className="text-4xl font-semibold text-center text-gray-800 mb-8">
-                Quản lý sản phẩm
-              </h1>
-
-              <form onSubmit={handleSubmit} className="space-y-6 mb-12">
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    name="productName"
-                    value={formData.productName}
-                    onChange={handleInput}
-                    placeholder="Tên sản phẩm"
-                  />
-                  <input
-                    name="productPrice"
-                    value={formData.productPrice}
-                    onChange={handleInput}
-                    placeholder="Giá"
-                  />
-                  <input
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInput}
-                    placeholder="Số lượng"
-                  />
-                  <input
-                    name="image"
-                    value={formData.image}
-                    onChange={handleInput}
-                    placeholder="Link ảnh"
-                  />
-                </div>
-
-                <div className="text-center">
-                  <button
-                    type="submit"
-                    className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all duration-200"
-                  >
-                    {editingId !== null ? "Cập nhật sản phẩm" : "Thêm sản phẩm"}
-                  </button>
-                </div>
-              </form>
-
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                <table className="min-w-full table-auto border-collapse">
-                  <thead>
-                    <tr className="bg-gray-200 text-gray-600">
-                      <th className="px-6 py-3 text-left border border-gray-300">
-                        Ảnh
-                      </th>
-                      <th className="px-6 py-3 text-left border border-gray-300">
-                        Tên sản phẩm
-                      </th>
-                      <th className="px-6 py-3 text-left border border-gray-300">
-                        Giá
-                      </th>
-                      <th className="px-6 py-3 text-left border border-gray-300">
-                        Số lượng
-                      </th>
-                      <th className="px-6 py-3 text-left border border-gray-300">
-                        Hành động
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((product) => (
-                      <tr
-                        key={product.id}
-                        className="border-t hover:bg-gray-50"
-                      >
-                        <td className="px-6 py-4 text-center border border-gray-300">
-                          <img
-                            src={product.image}
-                            alt={product.productName}
-                            className="w-16 h-16 object-cover rounded-md"
-                          />
-                        </td>
-                        <td className="px-6 py-4 border border-gray-300">
-                          {product.productName}
-                        </td>
-                        <td className="px-6 py-4 border border-gray-300">{`$${product.productPrice}`}</td>
-                        <td className="px-6 py-4 border border-gray-300">
-                          {product.quantity}
-                        </td>
-                        <td className="px-6 py-4 flex justify-center border border-gray-300">
-                          <button
-                            onClick={() => handleEdit(product)}
-                            className="text-blue-600 hover:underline mr-4"
-                          >
-                            Sửa
-                          </button>
-                          <button
-                            onClick={() => handleDelete(product.id)}
-                            className="text-red-600 hover:underline"
-                          >
-                            Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "users" && (
-          <div className="p-6 max-w-screen-2xl mx-auto">
-            <h1 className="text-3xl font-semibold text-center mb-6">
-              Quản lý người dùng
-            </h1>
-
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => setAddingUser(true)}
-                className="px-4 py-2 bg-green text-black rounded hover:bg-green-700"
-              >
-                + Thêm người dùng
-              </button>
-            </div>
-
-            {/* Bảng danh sách người dùng */}
-            <table className="min-w-full table-auto border border-gray-200 mb-6">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-center font-semibold">ID</th>
-                  <th className="px-4 py-2 w-1/4 text-center font-semibold">
-                    Họ tên
-                  </th>
-                  <th className="px-4 py-2 w-40 text-center font-semibold">
-                    Giới tính
-                  </th>
-                  <th className="px-4 py-2 text-center font-semibold">Email</th>
-                  <th className="px-4 py-2 text-center font-semibold">
-                    Địa chỉ
-                  </th>
-                  <th className="px-4 py-2 text-center font-semibold">
-                    Số điện thoại
-                  </th>
-                  <th className="px-6 py-3 text-center font-semibold">
-                    Hành động
-                  </th>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-t border-gray-200">
-                    <td className="px-4 py-2 whitespace-nowrap">{user.id}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      {user.firstName ? user.firstName : ""}{" "}
-                      {user.lastName ? user.lastName : "Chưa có"}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      {user.gender ? user.gender : "Chưa có"}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      {user.email}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      {user.address ? user.address : "Chưa có"}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      {user.phoneNumber ? user.phoneNumber : "Chưa có"}
-                    </td>
-                    <td className="px-6 py-4 flex justify-center space-x-4">
-                      <button
-                        onClick={() => setEditingUser(user)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ReactPaginate
+          breakLabel="..."
+          nextLabel="Next >"
+          onPageChange={handlePageClick}
+          pageRangeDisplayed={3}
+          marginPagesDisplayed={2}
+          pageCount={pageCount}
+          previousLabel="< Prev"
+          containerClassName="flex justify-center mt-6 space-x-2"
+          pageClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
+          activeClassName="bg-blue-600 text-white"
+          previousClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
+          nextClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
+        />
+        <form
+          onSubmit={productId ? handleUpdateProduct : handleAddProduct}
+          className="space-y-6 mb-12"
+          ref={formRef}
+        >
+          <div className="grid grid-cols-2 gap-6">
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Product Name</label>
+              <input
+                name="productName"
+                value={formData.productName}
+                onChange={handleInputChange}
+                placeholder="Enter product name"
+                required
+                className="border px-4 py-2 rounded-md"
+              />
+            </div>
 
-            {/* Form chỉnh sửa người dùng */}
-            {editingUser && (
-              <div className="bg-white p-6 mt-4 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold mb-4">
-                  Chỉnh sửa người dùng
-                </h2>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleEditUser(editingUser);
-                    setEditingUser(null);
-                  }}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <input
-                    type="text"
-                    value={editingUser.firstName}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        firstName: e.target.value,
-                      })
-                    }
-                    placeholder="Họ"
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    type="text"
-                    value={editingUser.lastName}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        lastName: e.target.value,
-                      })
-                    }
-                    placeholder="Tên"
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    type="text"
-                    value={editingUser.gender || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        address: e.target.value,
-                      })
-                    }
-                    placeholder="Giới tính"
-                    className="border p-2 rounded col-span-2"
-                  />
-                  <input
-                    type="text"
-                    value={editingUser.address || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        address: e.target.value,
-                      })
-                    }
-                    placeholder="Địa chỉ"
-                    className="border p-2 rounded col-span-2"
-                  />
-                  <input
-                    type="text"
-                    value={editingUser.phoneNumber || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        phoneNumber: e.target.value,
-                      })
-                    }
-                    placeholder="Số điện thoại"
-                    className="border p-2 rounded col-span-2"
-                  />
-                  <div className="col-span-2 flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditingUser(null)}
-                      className="px-4 py-2 bg-gray-300 rounded"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded"
-                    >
-                      Lưu
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Price</label>
+              <input
+                name="productPrice"
+                value={new Intl.NumberFormat("vi-VN").format(
+                  formData.productPrice || 0
+                )}
+                onChange={handleInputChange}
+                placeholder="Enter price"
+                required
+                className="border px-4 py-2 rounded-md"
+              />
+            </div>
 
-            {addingUser && (
-              <div className="bg-white p-6 mt-4 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold mb-4">
-                  Thêm người dùng mới
-                </h2>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAddUser(newUser);
-                    setNewUser({
-                      firstName: "",
-                      lastName: "",
-                      gender: "",
-                      email: "",
-                      password: "",
-                      address: "",
-                      phoneNumber: "",
-                    });
-                    setAddingUser(false);
-                  }}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <input
-                    type="email"
-                    value={newUser.email}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, email: e.target.value })
-                    }
-                    placeholder="Email"
-                    className="border p-2 rounded col-span-2"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={newUser.password}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, password: e.target.value })
-                    }
-                    placeholder="Password"
-                    className="border p-2 rounded col-span-2"
-                    required
-                  />
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Quantity</label>
+              <input
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleInputChange}
+                placeholder="Enter quantity"
+                className="border px-4 py-2 rounded-md"
+                required
+              />
+            </div>
 
-                  <div className="col-span-2 flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setAddingUser(false)}
-                      className="px-4 py-2 bg-gray-300 rounded text-red-500"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-green text-black rounded"
-                    >
-                      Lưu
-                    </button>
-                  </div>
-                </form>
-              </div>
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Image URL</label>
+              <input
+                name="image"
+                value={formData.image}
+                onChange={handleInputChange}
+                placeholder="Enter image URL"
+                className="border px-4 py-2 rounded-md"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Category</label>
+              <select
+                name="categoryType"
+                value={formData.categoryType}
+                onChange={handleInputChange}
+                className="border px-4 py-2 rounded-md"
+                required
+              >
+                <option value="">-- Select Category --</option>
+                <option value="chair">Chair</option>
+                <option value="lamp">Lamp</option>
+                <option value="decor">Decor</option>
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Size</label>
+              <select
+                name="size"
+                value={formData.size}
+                onChange={handleInputChange}
+                className="border px-4 py-2 rounded-md"
+                required
+              >
+                <option value="">-- Select size --</option>
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">Descriptions</label>
+              <textarea
+                name="descriptions"
+                value={formData.descriptions}
+                onChange={handleInputChange}
+                placeholder="Enter product descriptions"
+                rows={4}
+                className="border px-4 py-2 rounded-md resize-none"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="text-center">
+            <button
+              type="submit"
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                productId
+                  ? "bg-green text-white hover:bg-green-500"
+                  : "bg-black text-white hover:bg-gray-700"
+              }`}
+            >
+              {productId ? "Update Product" : "Add Product"}
+            </button>
+            {productId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="ml-3 bg-red-400 text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-400 transition-all duration-200"
+              >
+                Cancel
+              </button>
             )}
           </div>
-        )}
+        </form>
       </div>
     </div>
   );

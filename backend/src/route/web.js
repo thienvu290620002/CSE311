@@ -18,8 +18,8 @@ let initWebRoutes = (app) => {
   router.post("/api/login", userController.handleLogin);
   router.get("/api/get-all-user", userController.getAllUser);
   router.post("/api/create-new-user", userController.createNewUser);
-  router.get("/api/delete-user", userController.deleteUserCRUD);
-  router.post("/api/update-user", userController.updateUserCRUD);
+  router.get("/api/delete-user", userController.deleteUserByID);
+  router.post("/api/update-user", userController.updateUserData);
   //Bill User History
   // router.get("/api/crud-bill", userController.getCRUDBill);
   router.get("/api/get-bill-by-user-id", userController.getBillByUserID); //history Cart

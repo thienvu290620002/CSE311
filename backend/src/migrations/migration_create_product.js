@@ -41,7 +41,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       quantity: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
       },
       categoryType: {
         type: Sequelize.STRING,

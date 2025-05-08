@@ -15,7 +15,7 @@ let getAllProduct = async (req, res) => {
 };
 let createNewProduct = async (req, res) => {
   try {
-    let data = await ProductService.createNewUser(req.body);
+    let data = await ProductService.createNewProduct(req.body);
     //console.log(data);
     return res.status(200).json(data);
   } catch (error) {
@@ -30,7 +30,7 @@ let deleteProductByID = async (req, res) => {
   try {
     // console.log(req.body.userId, "ssss");
 
-    let data = await ProductService.deleteProductByID(req.body.productId);
+    let data = await ProductService.deleteProductByID(req.query.productId);
     //console.log(data);
     return res.status(200).json(data);
   } catch (error) {
@@ -57,6 +57,7 @@ let updateProduct = async (req, res) => {
 let getProductById = async (req, res) => {
   try {
     const productId = req.query.id;
+
     // console.log(productId);
 
     let infor = await ProductService.getProductById(productId);

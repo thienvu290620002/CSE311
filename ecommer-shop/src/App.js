@@ -25,6 +25,8 @@ import { WishlistProvider } from "./User/context/WishlistContext";
 import CheckoutPage from "./User/components/pages/CheckoutPage";
 import OrdersPage from "./User/components/pages/OrdersPage";
 import AdminProductPage from "./Admin/components/AdminProductPage";
+import AdminUserPage from "./Admin/components/AdminUserPage";
+import AdminDashBoard from "./Admin/components/AdminDashBoard";
 import PrivateRoute from "./User/components/PrivateRoute"; // Thêm dòng này
 import ResultPage from "./User/components/pages/ResultPage";
 import { ToastContainer } from "react-toastify";
@@ -63,7 +65,7 @@ function App() {
                 path="/admin"
                 element={
                   <>
-                    <AdminProductPage />
+                    <AdminDashBoard />
                   </>
                 }
               />
@@ -172,21 +174,20 @@ function App() {
 
               <Route path="/result" element={<ResultPage />} />
             </Routes>
-
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
             <GoTop />
           </div>
         </Router>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
       </WishlistProvider>
     </div>
   );

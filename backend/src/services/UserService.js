@@ -6,40 +6,98 @@ import user from "../models/user";
 
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
+// let createNewUser = async (data) => {
+//   try {
+//     let hashPasswordFromBcrypt = await hashUserPassword(data.password);
+//     await db.User.create({
+//       email: data.email,
+//       password: hashPasswordFromBcrypt,
+//       firstName: data.firstName,
+//       lastName: data.lastName,
+//       address: data.address,
+//       phoneNumber: data.phoneNumber,
+//       gender: data.gender,
+//       image: data.image,
+//       roleId: data.roleId,
+//     });
+
+//     return { message: "Ok, create a new user successful" };
+//   } catch (e) {
+//     throw e; // Ném lỗi để controller xử lý
+//   }
+// };
 let createNewUser = async (data) => {
-  // console.log(data);
+  try {
+    // Kiểm tra email đã tồn tại
+    const existingUser = await db.User.findOne({
+      where: { email: data.email },
+    });
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      let hashPasswordFromBcryt = await hashUserPassword(data.password);
-      await db.User.create({
-        email: data.email,
-        password: hashPasswordFromBcryt,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        address: data.address,
-        phoneNumber: data.phoneNumber,
-        gender: data.gender === "1" ? true : false,
-        image: data.image,
-        roleId: data.roleId,
-      });
-
-      resolve("Ok create a new user successfull");
-    } catch (e) {
-      reject(e);
+    if (existingUser) {
+      return { error: true, message: "Email already exists" };
     }
-  });
+
+    let hashPasswordFromBcrypt = await hashUserPassword(data.password);
+    await db.User.create({
+      email: data.email,
+      password: hashPasswordFromBcrypt,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      address: data.address,
+      phoneNumber: data.phoneNumber,
+      gender: data.gender,
+      image: data.image,
+      roleId: data.roleId,
+    });
+
+    return { error: false, message: "Create new user successful" };
+  } catch (e) {
+    throw e;
+  }
 };
 
-let hashUserPassword = (password) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      var hashPassword = await bcrypt.hashSync(password, salt);
-      resolve(hashPassword);
-    } catch (e) {
-      reject(e);
-    }
-  });
+// let createNewUser = async (data) => {
+//   // console.log(data);
+
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       let hashPasswordFromBcryt = await hashUserPassword(data.password);
+//       await db.User.create({
+//         email: data.email,
+//         password: hashPasswordFromBcryt,
+//         firstName: data.firstName,
+//         lastName: data.lastName,
+//         address: data.address,
+//         phoneNumber: data.phoneNumber,
+//         gender: data.gender,
+//         image: data.image,
+//         roleId: data.roleId,
+//       });
+
+//       resolve("Ok create a new user successfull");
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
+
+// let hashUserPassword = (password) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       var hashPassword = await bcrypt.hashSync(password, salt);
+//       resolve(hashPassword);
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
+let hashUserPassword = async (password) => {
+  try {
+    const hashPassword = await bcrypt.hash(password, salt); // Sử dụng async hàm bcrypt.hash
+    return hashPassword;
+  } catch (e) {
+    throw e; // Ném lỗi nếu có
+  }
 };
 
 let getAllUser = () => {
@@ -81,6 +139,8 @@ let updateUserData = (data) => {
         user.firstName = data.firstName;
         user.lastName = data.lastName;
         user.address = data.address;
+        user.phoneNumber = data.phoneNumber;
+        user.gender = data.gender;
         await user.save();
 
         let allUser = await db.User.findAll();

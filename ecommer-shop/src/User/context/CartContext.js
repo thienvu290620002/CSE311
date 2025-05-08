@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from "react";
 import { toast } from "react-toastify"; // Ensure proper import
 import "react-toastify/dist/ReactToastify.css"; // Ensure styles are imported
@@ -23,7 +22,7 @@ export const CartProvider = ({ children }) => {
       if (existingItem) {
         toast.success("Quantity updated in cart successfully!", {
           position: "top-right",
-          autoClose: 3000,
+          autoClose: 1000,
           toastId, // Pass the unique ID
         });
         return prevItems.map((item) =>
@@ -34,7 +33,7 @@ export const CartProvider = ({ children }) => {
       } else {
         toast.success("Added to cart successfully!", {
           position: "top-right",
-          autoClose: 3000,
+          autoClose: 1000,
           toastId, // Pass the unique ID
         });
         return [...prevItems, { ...product, quantity: 1 }];
