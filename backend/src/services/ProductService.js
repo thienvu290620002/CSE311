@@ -2,13 +2,13 @@ import bcrypt from "bcrypt";
 import db from "../models/index";
 import { raw } from "body-parser";
 import { where } from "sequelize";
-import user from "../models/user";
 
-let createNewProduct = async (data) => {
+let createNewProduct = (data) => {
   // console.log(data);
 
   return new Promise(async (resolve, reject) => {
     try {
+      //const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
       await db.Product.create({
         // id: data.id,
         productId: data.productId,
@@ -23,7 +23,7 @@ let createNewProduct = async (data) => {
         categoryType: data.categoryType,
       });
 
-      resolve("Ok create a new user successfull");
+      resolve("Ok create a new product successfull");
     } catch (e) {
       reject(e);
     }
@@ -123,7 +123,7 @@ let deleteProductByID = (productId) => {
     }
   });
 };
-let getProductById = (productId) => {
+let getProductByProductId = (productId) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (!productId) {
@@ -226,5 +226,5 @@ module.exports = {
   deleteProductByID: deleteProductByID,
   getProductByBillItem: getProductByBillItem,
   getBillItemByBill: getBillItemByBill,
-  getProductById: getProductById,
+  getProductByProductId: getProductByProductId,
 };

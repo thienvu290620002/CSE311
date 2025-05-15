@@ -74,8 +74,18 @@ const Profile = () => {
     );
   };
 
-  if (!user) {
-    return <p className="text-center mt-10">Bạn chưa đăng nhập</p>;
+if (!user) {
+    return (
+      <div className="text-center mt-10">
+        <p className="mb-4">Bạn chưa đăng nhập</p>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          onClick={() => navigate("/login")}
+        >
+          Đăng nhập ngay
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -322,14 +332,14 @@ const Profile = () => {
                 >
                   <div className="flex items-center gap-4">
                     <img
-                      src={item.image}
+                      src={`http://localhost:8080${item.image}`}
                       alt={item.productName}
                       className="w-16 h-16 object-cover rounded"
                     />
                     <div className="text-left">
                       <p className="font-semibold">{item.productName}</p>
                       <p className="text-sm text-gray-600">
-                        ${item.productPrice}
+                        {item.productPrice.toLocaleString("vi-VN")}₫
                       </p>
                     </div>
                   </div>

@@ -64,7 +64,7 @@ const WishList = () => {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 flex items-center">
                     <img
-                      src={item.image}
+                      src={`http://localhost:8080${item.image}`}
                       alt={item.productName}
                       className="w-16 h-16 object-cover rounded-md mr-4"
                     />

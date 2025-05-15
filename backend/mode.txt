@@ -22,17 +22,7 @@ trang web hiện tại đang chạy,
  Cross-Origin Resource Sharing (CORS).
 
 
-      {/* <ReactPaginate
-            breakLabel="..."
-            nextLabel="Next >"
-            onPageChange={handlePageClick}
-            pageRangeDisplayed={3}
-            marginPagesDisplayed={2}
-            pageCount={pageCount}
-            previousLabel="< Prev"
-            containerClassName="flex justify-center mt-6 space-x-2"
-            pageClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
-            activeClassName="bg-blue-600 text-white"
-            previousClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
-            nextClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
-          /> */}
+Frontend (nén ảnh) 
+  → Backend (nhận ảnh, lưu vào /uploads) 
+  → Database (lưu path) 
+  → Client (hiển thị qua URL /uploads/filename.jpg)

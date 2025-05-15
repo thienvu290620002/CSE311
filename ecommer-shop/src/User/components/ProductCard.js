@@ -20,8 +20,8 @@ const ProductCard = ({ product }) => {
           {/* Thay thế next/image bằng thẻ <img> */}
           <img
             className="object-cover w-full h-full"
-            src={product.image}
-            alt={product.name}
+            src={`http://localhost:8080${img}`}
+            alt={product.productName}
           />
         </div>
         <h3 className="text-lg mt-2 font-semibold">{product.name}</h3>

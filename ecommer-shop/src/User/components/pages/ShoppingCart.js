@@ -126,7 +126,7 @@ const ShoppingCart = () => {
                           <div className="w-20 h-20 overflow-hidden flex-shrink-0">
                             <img
                               className="object-cover w-full h-full"
-                              src={item.image}
+                              src={`http://localhost:8080${item.image}`}
                               alt={item.productName}
                             />
                           </div>
@@ -134,11 +134,11 @@ const ShoppingCart = () => {
                             <p className="text-xs uppercase">
                               {item.productName}
                             </p>
-                            <span className="text-xs">
+                            {/* <span className="text-xs">
                               {typeof item.productPrice === "number"
                                 ? item.productPrice.toLocaleString("vi-VN")
                                 : Number(item.productPrice).toFixed(3)}
-                            </span>
+                            </span> */}
                             {/* <span className="text-xs">{formatPrice(item.productPrice)} ₫</span> */}
                           </div>
                         </div>
@@ -174,6 +174,7 @@ const ShoppingCart = () => {
                           {(item.productPrice * item.quantity).toLocaleString(
                             "vi-VN"
                           )}
+                          ₫
                         </div>
 
                         {/* Remove from Cart Button */}
@@ -197,7 +198,7 @@ const ShoppingCart = () => {
                 <div className="col-span-2">
                   <div className="p-7 bg-[#f7f4ef] rounded-lg">
                     <h3 className="uppercase font-medium text-sm">
-                      FREE SHIPPING ON ORDERS ₫100.00
+                      FREE SHIPPING ON ORDERS ₫100.000
                     </h3>
                     <p className="text-sm mt-2">
                       Congratulations, you've got free shipping!
@@ -216,7 +217,7 @@ const ShoppingCart = () => {
                       placeholder="Coupon code"
                     />
                     <p className="mt-6 font-semibold">
-                      Total: {total.toFixed(3)}
+                      Total: {total.toFixed(3)}₫
                     </p>
 
                     {/* <Link

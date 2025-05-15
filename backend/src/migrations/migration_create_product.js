@@ -18,6 +18,8 @@ module.exports = {
       },
       productId: {
         type: Sequelize.STRING,
+        allowNull: false,
+        primaryKey: true,
       },
       productName: {
         type: Sequelize.STRING,
@@ -34,12 +36,7 @@ module.exports = {
       image: {
         type: Sequelize.STRING,
       },
-      image2: {
-        type: Sequelize.STRING,
-      },
-      image3: {
-        type: Sequelize.STRING,
-      },
+
       quantity: {
         type: Sequelize.INTEGER,
       },

@@ -15,9 +15,49 @@ let getAllProduct = async (req, res) => {
 };
 let createNewProduct = async (req, res) => {
   try {
+    // console.log("Request body:", req.body); // Log body
+    // console.log("File uploaded:", req.file); // Log file upload
+
+    // if (!req.file) {
+    //   return res.status(400).json({ error: "No file uploaded" });
+    // }
+    if (
+      !req.body.productName ||
+      !req.body.productPrice ||
+      !req.body.descriptions ||
+      !req.body.size ||
+      !req.body.quantity ||
+      !req.body.categoryType ||
+      !req.body.image
+    ) {
+      return res.status(400).json({ error: "Thiếu thông tin sản phẩm" });
+    }
+
+    // const productData = {
+    //   ...req.body,
+    //   image: `${req.protocol}://${req.get("host")}/uploads/${
+    //     req.file.filename
+    //   }`,
+    // };
+
     let data = await ProductService.createNewProduct(req.body);
-    //console.log(data);
+    console.log(data);
+
     return res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      errCode: -1,
+      errMessage: "Lỗi server khi tạo sản phẩm",
+    });
+  }
+};
+let updateProduct = async (req, res) => {
+  try {
+    let data = req.body;
+    //console.log(data);
+    let allUser = await ProductService.updateProduct(data);
+    return res.status(200).json(allUser);
   } catch (error) {
     return res.status(200).json({
       errCode: -1,
@@ -25,6 +65,33 @@ let createNewProduct = async (req, res) => {
     });
   }
 };
+// let createNewProduct = async (req, res) => {
+//   try {
+//     // Xử lý đường dẫn ảnh
+//     const processImage = (field) => {
+//       if (req.files[field]) {
+//         return `/uploads/${req.files[field][0].filename}`;
+//       }
+//       return null;
+//     };
+
+//     const productData = {
+//       ...req.body,
+//       image: processImage("image"),
+//       image2: processImage("image2"),
+//       image3: processImage("image3"),
+//     };
+
+//     let data = await ProductService.createNewProduct(productData);
+//     return res.status(200).json(data);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       errCode: -1,
+//       errMessage: "Lỗi server khi tạo sản phẩm",
+//     });
+//   }
+// };
 
 let deleteProductByID = async (req, res) => {
   try {
@@ -41,26 +108,14 @@ let deleteProductByID = async (req, res) => {
   }
 };
 
-let updateProduct = async (req, res) => {
+let getProductByProductId = async (req, res) => {
   try {
-    let data = req.body;
-    //console.log(data);
-    let allUser = await ProductService.updateProduct(data);
-    return res.status(200).json(allUser);
-  } catch (error) {
-    return res.status(200).json({
-      errCode: -1,
-      errMessage: " Error from Server",
-    });
-  }
-};
-let getProductById = async (req, res) => {
-  try {
-    const productId = req.query.id;
+    const productId = req.query.productId;
+    console.log(productId);
 
     // console.log(productId);
 
-    let infor = await ProductService.getProductById(productId);
+    let infor = await ProductService.getProductByProductId(productId);
     return res.status(200).json(infor);
   } catch (e) {
     console.log(e);
@@ -106,5 +161,5 @@ module.exports = {
   deleteProductByID: deleteProductByID,
   getProductByBillItem: getProductByBillItem,
   getBillItemByBill: getBillItemByBill,
-  getProductById: getProductById,
+  getProductByProductId: getProductByProductId,
 };

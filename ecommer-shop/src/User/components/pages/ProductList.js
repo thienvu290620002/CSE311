@@ -13,7 +13,7 @@ const ProductList = () => {
           "http://localhost:8080/api/get-all-product"
         );
         const data = await response.json();
-        console.log(data);
+        //console.log(data);
 
         setProducts(data);
       } catch (error) {
@@ -211,10 +211,10 @@ const ProductList = () => {
                         className="mt-6 md:mt-0 text-center group relative"
                       >
                         <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                          <Link to={`/productdetail/${product.id}`}>
+                          <Link to={`/productdetail/${product.productId}`}>
                             <img
                               className="block size-full object-cover"
-                              src={product.image}
+                              src={`http://localhost:8080${product.image}`}
                               alt={product.productName}
                             />
                           </Link>
@@ -290,15 +290,13 @@ const ProductList = () => {
                                       <sup className="text-[10px] align-middle">
                                         ₫
                                       </sup>
-                                      {product.originalPrice / 1000}.000
+                                      {product.originalPrice / 1000}
                                     </span>
                                     -{" "}
                                   </>
                                 )}
-                                <sup className="text-[10px] align-middle">
-                                  ₫
-                                </sup>
-                                {product.productPrice / 1000}.000
+                                <sup className="text-[10px] align-middle"></sup>
+                                {product.productPrice.toLocaleString("vi-VN")}₫
                               </span>
                             </div>
                             <button

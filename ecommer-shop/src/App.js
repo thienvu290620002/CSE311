@@ -8,26 +8,24 @@ import "./App.css";
 import Header from "./User/components/Header";
 import Footer from "./User/components/Footer";
 import Banner from "./User/components/Banner";
-import Service from "./User/components/Service";
+import Service from "./User/components/services/Service";
 import Category from "./User/components/Category";
 import ProductDetail from "./User/components/pages/ProductDetail";
 import ShoppingCart from "./User/components/pages/ShoppingCart";
 import ProductList from "./User/components/pages/ProductList";
 import Blog from "./User/components/Blog";
-import GoTop from "./User/components/goTop";
-import Login from "./User/components/Login";
-import Register from "./User/components/Register";
+import GoTop from "./User/components/services/goTop";
+import Login from "./User/components/services/Login";
+import Register from "./User/components/services/Register";
 import Profile from "./User/components/pages/Profile";
-import ScrollToTop from "./User/components/ScrollToTop";
+import ScrollToTop from "./User/components/services/ScrollToTop";
 import AboutUS from "./User/components/AboutUs";
 import WishList from "./User/components/pages/WishList";
 import { WishlistProvider } from "./User/context/WishlistContext";
 import CheckoutPage from "./User/components/pages/CheckoutPage";
 import OrdersPage from "./User/components/pages/OrdersPage";
-import AdminProductPage from "./Admin/components/AdminProductPage";
-import AdminUserPage from "./Admin/components/AdminUserPage";
 import AdminDashBoard from "./Admin/components/AdminDashBoard";
-import PrivateRoute from "./User/components/PrivateRoute"; // Thêm dòng này
+import PrivateRoute from "./User/components/services/PrivateRoute"; // Thêm dòng này
 import ResultPage from "./User/components/pages/ResultPage";
 import { ToastContainer } from "react-toastify";
 
@@ -84,7 +82,7 @@ function App() {
 
               {/* Chi tiết sản phẩm */}
               <Route
-                path="/ProductDetail/:id"
+                path="/ProductDetail/:productId"
                 element={
                   <>
                     <Header />

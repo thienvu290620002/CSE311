@@ -5,7 +5,7 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
 const ProductDetail = () => {
-  const { id } = useParams(); // Get id from URL
+  // const { productId } = useParams(); // Get id from URL
   const { addToCart } = useCart(); // Add to cart function from context
   const { addToWishlist } = useWishlist(); // Add to wishlist function
   const [activeTab, setActiveTab] = useState("description");
@@ -14,27 +14,43 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null); // Single product
   const [selectedImage, setSelectedImage] = useState(null); // Selected image state
 
+  const [quantity, setQuantity] = useState(1);
+
+  const handleDecrease = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  const handleIncrease = () => {
+    setQuantity(quantity + 1);
+  };
+
+  const getImageSrc = (img) => {
+    return img?.startsWith("http") ? img : `http://localhost:8080${img}`;
+  };
+  const { productId } = useParams(); // Get id from URL
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8080/api/get-product-by-id?id=${id}`
+          `http://localhost:8080/api/get-product-by-productId?productId=${productId}`
         );
 
         if (!response.ok) {
           throw new Error("Sản phẩm không tồn tại");
         }
         const result = await response.json();
-
+        console.log("Fetched product:", result.data.image);
         setProduct(result.data);
-        setSelectedImage(result.data.image);
+        //  setSelectedImage(result.data.image);
       } catch (error) {
         console.error("Lỗi khi lấy sản phẩm:", error.message);
       }
     };
 
     fetchProduct();
-  }, [id]);
+  }, [productId]);
 
   useEffect(() => {
     const fetchAllProducts = async () => {
@@ -46,7 +62,8 @@ const ProductDetail = () => {
           throw new Error("Không thể lấy danh sách sản phẩm");
         }
         const result = await response.json();
-        console.log("Tất cả sản phẩm:", result);
+        // console.log("Tất cả sản phẩm:", result);
+
         setProducts(result); // Đảm bảo API trả về { data: [...] }
       } catch (error) {
         console.error("Lỗi khi lấy tất cả sản phẩm:", error.message);
@@ -108,8 +125,10 @@ const ProductDetail = () => {
           <div className="lg:grid grid-cols-5 gap-7 mt-4">
             <div className="col-span-3 flex gap-3">
               <ul className="flex flex-col gap-4">
-                {[product.image, product.image1, product.image2]
+                {[product.image]
+
                   .filter((img) => img && img.trim() !== "")
+
                   .map((img, index) => (
                     <li
                       key={index}
@@ -122,14 +141,14 @@ const ProductDetail = () => {
                     >
                       <img
                         className="image"
-                        src={img}
-                        alt={`Thumbnail ${index + 1}`}
+                        src={`http://localhost:8080${img}`}
+                        alt={product.productName}
                       />
                     </li>
                   ))}
               </ul>
 
-              <div className="overflow-hidden">
+              {/* <div className="overflow-hidden">
                 <div
                   className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
                   onMouseEnter={() => setShowZoom(true)}
@@ -137,9 +156,10 @@ const ProductDetail = () => {
                   onMouseLeave={() => setShowZoom(false)}
                 >
                   <img
-                    src={selectedImage}
+                    src={`http://localhost:8080${product.image}`}
+                    alt={product.productName}
                     className="w-full h-full object-cover"
-                    alt="Main product"
+                    // alt="Main product"
                   />
                   {showZoom && (
                     <div
@@ -151,6 +171,32 @@ const ProductDetail = () => {
                         backgroundSize: "150%", // Zoom level
                       }}
                     ></div>
+                  )}
+                </div>
+              </div> */}
+              <div className="overflow-hidden">
+                <div
+                  className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
+                  onMouseEnter={() => setShowZoom(true)}
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={() => setShowZoom(false)}
+                >
+                  <img
+                    src={getImageSrc(product.image)}
+                    alt={product.productName}
+                    className="w-full h-full object-cover"
+                  />
+                  {showZoom && (
+                    <div
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
+                      style={{
+                        backgroundImage: `url(${getImageSrc(selectedImage || product.image)})`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                        backgroundSize: "300%",
+                        border: "3px solid black", // For debug
+                      }}
+                    />
                   )}
                 </div>
               </div>
@@ -216,23 +262,25 @@ const ProductDetail = () => {
                   odio, ac pellentesque lacus. Pellentesque dapibus nunc nec est
                   imperdiet, a malesuada sem rutrum
                 </p>
-
                 <div className="mt-6 flex items-center gap-3">
                   <div className="flex items-center w-max relative">
                     <button
                       type="button"
                       className="text-lg block text-[0px] absolute left-4"
+                      onClick={handleDecrease}
                     >
                       <span className="text-2xl leading-[24px]">-</span>
                     </button>
                     <input
                       type="text"
                       className="w-[120px] h-[50px] border px-10 border-gray rounded-full text-center"
-                      value="1"
+                      value={quantity}
+                      readOnly
                     />
                     <button
                       type="button"
                       className="text-lg block text-[0px] absolute right-4"
+                      onClick={handleIncrease}
                     >
                       <span className="text-2xl leading-[24px]">+</span>
                     </button>
@@ -246,7 +294,7 @@ const ProductDetail = () => {
                     Add To Cart
                   </button>
 
-                  <button type="button" className="p-4 bg-white rounded-full">
+                  {/* <button type="button" className="p-4 bg-white rounded-full">
                     <button
                       className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
                       onClick={(e) => {
@@ -260,6 +308,19 @@ const ProductDetail = () => {
                         alt=""
                       />
                     </button>
+                  </button> */}
+                  <button
+                    className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToWishlist(product);
+                    }}
+                  >
+                    <img
+                      src="../images/ico_heart.png"
+                      className="image size-4 rounded-full"
+                      alt=""
+                    />
                   </button>
                 </div>
 
@@ -533,7 +594,7 @@ const ProductDetail = () => {
                 {Array.isArray(products) &&
                   products.slice(0, 4).map((product) => (
                     <li
-                      key={product.id}
+                      key={product.productId}
                       className="mt-6 md:mt-0 text-center group relative"
                       onClick={(e) => e.stopPropagation()} // Ngừng sự kiện click ở đây
                     >
@@ -547,10 +608,10 @@ const ProductDetail = () => {
 
                         {/* Product Image */}
                         <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                          <Link to={`/productdetail/${product.id}`}>
+                          <Link to={`/productdetail/${product.productId}`}>
                             <img
                               className="block size-full object-cover"
-                              src={product.image}
+                              src={`http://localhost:8080${product.image}`}
                               alt={product.productName}
                             />
                           </Link>

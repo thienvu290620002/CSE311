@@ -113,10 +113,10 @@ const Category = () => {
 
                   {/* Product Image */}
                   <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                    <Link to={`/productdetail/${product.id}`}>
+                    <Link to={`/productdetail/${product.productId}`}>
                       <img
                         className="block size-full object-cover"
-                        src={product.image}
+                        src={`http://localhost:8080${product.image}`}
                         alt={product.productName}
                       />
                     </Link>
@@ -151,7 +151,7 @@ const Category = () => {
                       </button>
                     </li>
                     <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
-                      <Link to={`/productdetail/${product.id}`}>
+                      <Link to={`/productdetail/${product.productId}`}>
                         <button
                           type="button"
                           className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"

@@ -2,15 +2,36 @@ import express from "express";
 import homeController from "../controllers/homeController";
 import productController from "../controllers/productController";
 import userController from "../controllers/userController";
+import billController from "../controllers/billController";
 import categoryController from "../controllers/categoryController";
 import crypto from "crypto";
 import request from "request";
 // const request = require("request");
+const { singleUpload } = require("../middleware/upload");
+
 const dayjs = require("dayjs");
 
 let router = express.Router();
 
 let initWebRoutes = (app) => {
+  router.post(
+    "/api/upload",
+    singleUpload, // Sử dụng middleware đã export
+    (req, res) => {
+      try {
+        // console.log(req.body.productName);
+        if (!req.file) {
+          return res.status(400).json({ error: "No file uploaded" });
+        }
+        const imageUrl = `/uploads/${req.file.filename}`;
+        res.status(200).json({ url: imageUrl });
+      } catch (error) {
+        console.error("Upload error:", error);
+        res.status(500).json({ error: "Upload failed" });
+      }
+    }
+  );
+
   //router.get("/api/getAlluser", homeController.displayGetCRUD);
   router.get("/crud", homeController.getCRUD);
   router.post("/post-crud", homeController.postCRUD);
@@ -22,14 +43,22 @@ let initWebRoutes = (app) => {
   router.post("/api/update-user", userController.updateUserData);
   //Bill User History
   // router.get("/api/crud-bill", userController.getCRUDBill);
-  router.get("/api/get-bill-by-user-id", userController.getBillByUserID); //history Cart
-  router.post("/api/create-bill", userController.createBill);
-  router.post("/api/update-bill", userController.updateBill);
-  router.get("/api/delete-bill", userController.deleteBill);
+  router.get("/api/get-all-bill", billController.getAllBill);
+  router.get("/api/get-bill-by-user-id", billController.getBillByUserID); //history Cart
+  router.post("/api/create-bill", billController.createBill);
+  router.post("/api/update-bill", billController.updateBill);
+  router.get("/api/delete-bill", billController.deleteBill);
   //Product
   router.get("/api/get-all-product", productController.getAllProduct);
-  router.get("/api/get-product-by-id", productController.getProductById);
-  router.post("/api/create-new-product", productController.createNewProduct);
+  router.get(
+    "/api/get-product-by-productId",
+    productController.getProductByProductId
+  );
+  router.post(
+    "/api/create-new-product",
+    singleUpload,
+    productController.createNewProduct
+  );
   router.get("/api/delete-product-by-id", productController.deleteProductByID);
   router.post("/api/update-product", productController.updateProduct);
   //Category
@@ -93,44 +122,6 @@ let initWebRoutes = (app) => {
       }
     );
   });
-  // router.post("/api/zalopay-callback", (req, res) => {
-  //   let result = {};
-  //   const key2 = "eG4r0GcoNtRGbO8"; // Mã khóa của bạn
-
-  //   try {
-  //     let dataStr = req.body.data;
-  //     let reqMac = req.body.mac;
-
-  //     // Generate HMAC SHA256
-  //     let mac = crypto.createHmac("sha256", key2).update(dataStr).digest("hex");
-  //     console.log("mac =", mac);
-
-  //     if (reqMac !== mac) {
-  //       // Invalid callback
-  //       result.return_code = -1;
-  //       result.return_message = "mac not equal";
-  //     } else {
-  //       // Valid callback, process the data
-  //       let dataJson = JSON.parse(dataStr);
-  //       console.log(
-  //         "Update order's status = success where app_trans_id =",
-  //         dataJson["app_trans_id"]
-  //       );
-
-  //       // TODO: Update your database here using `app_trans_id` if needed
-
-  //       // Chuyển hướng về trang chủ nếu đơn hủy hoặc đã hoàn thành
-  //       result.return_code = 1;
-  //       result.return_message = "success";
-  //       result.redirect_url = "http://localhost:3000/home"; // URL chuyển hướng về trang chủ
-  //     }
-  //   } catch (ex) {
-  //     result.return_code = 0; // ZaloPay sẽ thử lại tối đa 3 lần
-  //     result.return_message = ex.message;
-  //   }
-
-  //   res.json(result);
-  // });
 
   return app.use("/", router);
 };

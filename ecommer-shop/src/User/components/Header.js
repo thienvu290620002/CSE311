@@ -93,7 +93,7 @@ const Header = () => {
                   >
                     <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
                       <img
-                        src={item.image}
+                        src={`http://localhost:8080${item.image}`}
                         alt={item.productName}
                         className="w-full h-full object-cover"
                       />

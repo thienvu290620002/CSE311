@@ -2,41 +2,48 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 import ReactPaginate from "react-paginate";
+import { v4 as uuidv4 } from "uuid";
+
 const AdminProductPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [productId, setProductId] = useState(null);
+  const [, setSelectedImages] = useState({
+    image: null,
+  });
   const [formData, setFormData] = useState({
     productName: "",
     productPrice: "",
     quantity: "",
-    image: "",
     categoryType: "",
     descriptions: "",
+    size: "",
+    image: "",
   });
-  const [categoryFilter, setCategoryFilter] = useState(""); // state for category filter
-
-  //Seperate page
-  const itemsPerPage = 5;
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 5;
   const pageCount = Math.ceil(filteredProducts.length / itemsPerPage);
   const currentItems = filteredProducts.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
 
+  const formRef = useRef(null);
+  const [tempImages, setTempImages] = useState({
+    image: null,
+  });
+
   const handlePageClick = ({ selected }) => {
     setCurrentPage(selected);
   };
-
-  const formRef = useRef(null);
 
   const fetchProducts = () => {
     fetch("http://localhost:8080/api/get-all-product")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
-        setFilteredProducts(data); // Set the filteredProducts to all products initially
+        setFilteredProducts(data);
       })
       .catch((error) => console.error("Error fetching products:", error));
   };
@@ -55,6 +62,9 @@ const AdminProductPage = () => {
       descriptions: product.descriptions,
       size: product.size,
     });
+    setTempImages({
+      image: product.image ? { preview: product.image } : null,
+    });
     setProductId(product.id);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -70,19 +80,23 @@ const AdminProductPage = () => {
       descriptions: "",
       size: "",
     });
+    setSelectedImages({ image: null });
+    if (formRef.current) {
+      formRef.current.value = null;
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "productPrice") {
-      const rawValue = value.replace(/\D/g, ""); // Xoá tất cả ký tự không phải số
-      const formatted = new Intl.NumberFormat("vi-VN").format(rawValue);
+      const rawValue = value.replace(/\D/g, "");
+      // const formatted = new Intl.NumberFormat("vi-VN").format(rawValue);
 
       setFormData((prev) => ({
         ...prev,
-        [name]: rawValue, // Lưu giá trị raw (dạng số) để gửi backend
-        formattedPrice: formatted, // Thêm field hiển thị nếu cần
+        [name]: rawValue,
+        // productPrice: formatted,
       }));
     } else {
       setFormData((prev) => ({
@@ -92,22 +106,77 @@ const AdminProductPage = () => {
     }
   };
 
+  const handleImageChange = async (e, field) => {
+    const file = e.target.files[0];
+    setSelectedImages((prev) => ({
+      ...prev,
+      [field]: file,
+    }));
+
+    if (!file) return;
+
+    const previewURL = URL.createObjectURL(file);
+    setTempImages((prev) => ({
+      ...prev,
+      [field]: {
+        file,
+        preview: previewURL,
+      },
+    }));
+  };
+
+  const uploadImageToServer = async (file) => {
+    try {
+      const imageFormData = new FormData();
+      imageFormData.append("image", file);
+      imageFormData.append("productName", formData.productName);
+      const response = await axios.post(
+        "http://localhost:8080/api/upload",
+        imageFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          validateStatus: (status) => status < 500,
+        }
+      );
+
+      if (response.status >= 400) {
+        throw new Error(response.data.error || "Upload failed");
+      }
+
+      return response.data.url;
+    } catch (error) {
+      console.error("Upload error:", error);
+      swal("Error", error.message, "error");
+      return null;
+    }
+  };
+  const generateCustomProductId = () => {
+    const shortUuid = uuidv4().split("-")[0]; // Lấy phần đầu để ngắn gọn
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+    return `PROD-${date}-${shortUuid}`;
+  };
   const handleAddProduct = async (e) => {
     e.preventDefault();
 
-    const newProduct = {
-      ...formData,
-      productId: Date.now(),
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      await axios.post(
-        "http://localhost:8080/api/create-new-product",
-        newProduct
-      );
+      const updatedData = { ...formData };
+      updatedData.productId = generateCustomProductId();
+      for (const field of ["image"]) {
+        if (tempImages[field]?.file) {
+          const url = await uploadImageToServer(tempImages[field].file);
+          updatedData[field] = url;
+        }
+      }
 
-      setProducts((prev) => [...prev, newProduct]);
+      await axios.post("http://localhost:8080/api/create-new-product", {
+        ...updatedData,
+      });
+
+      // setTempImages({ image: null });
+      // setSelectedImages({ image: null });
+      fetchProducts();
       setFormData({
         productName: "",
         productPrice: "",
@@ -117,44 +186,51 @@ const AdminProductPage = () => {
         descriptions: "",
         size: "",
       });
-
-      fetchProducts();
-
-      // ✅ Success notification
-      swal("Success!", "Product has been added successfully.", "success");
+      handleCancelEdit();
+      if (formRef.current) {
+        formRef.current.value = null;
+      }
+      swal("Success!", "Product Created!", "success");
     } catch (error) {
-      console.error("Error adding product:", error);
-      // ❌ Error notification
-      swal("Error", "Failed to add product. Please try again.", "error");
+      swal("Error", "Created failed", "error");
     }
   };
-
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
-    if (productId) {
-      try {
-        await axios.post("http://localhost:8080/api/update-product", {
-          ...formData,
-          id: productId,
-        });
-        fetchProducts();
-        setProductId(null);
-        setFormData({
-          productName: "",
-          productPrice: "",
-          quantity: "",
-          image: "",
-          categoryType: "",
-          descriptions: "",
-          size: "",
-        });
-        // ✅ Success notification
-        swal("Success!", "Product has been updatedd successfully.", "success");
-      } catch (error) {
-        console.error("Error update product:", error);
-        // ❌ Error notification
-        swal("Error", "Failed to update product. Please try again.", "error");
+
+    try {
+      const updatedData = { ...formData };
+
+      for (const field of ["image"]) {
+        if (tempImages[field]?.file) {
+          const url = await uploadImageToServer(tempImages[field].file);
+          updatedData[field] = url;
+        }
       }
+
+      await axios.post("http://localhost:8080/api/update-product", {
+        ...updatedData,
+        id: productId,
+      });
+
+      // setSelectedImages({ image: null });
+      if (formRef.current) {
+        formRef.current.value = null;
+      }
+      fetchProducts();
+      setFormData({
+        productName: "",
+        productPrice: "",
+        quantity: "",
+        image: "",
+        categoryType: "",
+        descriptions: "",
+        size: "",
+      });
+      handleCancelEdit();
+      swal("Success!", "Product updated!", "success");
+    } catch (error) {
+      swal("Error", "Update failed", "error");
     }
   };
 
@@ -187,12 +263,11 @@ const AdminProductPage = () => {
     });
   };
 
-  // Filter products based on selected category
   const handleCategoryFilterChange = (e) => {
     const selectedCategory = e.target.value;
     setCategoryFilter(selectedCategory);
     if (selectedCategory === "") {
-      setFilteredProducts(products); // If no category selected, show all products
+      setFilteredProducts(products);
     } else {
       setFilteredProducts(
         products.filter((product) => product.categoryType === selectedCategory)
@@ -206,8 +281,6 @@ const AdminProductPage = () => {
         <h1 className="text-4xl font-semibold text-center text-gray-800 mb-8">
           Product Management
         </h1>
-
-        {/* Category filter */}
 
         <div className="mb-6 flex justify-start">
           <p className="mt-2 mr-3"> Filter</p>
@@ -257,9 +330,9 @@ const AdminProductPage = () => {
                   key={product.productId || product.id}
                   className="hover:bg-gray-50 transition duration-200"
                 >
-                  <td className="border border-gray-300 px-6 py-4 text-center">
+                  <td className="border px-6 py-4 text-center">
                     <img
-                      src={product.image}
+                      src={`http://localhost:8080${product.image}`}
                       alt={product.productName}
                       className="w-16 h-16 object-cover rounded-md mx-auto"
                     />
@@ -331,7 +404,6 @@ const AdminProductPage = () => {
                 className="border px-4 py-2 rounded-md"
               />
             </div>
-
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Price</label>
               <input
@@ -345,7 +417,6 @@ const AdminProductPage = () => {
                 className="border px-4 py-2 rounded-md"
               />
             </div>
-
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Quantity</label>
               <input
@@ -357,19 +428,16 @@ const AdminProductPage = () => {
                 required
               />
             </div>
-
             <div className="flex flex-col">
-              <label className="mb-1 font-medium text-left">Image URL</label>
+              <label className="mb-1 font-medium text-left">Main Image</label>
               <input
-                name="image"
-                value={formData.image}
-                onChange={handleInputChange}
-                placeholder="Enter image URL"
+                type="file"
+                ref={formRef}
+                onChange={(e) => handleImageChange(e, "image")} // Gọi hàm khi chọn file
                 className="border px-4 py-2 rounded-md"
-                required
+                accept="image/*"
               />
             </div>
-
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Category</label>
               <select
