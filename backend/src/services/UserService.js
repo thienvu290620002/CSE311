@@ -6,26 +6,6 @@ import user from "../models/user";
 
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
-// let createNewUser = async (data) => {
-//   try {
-//     let hashPasswordFromBcrypt = await hashUserPassword(data.password);
-//     await db.User.create({
-//       email: data.email,
-//       password: hashPasswordFromBcrypt,
-//       firstName: data.firstName,
-//       lastName: data.lastName,
-//       address: data.address,
-//       phoneNumber: data.phoneNumber,
-//       gender: data.gender,
-//       image: data.image,
-//       roleId: data.roleId,
-//     });
-
-//     return { message: "Ok, create a new user successful" };
-//   } catch (e) {
-//     throw e; // Ném lỗi để controller xử lý
-//   }
-// };
 let createNewUser = async (data) => {
   try {
     // Kiểm tra email đã tồn tại
@@ -55,42 +35,6 @@ let createNewUser = async (data) => {
     throw e;
   }
 };
-
-// let createNewUser = async (data) => {
-//   // console.log(data);
-
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       let hashPasswordFromBcryt = await hashUserPassword(data.password);
-//       await db.User.create({
-//         email: data.email,
-//         password: hashPasswordFromBcryt,
-//         firstName: data.firstName,
-//         lastName: data.lastName,
-//         address: data.address,
-//         phoneNumber: data.phoneNumber,
-//         gender: data.gender,
-//         image: data.image,
-//         roleId: data.roleId,
-//       });
-
-//       resolve("Ok create a new user successfull");
-//     } catch (e) {
-//       reject(e);
-//     }
-//   });
-// };
-
-// let hashUserPassword = (password) => {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       var hashPassword = await bcrypt.hashSync(password, salt);
-//       resolve(hashPassword);
-//     } catch (e) {
-//       reject(e);
-//     }
-//   });
-// };
 let hashUserPassword = async (password) => {
   try {
     const hashPassword = await bcrypt.hash(password, salt); // Sử dụng async hàm bcrypt.hash
@@ -389,7 +333,7 @@ let handleLogin = (email, password) => {
       if (isExist) {
         //User Allready exist
         let user = await db.User.findOne({
-          attributes: ["email", "roleId", "password"],
+          attributes: ["id", "email", "roleId", "password"],
           where: { email: email },
           raw: true,
           // attributes: {

@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { FaBox, FaUsers, FaSignOutAlt } from "react-icons/fa";
-import { useOrders } from "../../User/context/OrderContext";
 import { UserContext } from "../../User/context/UserContext";
 import { useNavigate } from "react-router-dom";
 import AdminUserPage from "./AdminUserPage";

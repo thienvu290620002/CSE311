@@ -35,6 +35,7 @@ let createBill = async (req, res) => {
     //console.log(data);
     return res.status(200).json(data);
   } catch (error) {
+    console.error("Error in createBill:", error);
     return res.status(200).json({
       errCode: -1,
       errMessage: " Error from Server",

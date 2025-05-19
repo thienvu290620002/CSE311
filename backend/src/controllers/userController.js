@@ -135,49 +135,7 @@ let getBillByUserID = async (req, res) => {
     });
   }
 };
-let createBill = async (req, res) => {
-  try {
-    let data = await UserService.createBill(req.body);
-    //console.log(data);
-    return res.status(200).json(data);
-  } catch (error) {
-    return res.status(200).json({
-      errCode: -1,
-      errMessage: " Error from Server",
-    });
-  }
-};
-let getCRUDBill = (req, res) => {
-  return res.render("bill.ejs");
-};
 
-let updateBill = async (req, res) => {
-  try {
-    let data = req.body;
-    //console.log(data);
-    let allUser = await UserService.updateBill(data);
-    return res.status(200).json(allUser);
-  } catch (error) {
-    return res.status(200).json({
-      errCode: -1,
-      errMessage: " Error from Server",
-    });
-  }
-};
-
-let deleteBill = async (req, res) => {
-  try {
-    // console.log(req.body.userId, "ssss");
-    let data = await UserService.deleteBill(req.body.userId);
-    //console.log(data);
-    return res.status(200).json(data);
-  } catch (error) {
-    return res.status(200).json({
-      errCode: -1,
-      errMessage: " Error from Server",
-    });
-  }
-};
 let createWishlist = async (req, res) => {
   try {
     let data = await UserService.createWishlist(req.body);
@@ -224,10 +182,6 @@ module.exports = {
   getBillByUserID: getBillByUserID,
   getWishListByUserID: getWishListByUserID,
   handleLogin: handleLogin,
-  createBill: createBill,
-  getCRUDBill: getCRUDBill,
-  updateBill: updateBill,
-  deleteBill: deleteBill,
   createWishlist: createWishlist,
   deleteWishlist: deleteWishlist,
 };

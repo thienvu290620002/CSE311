@@ -8,9 +8,6 @@ const AdminProductPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [productId, setProductId] = useState(null);
-  const [, setSelectedImages] = useState({
-    image: null,
-  });
   const [formData, setFormData] = useState({
     productName: "",
     productPrice: "",
@@ -19,6 +16,9 @@ const AdminProductPage = () => {
     descriptions: "",
     size: "",
     image: "",
+  });
+  const [tempImages, setTempImages] = useState({
+    image: null,
   });
   const [categoryFilter, setCategoryFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -30,9 +30,6 @@ const AdminProductPage = () => {
   );
 
   const formRef = useRef(null);
-  const [tempImages, setTempImages] = useState({
-    image: null,
-  });
 
   const handlePageClick = ({ selected }) => {
     setCurrentPage(selected);
@@ -63,7 +60,11 @@ const AdminProductPage = () => {
       size: product.size,
     });
     setTempImages({
-      image: product.image ? { preview: product.image } : null,
+      image: product.image
+        ? {
+            preview: `http://localhost:8080${product.image}`,
+          }
+        : null,
     });
     setProductId(product.id);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,10 +81,7 @@ const AdminProductPage = () => {
       descriptions: "",
       size: "",
     });
-    setSelectedImages({ image: null });
-    if (formRef.current) {
-      formRef.current.value = null;
-    }
+    setTempImages({ image: null });
   };
 
   const handleInputChange = (e) => {
@@ -91,12 +89,9 @@ const AdminProductPage = () => {
 
     if (name === "productPrice") {
       const rawValue = value.replace(/\D/g, "");
-      // const formatted = new Intl.NumberFormat("vi-VN").format(rawValue);
-
       setFormData((prev) => ({
         ...prev,
         [name]: rawValue,
-        // productPrice: formatted,
       }));
     } else {
       setFormData((prev) => ({
@@ -106,13 +101,8 @@ const AdminProductPage = () => {
     }
   };
 
-  const handleImageChange = async (e, field) => {
+  const handleImageChange = (e, field) => {
     const file = e.target.files[0];
-    setSelectedImages((prev) => ({
-      ...prev,
-      [field]: file,
-    }));
-
     if (!file) return;
 
     const previewURL = URL.createObjectURL(file);
@@ -130,6 +120,7 @@ const AdminProductPage = () => {
       const imageFormData = new FormData();
       imageFormData.append("image", file);
       imageFormData.append("productName", formData.productName);
+
       const response = await axios.post(
         "http://localhost:8080/api/upload",
         imageFormData,
@@ -152,60 +143,45 @@ const AdminProductPage = () => {
       return null;
     }
   };
+
   const generateCustomProductId = () => {
-    const shortUuid = uuidv4().split("-")[0]; // Lấy phần đầu để ngắn gọn
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+    const shortUuid = uuidv4().split("-")[0];
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     return `PROD-${date}-${shortUuid}`;
   };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
-
     try {
       const updatedData = { ...formData };
       updatedData.productId = generateCustomProductId();
-      for (const field of ["image"]) {
-        if (tempImages[field]?.file) {
-          const url = await uploadImageToServer(tempImages[field].file);
-          updatedData[field] = url;
-        }
+
+      if (tempImages.image?.file) {
+        const url = await uploadImageToServer(tempImages.image.file);
+        updatedData.image = url;
       }
 
-      await axios.post("http://localhost:8080/api/create-new-product", {
-        ...updatedData,
-      });
+      await axios.post(
+        "http://localhost:8080/api/create-new-product",
+        updatedData
+      );
 
-      // setTempImages({ image: null });
-      // setSelectedImages({ image: null });
       fetchProducts();
-      setFormData({
-        productName: "",
-        productPrice: "",
-        quantity: "",
-        image: "",
-        categoryType: "",
-        descriptions: "",
-        size: "",
-      });
       handleCancelEdit();
-      if (formRef.current) {
-        formRef.current.value = null;
-      }
       swal("Success!", "Product Created!", "success");
     } catch (error) {
-      swal("Error", "Created failed", "error");
+      swal("Error", "Creation failed", "error");
     }
   };
+
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
-
     try {
       const updatedData = { ...formData };
 
-      for (const field of ["image"]) {
-        if (tempImages[field]?.file) {
-          const url = await uploadImageToServer(tempImages[field].file);
-          updatedData[field] = url;
-        }
+      if (tempImages.image?.file) {
+        const url = await uploadImageToServer(tempImages.image.file);
+        updatedData.image = url;
       }
 
       await axios.post("http://localhost:8080/api/update-product", {
@@ -213,20 +189,7 @@ const AdminProductPage = () => {
         id: productId,
       });
 
-      // setSelectedImages({ image: null });
-      if (formRef.current) {
-        formRef.current.value = null;
-      }
       fetchProducts();
-      setFormData({
-        productName: "",
-        productPrice: "",
-        quantity: "",
-        image: "",
-        categoryType: "",
-        descriptions: "",
-        size: "",
-      });
       handleCancelEdit();
       swal("Success!", "Product updated!", "success");
     } catch (error) {
@@ -266,13 +229,11 @@ const AdminProductPage = () => {
   const handleCategoryFilterChange = (e) => {
     const selectedCategory = e.target.value;
     setCategoryFilter(selectedCategory);
-    if (selectedCategory === "") {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(
-        products.filter((product) => product.categoryType === selectedCategory)
-      );
-    }
+    setFilteredProducts(
+      selectedCategory
+        ? products.filter((p) => p.categoryType === selectedCategory)
+        : products
+    );
   };
 
   return (
@@ -284,7 +245,6 @@ const AdminProductPage = () => {
 
         <div className="mb-6 flex justify-start">
           <p className="mt-2 mr-3"> Filter</p>
-
           <select
             onChange={handleCategoryFilterChange}
             value={categoryFilter}
@@ -297,38 +257,24 @@ const AdminProductPage = () => {
           </select>
         </div>
 
-        <div className="overflow-x-auto bg-white shadow-md rounded-lg border  mx-auto max-w-6xl">
-          <table className="min-w-full table-fixed border border-gray-300 border-collapse rounded-lg overflow-hidden">
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg border mx-auto max-w-6xl">
+          <table className="min-w-full table-fixed border border-gray-300">
             <thead>
               <tr className="bg-gray-200 text-gray-600">
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Image
-                </th>
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Name
-                </th>
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Price
-                </th>
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Quantity
-                </th>
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Category
-                </th>
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Size
-                </th>
-                <th className="border border-gray-300 px-6 py-3 text-center">
-                  Actions
-                </th>
+                <th className="border px-6 py-3 text-center">Image</th>
+                <th className="border px-6 py-3 text-center">Name</th>
+                <th className="border px-6 py-3 text-center">Price</th>
+                <th className="border px-6 py-3 text-center">Quantity</th>
+                <th className="border px-6 py-3 text-center">Category</th>
+                <th className="border px-6 py-3 text-center">Size</th>
+                <th className="border px-6 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.map((product) => (
                 <tr
                   key={product.productId || product.id}
-                  className="hover:bg-gray-50 transition duration-200"
+                  className="hover:bg-gray-50"
                 >
                   <td className="border px-6 py-4 text-center">
                     <img
@@ -337,22 +283,20 @@ const AdminProductPage = () => {
                       className="w-16 h-16 object-cover rounded-md mx-auto"
                     />
                   </td>
-                  <td className="border border-gray-300 px-6 py-4">
-                    {product.productName}
+                  <td className="border px-6 py-4">{product.productName}</td>
+                  <td className="border px-6 py-4 text-center">
+                    {product.productPrice.toLocaleString("vi-VN")}₫
                   </td>
-                  <td className="border border-gray-300 px-6 py-4  text-center">
-                    {product.productPrice.toLocaleString("en-US")}₫
-                  </td>
-                  <td className="border border-gray-300 px-6 py-4 text-center">
+                  <td className="border px-6 py-4 text-center">
                     {product.quantity}
                   </td>
-                  <td className="border border-gray-300 px-6 py-4 text-center">
+                  <td className="border px-6 py-4 text-center">
                     {product.categoryType}
                   </td>
-                  <td className="border border-gray-300 px-6 py-4 text-center">
+                  <td className="border px-6 py-4 text-center">
                     {product.size}
                   </td>
-                  <td className="border border-gray-300 px-6 py-4 text-center">
+                  <td className="border px-6 py-4 text-center">
                     <div className="flex justify-center gap-2">
                       <button
                         onClick={() => handleEdit(product)}
@@ -373,6 +317,7 @@ const AdminProductPage = () => {
             </tbody>
           </table>
         </div>
+
         <ReactPaginate
           breakLabel="..."
           nextLabel="Next >"
@@ -387,6 +332,7 @@ const AdminProductPage = () => {
           previousClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
           nextClassName="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-blue-100"
         />
+
         <form
           onSubmit={productId ? handleUpdateProduct : handleAddProduct}
           className="space-y-6 mb-12"
@@ -399,11 +345,11 @@ const AdminProductPage = () => {
                 name="productName"
                 value={formData.productName}
                 onChange={handleInputChange}
-                placeholder="Enter product name"
                 required
                 className="border px-4 py-2 rounded-md"
               />
             </div>
+
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Price</label>
               <input
@@ -412,32 +358,39 @@ const AdminProductPage = () => {
                   formData.productPrice || 0
                 )}
                 onChange={handleInputChange}
-                placeholder="Enter price"
                 required
                 className="border px-4 py-2 rounded-md"
               />
             </div>
+
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Quantity</label>
               <input
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleInputChange}
-                placeholder="Enter quantity"
-                className="border px-4 py-2 rounded-md"
                 required
+                className="border px-4 py-2 rounded-md"
               />
             </div>
+
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Main Image</label>
               <input
                 type="file"
-                ref={formRef}
-                onChange={(e) => handleImageChange(e, "image")} // Gọi hàm khi chọn file
+                onChange={(e) => handleImageChange(e, "image")}
                 className="border px-4 py-2 rounded-md"
                 accept="image/*"
               />
+              {tempImages.image?.preview && (
+                <img
+                  src={tempImages.image.preview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover mt-2 rounded"
+                />
+              )}
             </div>
+
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Category</label>
               <select
@@ -453,6 +406,7 @@ const AdminProductPage = () => {
                 <option value="decor">Decor</option>
               </select>
             </div>
+
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-left">Size</label>
               <select
@@ -462,19 +416,19 @@ const AdminProductPage = () => {
                 className="border px-4 py-2 rounded-md"
                 required
               >
-                <option value="">-- Select size --</option>
+                <option value="">-- Select Size --</option>
                 <option value="S">S</option>
                 <option value="M">M</option>
                 <option value="L">L</option>
               </select>
             </div>
-            <div className="flex flex-col">
+
+            <div className="flex flex-col col-span-2">
               <label className="mb-1 font-medium text-left">Descriptions</label>
               <textarea
                 name="descriptions"
                 value={formData.descriptions}
                 onChange={handleInputChange}
-                placeholder="Enter product descriptions"
                 rows={4}
                 className="border px-4 py-2 rounded-md resize-none"
                 required
@@ -486,9 +440,7 @@ const AdminProductPage = () => {
             <button
               type="submit"
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                productId
-                  ? "bg-green text-white hover:bg-green-500"
-                  : "bg-black text-white hover:bg-gray-700"
+                productId ? "bg-green text-white" : "bg-black text-white"
               }`}
             >
               {productId ? "Update Product" : "Add Product"}
@@ -497,7 +449,7 @@ const AdminProductPage = () => {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="ml-3 bg-red-400 text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-400 transition-all duration-200"
+                className="ml-3 bg-red-400 text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-300"
               >
                 Cancel
               </button>

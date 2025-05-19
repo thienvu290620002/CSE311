@@ -2,7 +2,8 @@ import bcrypt from "bcrypt";
 import db from "../models/index";
 import { raw } from "body-parser";
 import { where } from "sequelize";
-
+const fs = require("fs");
+const path = require("path");
 let createNewProduct = (data) => {
   // console.log(data);
 
@@ -59,30 +60,82 @@ let getProductByCategory = (categoryId) => {
     }
   });
 };
+// let updateProduct = (data) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       let products = await db.Product.findOne({
+//         where: { id: data.id },
+//       });
+//       if (products) {
+//         products.productId = data.productId;
+//         products.productName = data.productName;
+//         products.productPrice = data.productPrice;
+//         products.descriptions = data.descriptions;
+//         products.size = data.size;
+//         products.image = data.image;
+//         products.quantity = data.quantity;
+//         products.categoryType = data.categoryType;
+
+//         await products.save();
+
+//         let allProduct = await db.Product.findAll();
+//         resolve(allProduct);
+//       } else {
+//         resolve({
+//           errCode: 1,
+//           errMessage: " Cannot find product",
+//         });
+//       }
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
 let updateProduct = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let products = await db.Product.findOne({
+      let product = await db.Product.findOne({
         where: { id: data.id },
       });
-      if (products) {
-        products.productId = data.productId;
-        products.productName = data.productName;
-        products.productPrice = data.productPrice;
-        products.descriptions = data.descriptions;
-        products.size = data.size;
-        products.image = data.image;
-        products.quantity = data.quantity;
-        products.categoryType = data.categoryType;
 
-        await products.save();
+      if (product) {
+        // Nếu có quantityToReduce, giảm quantity hiện tại
+        if (
+          data.quantityToReduce &&
+          typeof data.quantityToReduce === "number"
+        ) {
+          if (product.quantity >= data.quantityToReduce) {
+            product.quantity = product.quantity - data.quantityToReduce;
+          } else {
+            // Nếu số lượng tồn kho không đủ, trả về lỗi
+            return reject({
+              errCode: 2,
+              errMessage: "Insufficient product quantity in stock",
+            });
+          }
+        } else {
+          // Nếu không có quantityToReduce, cập nhật các trường còn lại như bình thường
+          product.productId = data.productId || product.productId;
+          product.productName = data.productName || product.productName;
+          product.productPrice = data.productPrice || product.productPrice;
+          product.descriptions = data.descriptions || product.descriptions;
+          product.size = data.size || product.size;
+          product.image = data.image || product.image;
+          product.quantity =
+            typeof data.quantity === "number"
+              ? data.quantity
+              : product.quantity;
+          product.categoryType = data.categoryType || product.categoryType;
+        }
+
+        await product.save();
 
         let allProduct = await db.Product.findAll();
         resolve(allProduct);
       } else {
         resolve({
           errCode: 1,
-          errMessage: " Cannot find product",
+          errMessage: "Cannot find product",
         });
       }
     } catch (e) {
@@ -90,6 +143,7 @@ let updateProduct = (data) => {
     }
   });
 };
+
 let deleteProductByID = (productId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -106,18 +160,44 @@ let deleteProductByID = (productId) => {
         where: { id: productId },
       });
 
+      //     if (!product) {
+      //       resolve({
+      //         errCode: 2,
+      //         errMessage: "Product not found",
+      //       });
+      //     } else {
+      //       await product.destroy();
+      //       resolve({
+      //         errCode: 0,
+      //         errMessage: "Product deleted successfully",
+      //       });
+      //     }
+      //   } catch (e) {
+      //     reject(e);
+      //   }
+      // });
       if (!product) {
-        resolve({
+        return resolve({
           errCode: 2,
           errMessage: "Product not found",
         });
-      } else {
-        await product.destroy();
-        resolve({
-          errCode: 0,
-          errMessage: "Product deleted successfully",
-        });
       }
+
+      // ✅ Xóa ảnh vật lý nếu có
+      if (product.image) {
+        const imagePath = path.join(__dirname, "..", "public", product.image);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      }
+
+      // ✅ Xóa sản phẩm trong database
+      await product.destroy();
+
+      return resolve({
+        errCode: 0,
+        errMessage: "Product deleted successfully",
+      });
     } catch (e) {
       reject(e);
     }

@@ -55,12 +55,10 @@ const AdminBillPage = () => {
 
                 <p className="mb-2">
                   <strong>Phương thức:</strong>{" "}
-                  {bill.paymentMethod === "cod"
-                    ? "Thanh toán khi nhận hàng"
-                    : "Chuyển khoản"}
+                  {bill.paymentMethod === "Cash" ? "Cash" : "ZaloPay"}
                 </p>
                 <ul className="list-none ml-6 my-2">
-                  {Array.isArray(bill.billItems) &&
+                  {/* {Array.isArray(bill.billItems) &&
                   bill.billItems.length > 0 ? (
                     bill.billItems.map((item, index) => (
                       <li key={index} className="my-2">
@@ -80,7 +78,25 @@ const AdminBillPage = () => {
                     ))
                   ) : (
                     <li className="text-red-500">Không có sản phẩm nào.</li>
-                  )}
+                  )} */}
+                  {bill.billItems.map((item, index) => (
+                    <li key={index} className="my-2">
+                      <span>
+                        {item.quantity} x{" "}
+                        {item.products?.productName ||
+                          "Sản phẩm không xác định"}
+                      </span>
+                      <span className="text-gray-600">
+                        (
+                        {item.products?.productPrice
+                          ? Number(item.products.productPrice).toLocaleString(
+                              "vi-VN"
+                            )
+                          : "Giá không xác định"}
+                        ₫)
+                      </span>
+                    </li>
+                  ))}
                 </ul>
                 <p className="mb-4">
                   <strong>Tổng cộng:</strong>

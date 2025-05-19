@@ -3,26 +3,7 @@ import React from "react";
 import { useCart } from "../../context/CartContext";
 import swal from "sweetalert";
 import { useNavigate } from "react-router-dom";
-// const ShoppingCart = () => {
-//   const { cartItems, setCartItems } = useCart();
 
-//   const increaseQuantity = (id) => {
-//     setCartItems((prev) =>
-//       prev.map((item) =>
-//         item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-//       )
-//     );
-//   };
-
-//   const decreaseQuantity = (id) => {
-//     setCartItems((prev) =>
-//       prev.map((item) =>
-//         item.id === id && item.quantity > 1
-//           ? { ...item, quantity: item.quantity - 1 }
-//           : item
-//       )
-//     );
-//   };
 const ShoppingCart = () => {
   const { cartItems, setCartItems } = useCart();
   const navigate = useNavigate(); // Thêm hook này để điều hướng
@@ -55,15 +36,6 @@ const ShoppingCart = () => {
     }
   };
 
-  // const removeFromCart = (id) => {
-  //   if (
-  //     window.confirm(
-  //       "Are you sure you want to remove this item from your cart?"
-  //     )
-  //   ) {
-  //     setCartItems((prev) => prev.filter((item) => item.id !== id));
-  //   }
-  // };
   const removeFromCart = (id) => {
     swal({
       title: "Are you sure?",

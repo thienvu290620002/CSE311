@@ -193,7 +193,7 @@ const ProductDetail = () => {
                         backgroundImage: `url(${getImageSrc(selectedImage || product.image)})`,
                         backgroundRepeat: "no-repeat",
                         backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                        backgroundSize: "300%",
+                        backgroundSize: "150%",
                         border: "3px solid black", // For debug
                       }}
                     />

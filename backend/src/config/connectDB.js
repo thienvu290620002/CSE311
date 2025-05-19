@@ -6,8 +6,6 @@ const sequelize = new Sequelize('database_development', 'root', '111111', {
   dialect: 'mysql',
   logging: false
 });
-
-
   let connectDB = async () =>{
     try {
         await sequelize.authenticate();

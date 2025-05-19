@@ -4,6 +4,7 @@ import productController from "../controllers/productController";
 import userController from "../controllers/userController";
 import billController from "../controllers/billController";
 import categoryController from "../controllers/categoryController";
+
 import crypto from "crypto";
 import request from "request";
 // const request = require("request");
@@ -41,8 +42,8 @@ let initWebRoutes = (app) => {
   router.post("/api/create-new-user", userController.createNewUser);
   router.get("/api/delete-user", userController.deleteUserByID);
   router.post("/api/update-user", userController.updateUserData);
+
   //Bill User History
-  // router.get("/api/crud-bill", userController.getCRUDBill);
   router.get("/api/get-all-bill", billController.getAllBill);
   router.get("/api/get-bill-by-user-id", billController.getBillByUserID); //history Cart
   router.post("/api/create-bill", billController.createBill);

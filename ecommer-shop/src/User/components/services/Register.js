@@ -8,7 +8,7 @@ const Register = () => {
     password: "",
     firstName: "",
     lastName: "",
-    role: "user", // Luôn là "user"
+    roleId: "user", // Luôn là "user"
   });
   const [error, setError] = useState("");
 
@@ -29,7 +29,7 @@ const Register = () => {
 
     const newUser = { ...formData, id: Date.now() };
     users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("userInfor", JSON.stringify(users));
 
     alert("Đăng ký thành công!");
     navigate("/");

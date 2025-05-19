@@ -111,7 +111,7 @@ let deleteProductByID = async (req, res) => {
 let getProductByProductId = async (req, res) => {
   try {
     const productId = req.query.productId;
-    console.log(productId);
+    //   console.log(productId);
 
     // console.log(productId);
 

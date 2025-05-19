@@ -19,12 +19,13 @@ module.exports = {
       userId: {
         type: Sequelize.STRING,
       },
+      paymentMethod: {
+        type: Sequelize.STRING,
+      },
       totalPrice: {
         type: Sequelize.DOUBLE,
       },
-      date: {
-        type: Sequelize.STRING,
-      },
+
       createdAt: {
         allowNull: true,
         type: Sequelize.DATE,

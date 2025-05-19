@@ -20,8 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       billId: DataTypes.STRING,
       userId: DataTypes.STRING,
+      paymentMethod: DataTypes.STRING,
       totalPrice: DataTypes.DOUBLE,
-      date: DataTypes.DATE,
     },
     {
       sequelize,

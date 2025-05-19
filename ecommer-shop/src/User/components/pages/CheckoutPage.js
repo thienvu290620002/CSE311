@@ -14,53 +14,81 @@ const CheckoutPage = () => {
     (acc, item) => acc + item.productPrice * item.quantity,
     0
   );
-  console.log(total);
 
-  const handlePlaceOrder = () => {
+  const displayPaymentMethod = paymentMethod === "cod" ? "Cash" : "ZaloPay";
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
+  //console.log(userId);
+
+  const handlePlaceOrder = async () => {
     const newOrder = {
       id: Date.now(),
       items: cartItems,
       total,
-      paymentMethod,
+      paymentMethod: displayPaymentMethod,
       createdAt: new Date().toISOString(),
     };
 
-    addOrder(newOrder);
-    // swal("Đặt hàng thành công! Bạn sẽ thanh toán khi nhận hàng.", "success");
-    swal({
-      title: "Thank for buying!",
-      text: "Order successful! You will pay upon receipt of goods.!",
-      icon: "success",
-      button: "OK",
-    });
-    setCartItems([]);
-    navigate("/home");
+    try {
+      const response = await fetch("http://localhost:8080/api/create-bill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          items: cartItems,
+          total,
+          paymentMethod: displayPaymentMethod,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Bill created:", data);
+      for (const product of cartItems) {
+        await fetch("http://localhost:8080/api/update-product", {
+          method: "POST", // hoặc PUT/PATCH tùy backend
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: product.id, // hoặc product.productId tùy bạn lưu
+            quantityToReduce: product.quantity, // số lượng bạn muốn trừ kho
+          }),
+        });
+      }
+      addOrder(newOrder);
+      swal({
+        title: "Thank you!",
+        text: "Order successful! You will pay upon receipt of goods.",
+        icon: "success",
+        button: "OK",
+      });
+      localStorage.removeItem("cartItems");
+      setCartItems([]);
+      navigate("/home");
+    } catch (error) {
+      console.error("Error creating bill:", error);
+      swal({
+        title: "Error!",
+        text: "There was a problem creating your bill. Please try again.",
+        icon: "error",
+        button: "OK",
+      });
+    }
   };
 
-  // const handleCheckOut = () => {
-  //   const order = {
-  //     items: cartItems,
-  //     description: "ZaloPay demo",
-  //     amount: total,
-  //   };
-  //   console.log(order.amount);
-
-  //   fetch("http://localhost:8080/api/zalopay-order", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(order),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       console.log("Success:", data);
-  //       window.location.href = data.order_url; // chuyển hướng qua trang thanh toán QR
-  //     })
-  //     .catch((error) => {
-  //       console.log("Error", error);
-  //     });
-  // };
+  const handleCancel = () => {
+    swal({
+      title: "Are you sure?",
+      text: "Your order will not be saved!",
+      icon: "warning",
+      buttons: ["No", "Yes, cancel"],
+      dangerMode: true,
+    }).then((willCancel) => {
+      if (willCancel) {
+        navigate("/shopping-cart");
+      }
+    });
+  };
   const handleCheckOut = () => {
     const order = {
       items: cartItems,
@@ -91,12 +119,25 @@ const CheckoutPage = () => {
       });
   };
 
-  const handleConfirmOrder = (e) => {
+  const handleConfirmOrder = async (e) => {
     e.preventDefault();
     if (paymentMethod === "cod") {
-      handlePlaceOrder();
+      await handlePlaceOrder();
     } else if (paymentMethod === "qr") {
-      handleCheckOut();
+      try {
+        // Tạo bill trước
+        await handlePlaceOrder();
+
+        // Sau đó tạo order ZaloPay và chuyển hướng
+        handleCheckOut();
+      } catch (error) {
+        swal({
+          title: "Error!",
+          text: "Failed to create bill before payment. Please try again.",
+          icon: "error",
+          button: "OK",
+        });
+      }
     }
   };
 
@@ -154,21 +195,6 @@ const CheckoutPage = () => {
           </label>
         </div>
       </div>
-
-      {/* QR code hiển thị nếu chọn qr */}
-      {/* {paymentMethod === "qr" && (
-        <div className="mb-6 text-center">
-          <p className="mb-2">Vui lòng quét mã bên dưới để thanh toán:</p>
-          <img
-            src="/images/qr_code.jpg"
-            alt="QR Code"
-            className="mx-auto max-w-[200px] border border-gray-300 rounded-lg"
-          />
-          <p className="mt-2 text-sm text-gray-600">
-            Nội dung chuyển khoản: [Tên khách hàng] - [Số điện thoại]
-          </p>
-        </div>
-      )} */}
       {paymentMethod === "qr" && (
         <div className="mb-6 text-center">
           <img
@@ -187,6 +213,12 @@ const CheckoutPage = () => {
         className="bg-black text-white w-full py-3 rounded-full hover:bg-white hover:text-black border hover:border-black transition-all font-semibold"
       >
         Order Confirmation
+      </button>
+      <button
+        onClick={handleCancel}
+        className="mt-4 w-full py-3 border border-red-500 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all font-semibold"
+      >
+        Cancel
       </button>
     </div>
   );
