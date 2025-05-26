@@ -5,10 +5,7 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
 const ProductDetail = () => {
-<<<<<<< HEAD
   // const { productId } = useParams(); // Get id from URL
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const { addToCart } = useCart(); // Add to cart function from context
   const { addToWishlist } = useWishlist(); // Add to wishlist function
   const [activeTab, setActiveTab] = useState("description");
@@ -37,11 +34,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const response = await fetch(
-<<<<<<< HEAD
           `http://localhost:8080/api/get-product-by-productId?productId=${productId}`
-=======
-          `http://localhost:8080/api/get-product-by-productId?productId=${productId}`,
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         );
 
         if (!response.ok) {
@@ -63,11 +56,7 @@ const ProductDetail = () => {
     const fetchAllProducts = async () => {
       try {
         const response = await fetch(
-<<<<<<< HEAD
           "http://localhost:8080/api/get-all-product"
-=======
-          "http://localhost:8080/api/get-all-product",
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         );
         if (!response.ok) {
           throw new Error("Không thể lấy danh sách sản phẩm");
@@ -83,14 +72,6 @@ const ProductDetail = () => {
 
     fetchAllProducts();
   }, []);
-<<<<<<< HEAD
-=======
-
-  // const handleAddToCart = (product) => {
-  //   const { quantity, ...productInfo } = product;
-  //   addToCart(productInfo);
-  // };
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
   const handleAddToCart = (product) => {
   const productWithQuantity = {
@@ -170,12 +151,8 @@ const ProductDetail = () => {
                     </li>
                   ))}
               </ul>
-<<<<<<< HEAD
 
               {/* <div className="overflow-hidden">
-=======
-              <div className="overflow-hidden">
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                 <div
                   className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
                   onMouseEnter={() => setShowZoom(true)}
@@ -183,16 +160,10 @@ const ProductDetail = () => {
                   onMouseLeave={() => setShowZoom(false)}
                 >
                   <img
-<<<<<<< HEAD
                     src={`http://localhost:8080${product.image}`}
                     alt={product.productName}
                     className="w-full h-full object-cover"
                     // alt="Main product"
-=======
-                    src={getImageSrc(product.image)}
-                    alt={product.productName}
-                    className="w-full h-full object-cover"
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                   />
                   {showZoom && (
                     <div
@@ -335,7 +306,6 @@ const ProductDetail = () => {
                       handleAddToWishlist(product);
                     }}
                   >
-<<<<<<< HEAD
                     Add To Cart
                   </button>
 
@@ -361,8 +331,6 @@ const ProductDetail = () => {
                       handleAddToWishlist(product);
                     }}
                   >
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                     <img
                       src="../images/ico_heart.png"
                       className="image size-4 rounded-full"
@@ -737,11 +705,7 @@ const ProductDetail = () => {
                                         ₫
                                       </sup>
                                       {product.originalPrice.toLocaleString(
-<<<<<<< HEAD
                                         "vi-VN"
-=======
-                                        "vi-VN",
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                                       )}
                                     </span>
                                     -{" "}

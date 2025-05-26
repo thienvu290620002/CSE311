@@ -25,11 +25,7 @@ const AdminUserPage = ({ goBack }) => {
   // const [users, setUsers] = useState([]);
   const currentItems = users.slice(
     currentPage * itemsPerPage,
-<<<<<<< HEAD
     (currentPage + 1) * itemsPerPage
-=======
-    (currentPage + 1) * itemsPerPage,
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   );
 
   const handlePageClick = ({ selected }) => setCurrentPage(selected);
@@ -39,11 +35,7 @@ const AdminUserPage = ({ goBack }) => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-<<<<<<< HEAD
         "http://localhost:8080/api/get-all-user"
-=======
-        "http://localhost:8080/api/get-all-user",
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       );
       const userList = Array.isArray(response.data)
         ? response.data
@@ -104,11 +96,7 @@ const AdminUserPage = ({ goBack }) => {
     try {
       const response = await axios.post(
         "http://localhost:8080/api/create-new-user",
-<<<<<<< HEAD
         formData
-=======
-        formData,
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       );
       const data = response.data;
 
@@ -125,11 +113,7 @@ const AdminUserPage = ({ goBack }) => {
       swal(
         "Error",
         error.response?.data?.errMessage || "Server error while adding user.",
-<<<<<<< HEAD
         "error"
-=======
-        "error",
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       );
     }
   };
@@ -158,11 +142,7 @@ const AdminUserPage = ({ goBack }) => {
         {
           ...formData,
           id: userId, // Đảm bảo rằng id người dùng được gửi lên
-<<<<<<< HEAD
         }
-=======
-        },
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       );
       console.log(response);
 

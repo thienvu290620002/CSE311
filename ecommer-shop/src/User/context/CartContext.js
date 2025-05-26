@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // import React, { createContext, useContext, useState } from "react";
 // import { toast } from "react-toastify"; // Ensure proper import
 // import "react-toastify/dist/ReactToastify.css"; // Ensure styles are imported
@@ -48,8 +47,6 @@
 //     </CartContext.Provider>
 //   );
 // };
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -68,14 +65,11 @@ export const CartProvider = ({ children }) => {
       return [];
     }
   });
-<<<<<<< HEAD
 
   // Lưu cartItems vào localStorage mỗi khi cartItems thay đổi
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
   // Lưu cartItems vào localStorage mỗi khi cartItems thay đổi
   useEffect(() => {
@@ -113,7 +107,6 @@ export const CartProvider = ({ children }) => {
   //   });
   // };
   const addToCart = (product) => {
-<<<<<<< HEAD
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
       const toastId = "cart-toast";
@@ -143,43 +136,6 @@ export const CartProvider = ({ children }) => {
       }
     });
   };
-=======
-  const quantityToAdd = parseInt(product.quantity, 10) || 1;
-
-  setCartItems((prevItems) => {
-    const existingItem = prevItems.find((item) => item.id === product.id);
-    const toastId = "cart-toast";
-
-    if (toast.isActive(toastId)) {
-      return prevItems;
-    }
-
-    if (existingItem) {
-      toast.success("Quantity updated in cart successfully!", {
-        position: "top-right",
-        autoClose: 1000,
-        toastId,
-      });
-
-      return prevItems.map((item) =>
-        item.id === product.id
-          ? { ...item, quantity: item.quantity + quantityToAdd }
-          : item
-      );
-    } else {
-      toast.success("Added to cart successfully!", {
-        position: "top-right",
-        autoClose: 1000,
-        toastId,
-      });
-
-      return [...prevItems, { ...product, quantity: quantityToAdd }];
-    }
-  });
-};
-
-
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
   return (
     <CartContext.Provider value={{ cartItems, setCartItems, addToCart }}>
