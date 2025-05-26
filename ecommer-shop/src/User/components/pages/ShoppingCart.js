@@ -75,95 +75,78 @@ const ShoppingCart = () => {
               <div className="grid grid-cols-6 mt-5 gap-8">
                 <div className="col-span-4">
                   <div className="border border-gray rounded-lg">
-                    <div className="grid grid-cols-4 gap-0">
-                      <div className="p-5 border border-gray flex items-center justify-center">
-                        Product
-                      </div>
-                      <div className="p-5 border border-gray flex items-center justify-center">
-                        Quantity
-                      </div>
-                      <div className="p-5 border border-gray flex items-center justify-center">
-                        Total
-                      </div>
-                      <div className="p-5 border border-gray flex items-center justify-center"></div>
-                    </div>
+                    <div className="grid grid-cols-5 gap-0">
+  <div className="p-5 border border-gray flex items-center justify-center">Product</div>
+  <div className="p-5 border border-gray flex items-center justify-center">Original Price</div>  {/* Cột mới */}
+  <div className="p-5 border border-gray flex items-center justify-center">Quantity</div>
+  <div className="p-5 border border-gray flex items-center justify-center">Total</div>
+  <div className="p-5 border border-gray flex items-center justify-center"></div>
+</div>
 
                     {cartItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="grid grid-cols-4 gap-0 border-b items-center"
-                      >
-                        {/* Product Image */}
-                        <div className="p-4 flex items-center gap-3">
-                          <div className="w-20 h-20 overflow-hidden flex-shrink-0">
-                            <img
-                              className="object-cover w-full h-full"
-                              src={`http://localhost:8080${item.image}`}
-                              alt={item.productName}
-                            />
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase">
-                              {item.productName}
-                            </p>
-                            {/* <span className="text-xs">
-                              {typeof item.productPrice === "number"
-                                ? item.productPrice.toLocaleString("vi-VN")
-                                : Number(item.productPrice).toFixed(3)}
-                            </span> */}
-                            {/* <span className="text-xs">{formatPrice(item.productPrice)} ₫</span> */}
-                          </div>
-                        </div>
+  <div
+    key={item.id}
+    className="grid grid-cols-5 gap-0 border-b items-center"
+  >
+    {/* Product Image */}
+    <div className="p-4 flex items-center gap-3">
+      <div className="w-20 h-20 overflow-hidden flex-shrink-0">
+        <img
+          className="object-cover w-full h-full"
+          src={`http://localhost:8080${item.image}`}
+          alt={item.productName}
+        />
+      </div>
+      <div>
+        <p className="text-xs uppercase">{item.productName}</p>
+      </div>
+    </div>
 
-                        {/* Quantity Control */}
-                        <div className="p-4 flex justify-center">
-                          <div className="flex items-center w-max relative">
-                            <button
-                              type="button"
-                              className="absolute left-2"
-                              onClick={() => decreaseQuantity(item.id)}
-                            >
-                              <span className="text-2xl leading-[24px]">-</span>
-                            </button>
-                            <input
-                              type="text"
-                              className="w-[70px] h-[40px] border px-4 border-black rounded-full text-center"
-                              value={item.quantity}
-                              readOnly
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-2"
-                              onClick={() => increaseQuantity(item.id)}
-                            >
-                              <span className="text-2xl leading-[24px]">+</span>
-                            </button>
-                          </div>
-                        </div>
+    {/* Original Price */}
+    <div className="p-4 flex justify-center">
+      {Number(item.productPrice).toLocaleString("vi-VN")}₫
+    </div>
 
-                        {/* Total Price */}
-                        <div className="p-4 flex justify-center">
-                          {(item.productPrice * item.quantity).toLocaleString(
-                            "vi-VN",
-                          )}
-                          ₫
-                        </div>
+    {/* Quantity Control */}
+    <div className="p-4 flex justify-center">
+      <div className="flex items-center w-max relative">
+        <button
+          type="button"
+          className="absolute left-2"
+          onClick={() => decreaseQuantity(item.id)}
+        >
+          <span className="text-2xl leading-[24px]">-</span>
+        </button>
+        <input
+          type="text"
+          className="w-[70px] h-[40px] border px-4 border-black rounded-full text-center"
+          value={item.quantity}
+          readOnly
+        />
+        <button
+          type="button"
+          className="absolute right-2"
+          onClick={() => increaseQuantity(item.id)}
+        >
+          <span className="text-2xl leading-[24px]">+</span>
+        </button>
+      </div>
+    </div>
 
-                        {/* Remove from Cart Button */}
-                        <div className="p-4 flex justify-center">
-                          <button
-                            type="button"
-                            onClick={() => removeFromCart(item.id)}
-                          >
-                            <img
-                              className="block size-5"
-                              src="images/ico_trash.png"
-                              alt="Delete"
-                            />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+    {/* Total Price */}
+    <div className="p-4 flex justify-center">
+      {(item.productPrice * item.quantity).toLocaleString("vi-VN")}₫
+    </div>
+
+    {/* Remove from Cart Button */}
+    <div className="p-4 flex justify-center">
+      <button type="button" onClick={() => removeFromCart(item.id)}>
+        <img className="block size-5" src="images/ico_trash.png" alt="Delete" />
+      </button>
+    </div>
+  </div>
+))}
+
                   </div>
                 </div>
 

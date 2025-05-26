@@ -23,7 +23,6 @@ import AboutUS from "./User/components/AboutUs";
 import WishList from "./User/components/pages/WishList";
 import { WishlistProvider } from "./User/context/WishlistContext";
 import CheckoutPage from "./User/components/pages/CheckoutPage";
-import OrdersPage from "./User/components/pages/OrdersPage";
 import AdminDashBoard from "./Admin/components/AdminDashBoard";
 import PrivateRoute from "./User/components/services/PrivateRoute"; // Thêm dòng này
 import ResultPage from "./User/components/pages/ResultPage";
@@ -158,14 +157,6 @@ function App() {
                 element={
                   <PrivateRoute>
                     <CheckoutPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <PrivateRoute>
-                    <OrdersPage />
                   </PrivateRoute>
                 }
               />
