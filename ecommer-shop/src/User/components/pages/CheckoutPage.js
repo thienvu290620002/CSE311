@@ -47,11 +47,11 @@ const CheckoutPage = () => {
       console.log("Bill created:", data);
       for (const product of cartItems) {
         await fetch("http://localhost:8080/api/update-product", {
-          method: "POST", // hoặc PUT/PATCH tùy backend
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: product.id, // hoặc product.productId tùy bạn lưu
-            quantityToReduce: product.quantity, // số lượng bạn muốn trừ kho
+            id: product.id,
+            quantityToReduce: product.quantity,
           }),
         });
       }

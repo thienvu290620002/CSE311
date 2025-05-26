@@ -22,10 +22,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Product.init(
     {
-      // id:DataTypes.INTEGER,
       productId: DataTypes.STRING,
       productName: DataTypes.STRING,
       productPrice: DataTypes.INTEGER,
+      productStatus: DataTypes.STRING,
       descriptions: DataTypes.TEXT,
       size: DataTypes.STRING,
       image: DataTypes.STRING,

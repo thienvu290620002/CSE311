@@ -4,12 +4,9 @@ import productController from "../controllers/productController";
 import userController from "../controllers/userController";
 import billController from "../controllers/billController";
 import categoryController from "../controllers/categoryController";
-
+const { singleUpload } = require("../middleware/upload");
 import crypto from "crypto";
 import request from "request";
-// const request = require("request");
-const { singleUpload } = require("../middleware/upload");
-
 const dayjs = require("dayjs");
 
 let router = express.Router();
@@ -20,7 +17,6 @@ let initWebRoutes = (app) => {
     singleUpload, // Sử dụng middleware đã export
     (req, res) => {
       try {
-        // console.log(req.body.productName);
         if (!req.file) {
           return res.status(400).json({ error: "No file uploaded" });
         }
@@ -32,8 +28,8 @@ let initWebRoutes = (app) => {
       }
     }
   );
-
-  //router.get("/api/getAlluser", homeController.displayGetCRUD);
+  //Learn Test
+  router.get("/api/getAlluser", homeController.displayGetCRUD);
   router.get("/crud", homeController.getCRUD);
   router.post("/post-crud", homeController.postCRUD);
   //User
@@ -48,7 +44,7 @@ let initWebRoutes = (app) => {
   router.get("/api/get-bill-by-user-id", billController.getBillByUserID); //history Cart
   router.post("/api/create-bill", billController.createBill);
   router.post("/api/update-bill", billController.updateBill);
-  router.get("/api/delete-bill", billController.deleteBill);
+  //  router.get("/api/delete-bill", billController.deleteBill);
   //Product
   router.get("/api/get-all-product", productController.getAllProduct);
   router.get(

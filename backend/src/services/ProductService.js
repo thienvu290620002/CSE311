@@ -15,6 +15,7 @@ let createNewProduct = (data) => {
         productId: data.productId,
         productName: data.productName,
         productPrice: data.productPrice,
+        productStatus: data.productStatus,
         // productPrice: parseInt(data.productPrice), // Nếu là số
         descriptions: data.descriptions,
         size: data.size,
@@ -91,6 +92,58 @@ let getProductByCategory = (categoryId) => {
 //     }
 //   });
 // };
+// let updateProduct = (data) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       let product = await db.Product.findOne({
+//         where: { id: data.id },
+//       });
+
+//       if (product) {
+//         // Nếu có quantityToReduce, giảm quantity hiện tại
+//         if (
+//           data.quantityToReduce &&
+//           typeof data.quantityToReduce === "number"
+//         ) {
+//           if (product.quantity >= data.quantityToReduce) {
+//             product.quantity = product.quantity - data.quantityToReduce;
+//           } else {
+//             // Nếu số lượng tồn kho không đủ, trả về lỗi
+//             return reject({
+//               errCode: 2,
+//               errMessage: "Insufficient product quantity in stock",
+//             });
+//           }
+//         } else {
+//           // Nếu không có quantityToReduce, cập nhật các trường còn lại như bình thường
+//           product.productId = data.productId || product.productId;
+//           product.productName = data.productName || product.productName;
+//           product.productPrice = data.productPrice || product.productPrice;
+//           product.descriptions = data.descriptions || product.descriptions;
+//           product.size = data.size || product.size;
+//           product.image = data.image || product.image;
+//           product.quantity =
+//             typeof data.quantity === "number"
+//               ? data.quantity
+//               : product.quantity;
+//           product.categoryType = data.categoryType || product.categoryType;
+//         }
+
+//         await product.save();
+
+//         let allProduct = await db.Product.findAll();
+//         resolve(allProduct);
+//       } else {
+//         resolve({
+//           errCode: 1,
+//           errMessage: "Cannot find product",
+//         });
+//       }
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
 let updateProduct = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -98,46 +151,46 @@ let updateProduct = (data) => {
         where: { id: data.id },
       });
 
-      if (product) {
-        // Nếu có quantityToReduce, giảm quantity hiện tại
-        if (
-          data.quantityToReduce &&
-          typeof data.quantityToReduce === "number"
-        ) {
-          if (product.quantity >= data.quantityToReduce) {
-            product.quantity = product.quantity - data.quantityToReduce;
-          } else {
-            // Nếu số lượng tồn kho không đủ, trả về lỗi
-            return reject({
-              errCode: 2,
-              errMessage: "Insufficient product quantity in stock",
-            });
-          }
-        } else {
-          // Nếu không có quantityToReduce, cập nhật các trường còn lại như bình thường
-          product.productId = data.productId || product.productId;
-          product.productName = data.productName || product.productName;
-          product.productPrice = data.productPrice || product.productPrice;
-          product.descriptions = data.descriptions || product.descriptions;
-          product.size = data.size || product.size;
-          product.image = data.image || product.image;
-          product.quantity =
-            typeof data.quantity === "number"
-              ? data.quantity
-              : product.quantity;
-          product.categoryType = data.categoryType || product.categoryType;
-        }
-
-        await product.save();
-
-        let allProduct = await db.Product.findAll();
-        resolve(allProduct);
-      } else {
-        resolve({
+      if (!product) {
+        return resolve({
           errCode: 1,
           errMessage: "Cannot find product",
         });
       }
+
+      // Nếu có quantityToReduce, giảm số lượng
+      if (
+        data.quantityToReduce !== undefined &&
+        !isNaN(Number(data.quantityToReduce))
+      ) {
+        if (product.quantity >= data.quantityToReduce) {
+          product.quantity -= Number(data.quantityToReduce);
+        } else {
+          return reject({
+            errCode: 2,
+            errMessage: "Insufficient product quantity in stock",
+          });
+        }
+      } else {
+        // Cập nhật các thông tin khác
+        product.productId = data.productId || product.productId;
+        product.productName = data.productName || product.productName;
+        product.productPrice = data.productPrice || product.productPrice;
+        product.productStatus = data.productStatus || product.productStatus;
+        product.descriptions = data.descriptions || product.descriptions;
+        product.size = data.size || product.size;
+        product.image = data.image || product.image;
+        product.categoryType = data.categoryType || product.categoryType;
+
+        if (data.quantity !== undefined && !isNaN(Number(data.quantity))) {
+          product.quantity = Number(data.quantity);
+        }
+      }
+
+      await product.save();
+
+      let allProduct = await db.Product.findAll();
+      resolve(allProduct);
     } catch (e) {
       reject(e);
     }
@@ -154,28 +207,11 @@ let deleteProductByID = (productId) => {
         });
         return;
       }
-      //  console.log(productId);
 
       let product = await db.Product.findOne({
         where: { id: productId },
       });
 
-      //     if (!product) {
-      //       resolve({
-      //         errCode: 2,
-      //         errMessage: "Product not found",
-      //       });
-      //     } else {
-      //       await product.destroy();
-      //       resolve({
-      //         errCode: 0,
-      //         errMessage: "Product deleted successfully",
-      //       });
-      //     }
-      //   } catch (e) {
-      //     reject(e);
-      //   }
-      // });
       if (!product) {
         return resolve({
           errCode: 2,
@@ -183,7 +219,6 @@ let deleteProductByID = (productId) => {
         });
       }
 
-      // ✅ Xóa ảnh vật lý nếu có
       if (product.image) {
         const imagePath = path.join(__dirname, "..", "public", product.image);
         if (fs.existsSync(imagePath)) {
@@ -191,7 +226,6 @@ let deleteProductByID = (productId) => {
         }
       }
 
-      // ✅ Xóa sản phẩm trong database
       await product.destroy();
 
       return resolve({
@@ -213,12 +247,9 @@ let getProductByProductId = (productId) => {
         });
       }
 
-      //    console.log("Looking for product with ID:", productId);
-
       let product = await db.Product.findOne({
         where: { productId: productId },
       });
-      //   console.log(product);
 
       if (product) {
         resolve({ errCode: 0, data: product });
@@ -233,7 +264,6 @@ let getProductByProductId = (productId) => {
 
 let getProductByBillItem = (productId) => {
   return new Promise(async (resolve, reject) => {
-    // console.log(productId);
     try {
       if (!productId) {
         resolve({
@@ -265,8 +295,6 @@ let getProductByBillItem = (productId) => {
 let getBillItemByBill = (billId) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // console.log(billId);
-
       if (!billId) {
         resolve({
           errCode: 1,
@@ -285,13 +313,11 @@ let getBillItemByBill = (billId) => {
           nest: true,
         });
 
-        // console.log(bill);
         resolve({
           errCode: 0,
           data: bill,
         });
       }
-      //console.log(bill);
     } catch (e) {
       reject(e);
     }

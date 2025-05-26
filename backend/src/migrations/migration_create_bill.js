@@ -19,6 +19,9 @@ module.exports = {
       userId: {
         type: Sequelize.STRING,
       },
+      billStatus: {
+        type: Sequelize.STRING,
+      },
       paymentMethod: {
         type: Sequelize.STRING,
       },

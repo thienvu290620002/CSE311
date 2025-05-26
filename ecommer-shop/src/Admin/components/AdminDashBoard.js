@@ -59,7 +59,7 @@ const AdminDashBoard = () => {
               onClick={handleLogout}
               className="flex items-center gap-2 cursor-pointer text-red-500 hover:text-red-600"
             >
-              <FaSignOutAlt /> Đăng xuất
+              <FaSignOutAlt /> Sign Out
             </div>
           </li>
         </ul>

@@ -11,6 +11,7 @@ const AdminProductPage = () => {
   const [formData, setFormData] = useState({
     productName: "",
     productPrice: "",
+    productStatus: "",
     quantity: "",
     categoryType: "",
     descriptions: "",
@@ -51,6 +52,7 @@ const AdminProductPage = () => {
 
   const handleEdit = (product) => {
     setFormData({
+      productId: product.productId,
       productName: product.productName,
       productPrice: product.productPrice,
       quantity: product.quantity,
@@ -75,6 +77,7 @@ const AdminProductPage = () => {
     setFormData({
       productName: "",
       productPrice: "",
+      productStatus: "",
       quantity: "",
       image: "",
       categoryType: "",
@@ -92,6 +95,14 @@ const AdminProductPage = () => {
       setFormData((prev) => ({
         ...prev,
         [name]: rawValue,
+      }));
+    } else if (name === "quantity") {
+      const quantityValue = value.replace(/\D/g, "");
+      const status = parseInt(quantityValue) > 0 ? "onShop" : "outDate";
+      setFormData((prev) => ({
+        ...prev,
+        quantity: quantityValue,
+        productStatus: status,
       }));
     } else {
       setFormData((prev) => ({
@@ -156,6 +167,8 @@ const AdminProductPage = () => {
       const updatedData = { ...formData };
       updatedData.productId = generateCustomProductId();
 
+      updatedData.productStatus =
+        parseInt(updatedData.quantity) > 0 ? "onShop" : "outDate";
       if (tempImages.image?.file) {
         const url = await uploadImageToServer(tempImages.image.file);
         updatedData.image = url;
@@ -347,6 +360,23 @@ const AdminProductPage = () => {
                 onChange={handleInputChange}
                 required
                 className="border px-4 py-2 rounded-md"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-left">
+                Product Status
+              </label>
+              <input
+                type="text"
+                value={
+                  productId
+                    ? Number(formData.quantity) > 0
+                      ? "On Shop"
+                      : "Out Date"
+                    : ""
+                }
+                readOnly
+                className="border px-4 py-2 rounded-md bg-gray-100 cursor-not-allowed text-center font-semibold"
               />
             </div>
 
