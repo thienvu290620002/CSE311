@@ -1,69 +1,16 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
-<<<<<<< HEAD
-=======
-import { FaHeart, FaRegHeart } from "react-icons/fa";
-  import { FiRefreshCw, FiSearch } from "react-icons/fi";
-  import swal from "sweetalert";
-    import { useNavigate } from "react-router-dom";
-    import { UserContext } from "../../context/UserContext";
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
 const ProductList = () => {
-  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const { user } = useContext(UserContext);
-
-    const { wishItems, setWishItems, addToWishlist } = useWishlist();
-
-    // Hàm toggle wishlist: nếu có thì xóa, không có thì thêm
-  const toggleWishlist = (product) => {
-    if (!user) {
-  swal({
-    title: "Login Required!",
-    text: "You need to log in to add this product to your wishlist.",
-    icon: "warning",
-    buttons: {
-      cancel: "Back to Home",
-      confirm: "Go to Login"
-    },
-    dangerMode: true,
-  }).then((willLogin) => {
-    if (willLogin) {
-      navigate("/login");
-    } else {
-      navigate("/");
-    }
-  });
-  return;
-}
-
-    if (isInWishlist(product.id)) {
-      // Xóa sản phẩm khỏi wishlist
-      const newWishList = wishItems.filter((item) => item.id !== product.id);
-      setWishItems(newWishList);
-    } else {
-      // Thêm sản phẩm vào wishlist
-      addToWishlist(product);
-    }
-  };
-  
-    // Kiểm tra sản phẩm có trong wishlist không
-    const isInWishlist = (productId) => {
-      return wishItems.some((item) => item.id === productId);
-    };
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(
-<<<<<<< HEAD
           "http://localhost:8080/api/get-all-product"
-=======
-          "http://localhost:8080/api/get-all-product",
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         );
         const data = await response.json();
         //console.log(data);
@@ -127,7 +74,6 @@ const ProductList = () => {
     (product) => product.quantity === 0
   ).length;
 
-<<<<<<< HEAD
   const { addToWishlist } = useWishlist();
 
   const handleAddToWishlist = (product) => {
@@ -138,12 +84,6 @@ const ProductList = () => {
   const itemsPerPage = 8;
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-=======
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const { addToCart } = useCart(); // Lấy hàm addToCart từ context
 
   const handleAddToCart = (product) => {
@@ -193,11 +133,7 @@ const ProductList = () => {
                             products.filter(
                               (product) =>
                                 product.categoryType &&
-<<<<<<< HEAD
                                 product.categoryType.toUpperCase() === category
-=======
-                                product.categoryType.toUpperCase() === category,
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                             ).length
                           }
                           )
@@ -267,7 +203,6 @@ const ProductList = () => {
                   {sortProducts(filteredProducts, sortOption)
                     .slice(
                       (currentPage - 1) * itemsPerPage,
-<<<<<<< HEAD
                       currentPage * itemsPerPage
                     )
                     .map((product) => (
@@ -374,143 +309,6 @@ const ProductList = () => {
                         </div>
                       </li>
                     ))}
-=======
-                      currentPage * itemsPerPage,
-                    )
-                    .map((product) => (
-                      <li
-                            key={product.id}
-                            className="mt-6 md:mt-0 text-center group relative"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="relative">
-                              {/* Sale Banner */}
-                              {product.sale && (
-                                <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
-                                  -{product.salePercentage}%
-                                </span>
-                              )}
-                      
-                              {/* Product Image */}
-                              {/* <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                                <Link to={`/productdetail/${product.productId}`}>
-                                  <img
-                                    className="block size-full object-cover"
-                                    src={`http://localhost:8080${product.image}`}
-                                    alt={product.productName}
-                                  />
-                                </Link>
-                              </div> */}
-                              <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
-                        {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
-                        {isInWishlist(product.id) && (
-                        <div className="absolute top-2 right-2 z-10">
-                          <FaHeart size={24} color="red"/>
-                        </div>
-                      )}
-                      
-                        <Link to={`/productdetail/${product.productId}`}>
-                          <img
-                            className="block size-full object-cover"
-                            src={`http://localhost:8080${product.image}`}
-                            alt={product.productName}
-                          />
-                        </Link>
-                      </div>
-                      
-                      
-                              {/* Hover Actions */}
-                              <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
-                                {/* Wishlist Button */}
-                                <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
-                                  <button
-                                    className={"shadow-lg p-3 rounded-full block transition-all bg-white hover:bg-slate-200"}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleWishlist(product);
-                                    }}
-                                  >
-                                    {isInWishlist(product.id) ? (
-                        <FaHeart size={24} color="red" />
-                      ) : (
-                        <FaRegHeart size={24} color="black" />
-                      )}
-                                  </button>
-                                </li>
-                      
-                                {/* Refresh/Reload Button */}
-                                <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-100">
-                                  <button
-                                    type="button"
-                                    className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
-                                  >
-                                    <FiRefreshCw size={20} className="text-gray-600" />
-                                  </button>
-                                </li>
-                      
-                                {/* Search/View Button */}
-                                <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
-                                  <Link to={`/productdetail/${product.productId}`}>
-                                    <button
-                                      type="button"
-                                      className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
-                                    >
-                                       <FiSearch size={20} className="text-gray-600" />
-                                    </button>
-                                  </Link>
-                                </li>
-                              </ul>
-                      
-                              {/* Star Rating */}
-                              <div className="flex justify-center items-center gap-1 mt-5">
-                                {[...Array(5)].map((_, index) => (
-                                  <img
-                                    key={index}
-                                    className="size-4"
-                                    src={
-                                      index < product.rating
-                                        ? "/images/ico_star_active.png"
-                                        : "/images/ico_star_gray.png"
-                                    }
-                                    alt="star"
-                                  />
-                                ))}
-                              </div>
-                      
-                              {/* Product Name */}
-                              <h3 className="text-15 mt-2">{product.productName}</h3>
-                      
-                              {/* Price + Add to Cart */}
-                              <div className="mt-2 relative h-7 overflow-hidden">
-                                <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
-                                  <div className="flex items-center justify-center font-bold text-15 text-center">
-                                    <span className={product.sale ? "text-red-600" : ""}>
-                                      {product.sale && product.originalPrice && (
-                                        <>
-                                          <span className="line-through text-lightGray mr-1">
-                                            <sup className="text-[10px] align-middle">₫</sup>
-                                            {product.originalPrice.toLocaleString("vi-VN")}
-                                          </span>
-                                          -{" "}
-                                        </>
-                                      )}
-                                      <sup className="text-[10px] align-middle">₫</sup>
-                                      {product.productPrice.toLocaleString("vi-VN")}
-                                    </span>
-                                  </div>
-                      
-                                  <button
-                                    onClick={() => handleAddToCart(product)}
-                                    className="mt-2 text-sm text-black font-bold"
-                                  >
-                                    Add to Cart
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                 </ul>
 
                 <div className="mt-10">
@@ -550,11 +348,7 @@ const ProductList = () => {
                       <button
                         onClick={() =>
                           setCurrentPage((prev) =>
-<<<<<<< HEAD
                             Math.min(prev + 1, totalPages)
-=======
-                            Math.min(prev + 1, totalPages),
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                           )
                         }
                         disabled={currentPage === totalPages}

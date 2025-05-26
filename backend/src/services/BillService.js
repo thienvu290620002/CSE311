@@ -52,10 +52,7 @@ let getBillByUserID = (inputId) => {
                     {
                       model: db.Product,
                       as: "products",
-<<<<<<< HEAD
                       attributes: { exclude: ["quantity"] },
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                     },
                   ],
                 },
@@ -81,15 +78,10 @@ function createDate() {
   return new Date(); // returns current date and time as a Date object
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 const generateBillId = () => {
   const short = Date.now().toString(36).slice(-6).toUpperCase();
   return `BILL-${short}`; // Ví dụ: BILL-7F5A3C
 };
-<<<<<<< HEAD
 // let createBill = async (data) => {
 //   return new Promise(async (resolve, reject) => {
 //     try {
@@ -147,17 +139,11 @@ const generateBillId = () => {
 //     }
 //   });
 // };
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 let createBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
       const billDiscount = data.discount || 0;
       let totalPrice = 0;
-<<<<<<< HEAD
-=======
-      console.log(data.productId);
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
       const customBillId = generateBillId();
 
@@ -165,20 +151,12 @@ let createBill = async (data) => {
       let bill = await db.Bill.create({
         billId: customBillId,
         userId: data.userId,
-<<<<<<< HEAD
         paymentMethod: data.paymentMethod,
-=======
-        paymentMethod: data.paymentMethod, // ✅ Đã sửa tên đúng
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         totalPrice: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-<<<<<<< HEAD
-=======
-      // ✅ Tạo các bill item
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       for (let item of data.items) {
         const product = await db.Product.findOne({
           where: { productId: item.productId },
@@ -186,7 +164,6 @@ let createBill = async (data) => {
 
         if (!product) {
           console.log("⚠️ Product not found for ID:", item.productId);
-<<<<<<< HEAD
           continue;
         }
 
@@ -202,18 +179,12 @@ let createBill = async (data) => {
         const itemTotalPrice = product.productPrice * item.quantity;
         // console.log(itemTotalPrice);
 
-=======
-          continue; // hoặc throw new Error để debug rõ hơn
-        }
-        const itemTotalPrice = product.productPrice * item.quantity;
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         const itemDiscount = item.discount || 0;
         const itemDiscountedPrice =
           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
 
         totalPrice += itemDiscountedPrice;
 
-<<<<<<< HEAD
         // ✅ Tạo bill item
         await db.Bill_Item.create({
           billId: customBillId,
@@ -229,18 +200,6 @@ let createBill = async (data) => {
         // ✅ Giảm số lượng tồn kho trong Product
         product.quantity -= item.quantity;
         await product.save();
-=======
-        await db.Bill_Item.create({
-          billId: customBillId,
-          billItemId: "ITEM-" + nanoid(8), // ✅ unique hơn
-          quantity: item.quantity,
-          productId: item.productId,
-          discount: billDiscount,
-          totalPrice: itemDiscountedPrice, // ✅ dùng giá trị đã tính
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       }
 
       bill.totalPrice = totalPrice;
@@ -253,11 +212,6 @@ let createBill = async (data) => {
   });
 };
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 let updateBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -317,10 +271,6 @@ let updateBill = async (data) => {
     }
   });
 };
-<<<<<<< HEAD
-
-=======
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 let deleteBill = async (billId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -357,8 +307,4 @@ module.exports = {
   createBill: createBill,
   updateBill: updateBill,
   deleteBill: deleteBill,
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
