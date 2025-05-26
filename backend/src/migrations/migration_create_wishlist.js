@@ -3,6 +3,10 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable("WishLists", {
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -14,9 +18,12 @@ module.exports = {
         type: Sequelize.STRING,
       },
       productId: {
+<<<<<<< HEAD
         type: Sequelize.STRING,
       },
       wishListStatus: {
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         type: Sequelize.STRING,
       },
       createdAt: {

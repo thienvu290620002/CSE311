@@ -5,7 +5,10 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
 const ProductDetail = () => {
+<<<<<<< HEAD
   // const { productId } = useParams(); // Get id from URL
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const { addToCart } = useCart(); // Add to cart function from context
   const { addToWishlist } = useWishlist(); // Add to wishlist function
   const [activeTab, setActiveTab] = useState("description");
@@ -34,7 +37,11 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const response = await fetch(
+<<<<<<< HEAD
           `http://localhost:8080/api/get-product-by-productId?productId=${productId}`
+=======
+          `http://localhost:8080/api/get-product-by-productId?productId=${productId}`,
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         );
 
         if (!response.ok) {
@@ -56,7 +63,11 @@ const ProductDetail = () => {
     const fetchAllProducts = async () => {
       try {
         const response = await fetch(
+<<<<<<< HEAD
           "http://localhost:8080/api/get-all-product"
+=======
+          "http://localhost:8080/api/get-all-product",
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         );
         if (!response.ok) {
           throw new Error("Không thể lấy danh sách sản phẩm");
@@ -72,11 +83,23 @@ const ProductDetail = () => {
 
     fetchAllProducts();
   }, []);
+<<<<<<< HEAD
+=======
+
+  // const handleAddToCart = (product) => {
+  //   const { quantity, ...productInfo } = product;
+  //   addToCart(productInfo);
+  // };
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
   const handleAddToCart = (product) => {
-    const { quantity, ...productInfo } = product;
-    addToCart(productInfo);
+  const productWithQuantity = {
+    ...product,
+    quantity: quantity,
   };
+  addToCart(productWithQuantity);
+};
+
 
   const handleAddToWishlist = (product) => {
     addToWishlist(product);
@@ -147,8 +170,12 @@ const ProductDetail = () => {
                     </li>
                   ))}
               </ul>
+<<<<<<< HEAD
 
               {/* <div className="overflow-hidden">
+=======
+              <div className="overflow-hidden">
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                 <div
                   className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
                   onMouseEnter={() => setShowZoom(true)}
@@ -156,21 +183,28 @@ const ProductDetail = () => {
                   onMouseLeave={() => setShowZoom(false)}
                 >
                   <img
+<<<<<<< HEAD
                     src={`http://localhost:8080${product.image}`}
                     alt={product.productName}
                     className="w-full h-full object-cover"
                     // alt="Main product"
+=======
+                    src={getImageSrc(product.image)}
+                    alt={product.productName}
+                    className="w-full h-full object-cover"
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                   />
                   {showZoom && (
                     <div
                       className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
                       style={{
-                        backgroundImage: `url(${selectedImage})`,
+                        backgroundImage: `url(${getImageSrc(selectedImage || product.image)})`,
                         backgroundRepeat: "no-repeat",
                         backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                        backgroundSize: "150%", // Zoom level
+                        backgroundSize: "150%",
+                        border: "3px solid black", // For debug
                       }}
-                    ></div>
+                    />
                   )}
                 </div>
               </div> */}
@@ -287,10 +321,21 @@ const ProductDetail = () => {
                   </div>
 
                   <button
-                    type="button"
-                    onClick={() => handleAddToCart(product)}
-                    className="h-[50px] bg-black text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
+  type="button"
+  onClick={() => handleAddToCart(product)}
+  className="h-[50px] bg-black text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
+>
+  Add To Cart
+</button>
+
+                  <button
+                    className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToWishlist(product);
+                    }}
                   >
+<<<<<<< HEAD
                     Add To Cart
                   </button>
 
@@ -316,6 +361,8 @@ const ProductDetail = () => {
                       handleAddToWishlist(product);
                     }}
                   >
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                     <img
                       src="../images/ico_heart.png"
                       className="image size-4 rounded-full"
@@ -690,7 +737,11 @@ const ProductDetail = () => {
                                         ₫
                                       </sup>
                                       {product.originalPrice.toLocaleString(
+<<<<<<< HEAD
                                         "vi-VN"
+=======
+                                        "vi-VN",
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                                       )}
                                     </span>
                                     -{" "}

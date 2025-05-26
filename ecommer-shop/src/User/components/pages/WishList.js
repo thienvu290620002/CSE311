@@ -2,11 +2,15 @@
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import swal from "sweetalert";
+<<<<<<< HEAD
 // import axios from "axios";
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
 const WishList = () => {
   const { wishItems, setWishItems } = useWishlist();
   const { cartItems, setCartItems } = useCart();
+<<<<<<< HEAD
 
   // ✅ Giả sử userId được lưu trong localStorage
   // const userString = localStorage.getItem("user");
@@ -76,6 +80,8 @@ const WishList = () => {
   //   }
   // }, [userId, setWishItems]);
   console.log(wishItems);
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
   const removeFromWishlist = (productId) => {
     swal({
@@ -87,7 +93,11 @@ const WishList = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setWishItems((prevItems) =>
+<<<<<<< HEAD
           prevItems.filter((item) => item.id !== productId)
+=======
+          prevItems.filter((item) => item.id !== productId),
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         );
 
         swal("Removed!", "The item has been removed from your wishlist.", {
@@ -106,8 +116,13 @@ const WishList = () => {
         prev.map((cartItem) =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
+<<<<<<< HEAD
             : cartItem
         )
+=======
+            : cartItem,
+        ),
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       );
     } else {
       setCartItems((prev) => [...prev, { ...item, quantity: 1 }]);
@@ -148,8 +163,13 @@ const WishList = () => {
                 <tr key={item.productWishLists.id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 flex items-center">
                     <img
+<<<<<<< HEAD
                       src={`http://localhost:8080${item.productWishLists.image}`}
                       alt={item.productWishLists.productName}
+=======
+                      src={`http://localhost:8080${item.image}`}
+                      alt={item.productName}
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                       className="w-16 h-16 object-cover rounded-md mr-4"
                     />
                     <span>{item.productWishLists.productName}</span>
@@ -158,12 +178,16 @@ const WishList = () => {
                     {item.productPrice.toLocaleString("vi-VN")} ₫
                   </td> */}
                   <td className="py-3 px-4 text-gray-800">
+<<<<<<< HEAD
                     {typeof item.productWishLists.productPrice === "number"
                       ? item.productWishLists.productPrice.toLocaleString(
                           "vi-VN"
                         )
                       : "0"}{" "}
                     ₫
+=======
+                    {item.productPrice.toLocaleString("vi-VN")} ₫
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                   </td>
                   <td className="py-3 px-4 flex justify-center gap-4">
                     <button

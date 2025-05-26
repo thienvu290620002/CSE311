@@ -11,7 +11,10 @@ module.exports = (sequelize, DataTypes) => {
       WishList.belongsTo(models.User, { foreignKey: "userId", as: "user" });
       WishList.belongsTo(models.Product, {
         foreignKey: "productId",
+<<<<<<< HEAD
         targetKey: "productId",
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         as: "productWishLists",
       });
     }
@@ -20,7 +23,10 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.STRING,
       productId: DataTypes.STRING,
+<<<<<<< HEAD
       wishListStatus: DataTypes.STRING,
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
     },
     {
       sequelize,

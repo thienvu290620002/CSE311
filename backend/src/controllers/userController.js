@@ -69,6 +69,7 @@ let createNewUser = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 let getUserInforByID = async (req, res) => {
   try {
     const userId = req.query.id;
@@ -91,6 +92,8 @@ let getUserInforByID = async (req, res) => {
   }
 };
 
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 let deleteUserByID = async (req, res) => {
   try {
     // console.log(req.body.userId, "ssss");

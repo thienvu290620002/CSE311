@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // // WishlistContext.js
 // import React, { createContext, useState, useContext, useEffect } from "react";
 
@@ -71,6 +72,8 @@
 //     </WishlistContext.Provider>
 //   );
 // };
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios"; // bạn quên import axios trong file này
 
@@ -83,9 +86,12 @@ export const useWishlist = () => {
 export const WishlistProvider = ({ children }) => {
   const [wishItems, setWishItems] = useState([]);
 
+<<<<<<< HEAD
   // Lấy userId từ localStorage (hoặc bạn có thể lấy từ context auth nếu có)
   const [userId, setUserId] = useState(null);
 
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   useEffect(() => {
     const userString = localStorage.getItem("user");
     if (userString) {
@@ -100,6 +106,7 @@ export const WishlistProvider = ({ children }) => {
     }
   }, []);
 
+<<<<<<< HEAD
   // Fetch wishlist từ API khi có userId
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -132,6 +139,9 @@ export const WishlistProvider = ({ children }) => {
 
   // Lưu wishlist vào localStorage khi wishItems thay đổi (không cần kiểm tra length > 0, có thể lưu mảng rỗng)
   useEffect(() => {
+=======
+  useEffect(() => {
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
     localStorage.setItem("wishlist", JSON.stringify(wishItems));
   }, [wishItems]);
 
@@ -144,9 +154,34 @@ export const WishlistProvider = ({ children }) => {
     });
   };
 
+  const isInWishlist = (productId) => {
+    return wishItems.some((item) => item.id === productId);
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId)
+    );
+  };
+
+  const toggleWishlist = (product) => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+
   return (
     <WishlistContext.Provider
-      value={{ wishItems, setWishItems, addToWishlist }}
+      value={{
+        wishItems,
+        setWishItems,
+        addToWishlist,
+        removeFromWishlist,
+        toggleWishlist,
+        isInWishlist,
+      }}
     >
       {children}
     </WishlistContext.Provider>

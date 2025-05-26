@@ -3,9 +3,17 @@ import { UserContext } from "../../context/UserContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+
 
 const Profile = () => {
+  const { setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
+<<<<<<< HEAD
+=======
+  const { addToCart } = useCart();
+  const { orders } = useOrders();
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const { wishItems, setWishItems } = useWishlist();
   const navigate = useNavigate();
   const [userBills, setUserBills] = useState([]);
@@ -80,10 +88,14 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
-  };
+  localStorage.removeItem("user");
+  localStorage.removeItem("wishlist");
+  setWishItems([]);  // xóa wishlist trong state
+  setCartItems([]);  // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
+  setUser(null);
+  navigate("/");
+};
+
 
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
@@ -106,12 +118,20 @@ const Profile = () => {
   if (!user) {
     return (
       <div className="text-center mt-10">
+<<<<<<< HEAD
         <p className="mb-4">You are not logged in</p>
+=======
+        <p className="mb-4">Bạn chưa đăng nhập</p>
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           onClick={() => navigate("/login")}
         >
+<<<<<<< HEAD
           Login now
+=======
+          Đăng nhập ngay
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         </button>
       </div>
     );
@@ -370,6 +390,7 @@ const Profile = () => {
                         </li>
                       ))}
                     </ul>
+<<<<<<< HEAD
 
                     {/* Total */}
                     <div className="text-right">
@@ -381,6 +402,11 @@ const Profile = () => {
                         }).format(order.totalPrice)}
                       </p>
                     </div>
+=======
+                    <p className="font-semibold">
+                      Tổng cộng: {order.total.toFixed(2)}₫
+                    </p>
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                   </div>
                 ))
             )}
@@ -394,6 +420,7 @@ const Profile = () => {
               Wishlist
             </h2>
             {wishItems && wishItems.length > 0 ? (
+<<<<<<< HEAD
               wishItems.map((item) => (
                 <div
                   key={item.id}
@@ -425,6 +452,50 @@ const Profile = () => {
                 You haven't added any products to your wishlist.
               </p>
             )}
+=======
+  wishItems.map((item) => (
+    <div
+      key={item.id}
+      className="flex items-center justify-between border-b py-3"
+    >
+      <div className="flex items-center gap-4">
+        <img
+          src={`http://localhost:8080${item.image}`}
+          alt={item.productName}
+          className="w-16 h-16 object-cover rounded"
+        />
+        <div className="text-left">
+          <p className="font-semibold">{item.productName}</p>
+          <p className="text-sm text-gray-600">
+            {item.productPrice.toLocaleString("vi-VN")}₫
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => addToCart(item)}
+          className="bg-green text-white px-4 py-1 rounded"
+        >
+          Thêm giỏ hàng
+        </button>
+
+        <button
+          onClick={() => removeFromWishlist(item.id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+        >
+          Xóa
+        </button>
+      </div>
+    </div>
+  ))
+) : (
+  <p className="text-center">
+    Bạn chưa thêm sản phẩm nào vào yêu thích.
+  </p>
+)}
+
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
           </div>
         )}
       </div>

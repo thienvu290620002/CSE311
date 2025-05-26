@@ -20,6 +20,7 @@ const CheckoutPage = () => {
   const userId = user?.id;
   //console.log(userId);
 
+<<<<<<< HEAD
   // const handlePlaceOrder = async () => {
   //   const newOrder = {
   //     id: Date.now(),
@@ -77,6 +78,8 @@ const CheckoutPage = () => {
   //     });
   //   }
   // };
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const handlePlaceOrder = async () => {
     const newOrder = {
       id: Date.now(),
@@ -101,6 +104,7 @@ const CheckoutPage = () => {
       });
 
       const data = await response.json();
+<<<<<<< HEAD
 
       // ❌ Nếu không đủ hàng
       if (data.errCode === 2) {
@@ -114,6 +118,19 @@ const CheckoutPage = () => {
       }
 
       // ✅ Nếu OK
+=======
+      console.log("Bill created:", data);
+      for (const product of cartItems) {
+        await fetch("http://localhost:8080/api/update-product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: product.id,
+            quantityToReduce: product.quantity,
+          }),
+        });
+      }
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
       addOrder(newOrder);
       swal({
         title: "Thank you!",
@@ -124,7 +141,10 @@ const CheckoutPage = () => {
       localStorage.removeItem("cartItems");
       setCartItems([]);
       navigate("/home");
+<<<<<<< HEAD
       return true; // thành công
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
     } catch (error) {
       console.error("Error creating bill:", error);
       swal({
@@ -133,7 +153,10 @@ const CheckoutPage = () => {
         icon: "error",
         button: "OK",
       });
+<<<<<<< HEAD
       return false;
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
     }
   };
 
@@ -182,15 +205,23 @@ const CheckoutPage = () => {
 
   const handleConfirmOrder = async (e) => {
     e.preventDefault();
+<<<<<<< HEAD
     const isBillCreated = await handlePlaceOrder();
 
     if (!isBillCreated) return; // dừng lại nếu lỗi
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
     if (paymentMethod === "cod") {
       await handlePlaceOrder();
     } else if (paymentMethod === "qr") {
       try {
+<<<<<<< HEAD
         // // Tạo bill trước
         // await handlePlaceOrder();
+=======
+        // Tạo bill trước
+        await handlePlaceOrder();
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
         // Sau đó tạo order ZaloPay và chuyển hướng
         handleCheckOut();

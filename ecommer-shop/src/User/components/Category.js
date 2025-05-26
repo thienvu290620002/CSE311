@@ -5,9 +5,16 @@ import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import swal from "sweetalert";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { FiRefreshCw, FiSearch } from "react-icons/fi";
+=======
+  import { useNavigate } from "react-router-dom";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+  import { FiRefreshCw, FiSearch } from "react-icons/fi";
+
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
 // const Category = () => {
 //   const navigate = useNavigate();
@@ -98,11 +105,14 @@ const Category = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const { user } = useContext(UserContext);
+<<<<<<< HEAD
   const { addToCart } = useCart();
   const { wishItems, setWishItems, addToWishlist } = useWishlist();
 
   // State lưu wishlist của user hiện tại
   const [userWishlist, setUserWishlist] = useState([]);
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -110,6 +120,10 @@ const Category = () => {
         const response = await axios.get(
           "http://localhost:8080/api/get-all-product"
         );
+<<<<<<< HEAD
+=======
+
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         setProducts(response.data || []);
       } catch (error) {
         console.error("Lỗi khi tải danh sách sản phẩm:", error);
@@ -119,12 +133,55 @@ const Category = () => {
     fetchProducts();
   }, []);
 
+<<<<<<< HEAD
   // Khi user thay đổi (đăng nhập/đăng xuất), fetch wishlist của user đó
   useEffect(() => {
     if (!user) {
       setUserWishlist([]); // nếu chưa đăng nhập thì clear wishlist
       return;
     }
+=======
+  const { addToCart } = useCart(); // Lấy hàm addToCart từ context
+  // const { addToWishlist } = useWishlist();
+  const { wishItems, setWishItems, addToWishlist } = useWishlist();
+
+  // Kiểm tra sản phẩm có trong wishlist không
+  const isInWishlist = (productId) => {
+    return wishItems.some((item) => item.id === productId);
+  };
+
+  // Hàm toggle wishlist: nếu có thì xóa, không có thì thêm
+  const toggleWishlist = (product) => {
+    if (!user) {
+  swal({
+    title: "Login Required!",
+    text: "You need to log in to add this product to your wishlist.",
+    icon: "warning",
+    buttons: {
+      cancel: "Back to Home",
+      confirm: "Go to Login"
+    },
+    dangerMode: true,
+  }).then((willLogin) => {
+    if (willLogin) {
+      navigate("/login");
+    } else {
+      navigate("/");
+    }
+  });
+  return;
+}
+
+    if (isInWishlist(product.id)) {
+      // Xóa sản phẩm khỏi wishlist
+      const newWishList = wishItems.filter((item) => item.id !== product.id);
+      setWishItems(newWishList);
+    } else {
+      // Thêm sản phẩm vào wishlist
+      addToWishlist(product);
+    }
+  };
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
     const fetchUserWishlist = async () => {
       try {
@@ -158,6 +215,7 @@ const Category = () => {
     addToCart(productInfo);
   };
 
+<<<<<<< HEAD
   const toggleWishlist = async (product) => {
     if (!user) {
       swal({
@@ -214,6 +272,8 @@ const Category = () => {
   //   addToWishlist(product);
   // };
 
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   return (
     <div>
       {/* Categories Section */}
@@ -273,20 +333,137 @@ const Category = () => {
           </div>
 
           <ul className="mt-8 lg:grid grid-cols-4 gap-7">
+<<<<<<< HEAD
             {products.slice(0, 4).map((product) => (
               <li
                 key={product.id}
                 className="mt-6 md:mt-0 text-center group relative"
                 onClick={(e) => e.stopPropagation()}
-              >
-                <div className="relative">
-                  {/* Sale Banner */}
-                  {product.sale && (
-                    <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
-                      -{product.salePercentage}%
-                    </span>
-                  )}
+=======
+  {products.slice(0, 4).map((product) => (
+    <li
+      key={product.id}
+      className="mt-6 md:mt-0 text-center group relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative">
+        {/* Sale Banner */}
+        {product.sale && (
+          <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
+            -{product.salePercentage}%
+          </span>
+        )}
 
+        {/* Product Image */}
+        {/* <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
+          <Link to={`/productdetail/${product.productId}`}>
+            <img
+              className="block size-full object-cover"
+              src={`http://localhost:8080${product.image}`}
+              alt={product.productName}
+            />
+          </Link>
+        </div> */}
+        <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
+  {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
+  {isInWishlist(product.id) && (
+  <div className="absolute top-2 right-2 z-10">
+    <FaHeart size={24} color="red"/>
+  </div>
+)}
+
+  <Link to={`/productdetail/${product.productId}`}>
+    <img
+      className="block size-full object-cover"
+      src={`http://localhost:8080${product.image}`}
+      alt={product.productName}
+    />
+  </Link>
+</div>
+
+
+        {/* Hover Actions */}
+        <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
+          {/* Wishlist Button */}
+          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
+            <button
+              className={"shadow-lg p-3 rounded-full block transition-all bg-white hover:bg-slate-200"}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleWishlist(product);
+              }}
+            >
+              {isInWishlist(product.id) ? (
+  <FaHeart size={24} color="red" />
+) : (
+  <FaRegHeart size={24} color="black" />
+)}
+            </button>
+          </li>
+
+          {/* Refresh/Reload Button */}
+          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-100">
+            <button
+              type="button"
+              className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
+            >
+              <FiRefreshCw size={20} className="text-gray-600" />
+            </button>
+          </li>
+
+          {/* Search/View Button */}
+          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
+            <Link to={`/productdetail/${product.productId}`}>
+              <button
+                type="button"
+                className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
+              >
+                 <FiSearch size={20} className="text-gray-600" />
+              </button>
+            </Link>
+          </li>
+        </ul>
+
+        {/* Star Rating */}
+        <div className="flex justify-center items-center gap-1 mt-5">
+          {[...Array(5)].map((_, index) => (
+            <img
+              key={index}
+              className="size-4"
+              src={
+                index < product.rating
+                  ? "/images/ico_star_active.png"
+                  : "/images/ico_star_gray.png"
+              }
+              alt="star"
+            />
+          ))}
+        </div>
+
+        {/* Product Name */}
+        <h3 className="text-15 mt-2">{product.productName}</h3>
+
+        {/* Price + Add to Cart */}
+        <div className="mt-2 relative h-7 overflow-hidden">
+          <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
+            <div className="flex items-center justify-center font-bold text-15 text-center">
+              <span className={product.sale ? "text-red-600" : ""}>
+                {product.sale && product.originalPrice && (
+                  <>
+                    <span className="line-through text-lightGray mr-1">
+                      <sup className="text-[10px] align-middle">₫</sup>
+                      {product.originalPrice.toLocaleString("vi-VN")}
+                    </span>
+                    -{" "}
+                  </>
+                )}
+                <sup className="text-[10px] align-middle">₫</sup>
+                {product.productPrice.toLocaleString("vi-VN")}
+              </span>
+            </div>
+
+<<<<<<< HEAD
                   <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
                     {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
                     {isInWishlist(product.id) && (
@@ -400,6 +577,21 @@ const Category = () => {
               </li>
             ))}
           </ul>
+=======
+            <button
+              onClick={() => handleAddToCart(product)}
+              className="mt-2 text-sm text-black font-bold"
+            >
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </li>
+  ))}
+</ul>
+
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         </div>
       </section>
 
