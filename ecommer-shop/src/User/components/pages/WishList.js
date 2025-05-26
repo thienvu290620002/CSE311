@@ -26,7 +26,7 @@ const WishList = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setWishItems((prevItems) =>
-          prevItems.filter((item) => item.id !== productId)
+          prevItems.filter((item) => item.id !== productId),
         );
 
         swal("Removed!", "The item has been removed from your wishlist.", {

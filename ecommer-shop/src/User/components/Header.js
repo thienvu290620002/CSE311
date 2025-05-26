@@ -11,7 +11,7 @@ const Header = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/get-all-product"
+          "http://localhost:8080/api/get-all-product",
         );
 
         setProducts(response.data || []);
@@ -37,7 +37,7 @@ const Header = () => {
         return prevItems.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       } else {
         return [...prevItems, { ...product, quantity: 1 }];
@@ -54,7 +54,7 @@ const Header = () => {
       setFiltered([]);
     } else {
       const results = products.filter((item) =>
-        item.productName.toLowerCase().includes(value.toLowerCase())
+        item.productName.toLowerCase().includes(value.toLowerCase()),
       );
       setFiltered(results);
     }

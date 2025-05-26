@@ -10,7 +10,7 @@ const ProductList = () => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/api/get-all-product"
+          "http://localhost:8080/api/get-all-product",
         );
         const data = await response.json();
         //console.log(data);
@@ -37,11 +37,11 @@ const ProductList = () => {
         return sorted.sort((a, b) => b.productPrice - a.productPrice); // High to low
       case "3":
         return sorted.sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
         ); // Old to New
       case "4":
         return sorted.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         ); // New to Old
       default:
         return products;
@@ -68,10 +68,10 @@ const ProductList = () => {
 
   // Tính số lượng sản phẩm còn hàng và hết hàng
   const inStockCount = products.filter(
-    (product) => product.quantity > 0
+    (product) => product.quantity > 0,
   ).length;
   const outOfStockCount = products.filter(
-    (product) => product.quantity === 0
+    (product) => product.quantity === 0,
   ).length;
 
   const { addToWishlist } = useWishlist();
@@ -133,7 +133,7 @@ const ProductList = () => {
                             products.filter(
                               (product) =>
                                 product.categoryType &&
-                                product.categoryType.toUpperCase() === category
+                                product.categoryType.toUpperCase() === category,
                             ).length
                           }
                           )
@@ -203,7 +203,7 @@ const ProductList = () => {
                   {sortProducts(filteredProducts, sortOption)
                     .slice(
                       (currentPage - 1) * itemsPerPage,
-                      currentPage * itemsPerPage
+                      currentPage * itemsPerPage,
                     )
                     .map((product) => (
                       <li
@@ -348,7 +348,7 @@ const ProductList = () => {
                       <button
                         onClick={() =>
                           setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
+                            Math.min(prev + 1, totalPages),
                           )
                         }
                         disabled={currentPage === totalPages}

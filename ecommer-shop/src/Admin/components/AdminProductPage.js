@@ -27,7 +27,7 @@ const AdminProductPage = () => {
   const pageCount = Math.ceil(filteredProducts.length / itemsPerPage);
   const currentItems = filteredProducts.slice(
     currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
+    (currentPage + 1) * itemsPerPage,
   );
 
   const formRef = useRef(null);
@@ -140,7 +140,7 @@ const AdminProductPage = () => {
             "Content-Type": "multipart/form-data",
           },
           validateStatus: (status) => status < 500,
-        }
+        },
       );
 
       if (response.status >= 400) {
@@ -176,7 +176,7 @@ const AdminProductPage = () => {
 
       await axios.post(
         "http://localhost:8080/api/create-new-product",
-        updatedData
+        updatedData,
       );
 
       fetchProducts();
@@ -245,7 +245,7 @@ const AdminProductPage = () => {
     setFilteredProducts(
       selectedCategory
         ? products.filter((p) => p.categoryType === selectedCategory)
-        : products
+        : products,
     );
   };
 
@@ -385,7 +385,7 @@ const AdminProductPage = () => {
               <input
                 name="productPrice"
                 value={new Intl.NumberFormat("vi-VN").format(
-                  formData.productPrice || 0
+                  formData.productPrice || 0,
                 )}
                 onChange={handleInputChange}
                 required

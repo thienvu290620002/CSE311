@@ -89,7 +89,7 @@ export const CartProvider = ({ children }) => {
         return prevItems.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       } else {
         toast.success("Added to cart successfully!", {

@@ -60,7 +60,7 @@ const Profile = () => {
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const updatedUsers = users.map((u) =>
-      u.email === user.email ? { ...u, ...newUserData } : u
+      u.email === user.email ? { ...u, ...newUserData } : u,
     );
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUser(newUserData);
@@ -70,11 +70,11 @@ const Profile = () => {
 
   const removeFromWishlist = (productId) => {
     setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
+      prevItems.filter((item) => item.id !== productId),
     );
   };
 
-if (!user) {
+  if (!user) {
     return (
       <div className="text-center mt-10">
         <p className="mb-4">Bạn chưa đăng nhập</p>

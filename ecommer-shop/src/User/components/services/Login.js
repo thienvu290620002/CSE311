@@ -53,7 +53,7 @@ const Login = () => {
       if (errCode === 0) {
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
-        navigate(user.roleId === "admin" ? "/admin" : "/shop");
+        navigate(user.roleId === "admin" ? "/admin" : "/home");
       } else {
         setError("Invalid or unauthorized account");
       }

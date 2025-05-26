@@ -90,7 +90,7 @@ const AdminBillPage = () => {
                         (
                         {item.products?.productPrice
                           ? Number(item.products.productPrice).toLocaleString(
-                              "vi-VN"
+                              "vi-VN",
                             )
                           : "Giá không xác định"}
                         ₫)

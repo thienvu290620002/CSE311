@@ -34,7 +34,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8080/api/get-product-by-productId?productId=${productId}`
+          `http://localhost:8080/api/get-product-by-productId?productId=${productId}`,
         );
 
         if (!response.ok) {
@@ -56,7 +56,7 @@ const ProductDetail = () => {
     const fetchAllProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/api/get-all-product"
+          "http://localhost:8080/api/get-all-product",
         );
         if (!response.ok) {
           throw new Error("Không thể lấy danh sách sản phẩm");
@@ -690,7 +690,7 @@ const ProductDetail = () => {
                                         ₫
                                       </sup>
                                       {product.originalPrice.toLocaleString(
-                                        "vi-VN"
+                                        "vi-VN",
                                       )}
                                     </span>
                                     -{" "}

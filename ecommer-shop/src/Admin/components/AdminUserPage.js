@@ -25,7 +25,7 @@ const AdminUserPage = ({ goBack }) => {
   // const [users, setUsers] = useState([]);
   const currentItems = users.slice(
     currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
+    (currentPage + 1) * itemsPerPage,
   );
 
   const handlePageClick = ({ selected }) => setCurrentPage(selected);
@@ -35,7 +35,7 @@ const AdminUserPage = ({ goBack }) => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/get-all-user"
+        "http://localhost:8080/api/get-all-user",
       );
       const userList = Array.isArray(response.data)
         ? response.data
@@ -96,7 +96,7 @@ const AdminUserPage = ({ goBack }) => {
     try {
       const response = await axios.post(
         "http://localhost:8080/api/create-new-user",
-        formData
+        formData,
       );
       const data = response.data;
 
@@ -113,7 +113,7 @@ const AdminUserPage = ({ goBack }) => {
       swal(
         "Error",
         error.response?.data?.errMessage || "Server error while adding user.",
-        "error"
+        "error",
       );
     }
   };
@@ -142,7 +142,7 @@ const AdminUserPage = ({ goBack }) => {
         {
           ...formData,
           id: userId, // Đảm bảo rằng id người dùng được gửi lên
-        }
+        },
       );
       console.log(response);
 

@@ -10,8 +10,8 @@ const ShoppingCart = () => {
   const increaseQuantity = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
+      ),
     );
   };
 
@@ -20,8 +20,8 @@ const ShoppingCart = () => {
       prev.map((item) =>
         item.id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
+          : item,
+      ),
     );
   };
   const handleCheckoutClick = () => {
@@ -59,7 +59,7 @@ const ShoppingCart = () => {
   const total = cartItems.reduce(
     (acc, item) =>
       acc + item.productPrice.toLocaleString("vi-VN") * item.quantity,
-    0
+    0,
   );
 
   return (
@@ -144,7 +144,7 @@ const ShoppingCart = () => {
                         {/* Total Price */}
                         <div className="p-4 flex justify-center">
                           {(item.productPrice * item.quantity).toLocaleString(
-                            "vi-VN"
+                            "vi-VN",
                           )}
                           ₫
                         </div>
