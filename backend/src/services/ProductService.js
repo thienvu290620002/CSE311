@@ -159,33 +159,33 @@ let updateProduct = (data) => {
       }
 
       // Nếu có quantityToReduce, giảm số lượng
-      if (
-        data.quantityToReduce !== undefined &&
-        !isNaN(Number(data.quantityToReduce))
-      ) {
-        if (product.quantity >= data.quantityToReduce) {
-          product.quantity -= Number(data.quantityToReduce);
-        } else {
-          return reject({
-            errCode: 2,
-            errMessage: "Insufficient product quantity in stock",
-          });
-        }
-      } else {
-        // Cập nhật các thông tin khác
-        product.productId = data.productId || product.productId;
-        product.productName = data.productName || product.productName;
-        product.productPrice = data.productPrice || product.productPrice;
-        product.productStatus = data.productStatus || product.productStatus;
-        product.descriptions = data.descriptions || product.descriptions;
-        product.size = data.size || product.size;
-        product.image = data.image || product.image;
-        product.categoryType = data.categoryType || product.categoryType;
+      // if (
+      //   data.quantityToReduce !== undefined &&
+      //   !isNaN(Number(data.quantityToReduce))
+      // ) {
+      //   if (product.quantity >= data.quantityToReduce) {
+      //     product.quantity -= Number(data.quantityToReduce);
+      //   } else {
+      //     return reject({
+      //       errCode: 2,
+      //       errMessage: "Insufficient product quantity in stock",
+      //     });
+      //   }
+      // } else {
+      // Cập nhật các thông tin khác
+      product.productId = data.productId || product.productId;
+      product.productName = data.productName || product.productName;
+      product.productPrice = data.productPrice || product.productPrice;
+      product.productStatus = data.productStatus || product.productStatus;
+      product.descriptions = data.descriptions || product.descriptions;
+      product.size = data.size || product.size;
+      product.image = data.image || product.image;
+      product.categoryType = data.categoryType || product.categoryType;
 
-        if (data.quantity !== undefined && !isNaN(Number(data.quantity))) {
-          product.quantity = Number(data.quantity);
-        }
+      if (data.quantity !== undefined && !isNaN(Number(data.quantity))) {
+        product.quantity = Number(data.quantity);
       }
+      // }
 
       await product.save();
 

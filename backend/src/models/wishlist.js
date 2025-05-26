@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       WishList.belongsTo(models.User, { foreignKey: "userId", as: "user" });
       WishList.belongsTo(models.Product, {
         foreignKey: "productId",
+        targetKey: "productId",
         as: "productWishLists",
       });
     }
@@ -19,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.STRING,
       productId: DataTypes.STRING,
+      wishListStatus: DataTypes.STRING,
     },
     {
       sequelize,

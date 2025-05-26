@@ -69,6 +69,28 @@ let createNewUser = async (req, res) => {
   }
 };
 
+let getUserInforByID = async (req, res) => {
+  try {
+    const userId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        error: 1,
+        errMessage: "Missing required parameter",
+      });
+    }
+
+    let infor = await UserService.getUserInforByID(userId);
+    return res.status(200).json(infor);
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      error: -1,
+      errMessage: "Message from server",
+    });
+  }
+};
+
 let deleteUserByID = async (req, res) => {
   try {
     // console.log(req.body.userId, "ssss");
@@ -176,6 +198,7 @@ let deleteWishlist = async (req, res) => {
 };
 module.exports = {
   getAllUser: getAllUser,
+  getUserInforByID: getUserInforByID,
   createNewUser: createNewUser,
   deleteUserByID: deleteUserByID,
   updateUserData: updateUserData,

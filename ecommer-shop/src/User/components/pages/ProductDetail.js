@@ -108,13 +108,13 @@ const ProductDetail = () => {
         <div className="container">
           <ul className="flex gap-2 items-center py-4">
             <li>
-              <Link className="text-sm" href="#none">
+              <Link className="text-sm" href="/home">
                 Home /{" "}
               </Link>
             </li>
             <li>
-              <Link className="text-sm" href="#none">
-                Bathroom /{" "}
+              <Link className="text-sm" href="/shop">
+                Shop /{" "}
               </Link>
             </li>
             <li>

@@ -20,6 +20,63 @@ const CheckoutPage = () => {
   const userId = user?.id;
   //console.log(userId);
 
+  // const handlePlaceOrder = async () => {
+  //   const newOrder = {
+  //     id: Date.now(),
+  //     items: cartItems,
+  //     total,
+  //     paymentMethod: displayPaymentMethod,
+  //     createdAt: new Date().toISOString(),
+  //   };
+
+  //   try {
+  //     const response = await fetch("http://localhost:8080/api/create-bill", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         userId,
+  //         items: cartItems,
+  //         total,
+  //         paymentMethod: displayPaymentMethod,
+  //       }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     // ✅ Xử lý khi không đủ tồn kho
+  //     if (data.errCode === 2) {
+  //       swal({
+  //         title: "Sản phẩm không đủ số lượng!",
+  //         text: data.errMessage,
+  //         icon: "warning",
+  //         button: "OK",
+  //       });
+  //       return;
+  //     }
+
+  //     // ✅ Nếu thành công
+  //     addOrder(newOrder);
+  //     swal({
+  //       title: "Thank you!",
+  //       text: "Order successful! You will pay upon receipt of goods.",
+  //       icon: "success",
+  //       button: "OK",
+  //     });
+  //     localStorage.removeItem("cartItems");
+  //     setCartItems([]);
+  //     navigate("/home");
+  //   } catch (error) {
+  //     console.error("Error creating bill:", error);
+  //     swal({
+  //       title: "Error!",
+  //       text: "There was a problem creating your bill. Please try again.",
+  //       icon: "error",
+  //       button: "OK",
+  //     });
+  //   }
+  // };
   const handlePlaceOrder = async () => {
     const newOrder = {
       id: Date.now(),
@@ -44,17 +101,19 @@ const CheckoutPage = () => {
       });
 
       const data = await response.json();
-      console.log("Bill created:", data);
-      for (const product of cartItems) {
-        await fetch("http://localhost:8080/api/update-product", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: product.id,
-            quantityToReduce: product.quantity,
-          }),
+
+      // ❌ Nếu không đủ hàng
+      if (data.errCode === 2) {
+        swal({
+          title: "Sản phẩm không đủ số lượng!",
+          text: data.errMessage,
+          icon: "warning",
+          button: "OK",
         });
+        return false; // báo lỗi
       }
+
+      // ✅ Nếu OK
       addOrder(newOrder);
       swal({
         title: "Thank you!",
@@ -65,6 +124,7 @@ const CheckoutPage = () => {
       localStorage.removeItem("cartItems");
       setCartItems([]);
       navigate("/home");
+      return true; // thành công
     } catch (error) {
       console.error("Error creating bill:", error);
       swal({
@@ -73,6 +133,7 @@ const CheckoutPage = () => {
         icon: "error",
         button: "OK",
       });
+      return false;
     }
   };
 
@@ -121,12 +182,15 @@ const CheckoutPage = () => {
 
   const handleConfirmOrder = async (e) => {
     e.preventDefault();
+    const isBillCreated = await handlePlaceOrder();
+
+    if (!isBillCreated) return; // dừng lại nếu lỗi
     if (paymentMethod === "cod") {
       await handlePlaceOrder();
     } else if (paymentMethod === "qr") {
       try {
-        // Tạo bill trước
-        await handlePlaceOrder();
+        // // Tạo bill trước
+        // await handlePlaceOrder();
 
         // Sau đó tạo order ZaloPay và chuyển hướng
         handleCheckOut();

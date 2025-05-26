@@ -52,6 +52,7 @@ let getBillByUserID = (inputId) => {
                     {
                       model: db.Product,
                       as: "products",
+                      attributes: { exclude: ["quantity"] },
                     },
                   ],
                 },
@@ -77,67 +78,72 @@ function createDate() {
   return new Date(); // returns current date and time as a Date object
 }
 
+const generateBillId = () => {
+  const short = Date.now().toString(36).slice(-6).toUpperCase();
+  return `BILL-${short}`; // Ví dụ: BILL-7F5A3C
+};
 // let createBill = async (data) => {
 //   return new Promise(async (resolve, reject) => {
 //     try {
-//       // Lấy discount từ data, mặc định là 0 nếu không có
-//       const billDiscount = data.discount || 0; // Discount toàn bộ hóa đơn
-
-//       // Tính tổng giá trị bill trước khi áp dụng discount
+//       const billDiscount = data.discount || 0;
 //       let totalPrice = 0;
+//       console.log(data.productId);
 
-//       // Duyệt qua tất cả các item trong bill
+//       const customBillId = generateBillId();
+
+//       // ✅ Tạo bill
+//       let bill = await db.Bill.create({
+//         billId: customBillId,
+//         userId: data.userId,
+//         paymentMethod: data.paymentMethod, // ✅ Đã sửa tên đúng
+//         totalPrice: 0,
+//         createdAt: new Date(),
+//         updatedAt: new Date(),
+//       });
+
+//       // ✅ Tạo các bill item
 //       for (let item of data.items) {
 //         const product = await db.Product.findOne({
 //           where: { productId: item.productId },
 //         });
 
-//         // Tính giá trị của sản phẩm
+//         if (!product) {
+//           console.log("⚠️ Product not found for ID:", item.productId);
+//           continue; // hoặc throw new Error để debug rõ hơn
+//         }
 //         const itemTotalPrice = product.productPrice * item.quantity;
-
-//         // Tính giá trị sau discount cho sản phẩm (ví dụ: 10% giảm giá cho từng sản phẩm)
-//         const itemDiscount = item.discount || 0; // Nếu có discount riêng cho item
+//         const itemDiscount = item.discount || 0;
 //         const itemDiscountedPrice =
 //           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
 
-//         // Cộng vào tổng giá trị của hóa đơn
 //         totalPrice += itemDiscountedPrice;
 
-//         // Lưu Bill_Item với discount cho sản phẩm
 //         await db.Bill_Item.create({
-//           billId: data.billId,
-//           productId: item.productId,
+//           billId: customBillId,
+//           billItemId: "ITEM-" + nanoid(8), // ✅ unique hơn
 //           quantity: item.quantity,
-//           discount: itemDiscount, // Lưu discount cho item vào Bill_Item
-//           totalPrice: itemDiscountedPrice, // Lưu giá trị của sản phẩm sau discount
+//           productId: item.productId,
+//           discount: billDiscount,
+//           totalPrice: itemDiscountedPrice, // ✅ dùng giá trị đã tính
+//           createdAt: new Date(),
+//           updatedAt: new Date(),
 //         });
 //       }
 
-//       // Tạo hóa đơn chính với tổng giá trị đã được giảm giá từ các sản phẩm
-//       let bill = await db.Bill.create({
-//         billId: data.billId,
-//         userId: data.userId,
-//         totalPrice: totalPrice, // Tổng giá trị sau khi tính discount cho từng item
-//         discount: billDiscount, // Lưu discount cho cả hóa đơn
-//         date: createDate(),
-//       });
+//       bill.totalPrice = totalPrice;
+//       await bill.save();
 
-//       resolve("Bill and bill items with discounts created successfully");
+//       resolve({ message: "Bill created successfully", billId: customBillId });
 //     } catch (e) {
 //       reject(e);
 //     }
 //   });
 // };
-const generateBillId = () => {
-  const short = Date.now().toString(36).slice(-6).toUpperCase();
-  return `BILL-${short}`; // Ví dụ: BILL-7F5A3C
-};
 let createBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
       const billDiscount = data.discount || 0;
       let totalPrice = 0;
-      console.log(data.productId);
 
       const customBillId = generateBillId();
 
@@ -145,13 +151,12 @@ let createBill = async (data) => {
       let bill = await db.Bill.create({
         billId: customBillId,
         userId: data.userId,
-        paymentMethod: data.paymentMethod, // ✅ Đã sửa tên đúng
+        paymentMethod: data.paymentMethod,
         totalPrice: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      // ✅ Tạo các bill item
       for (let item of data.items) {
         const product = await db.Product.findOne({
           where: { productId: item.productId },
@@ -159,25 +164,42 @@ let createBill = async (data) => {
 
         if (!product) {
           console.log("⚠️ Product not found for ID:", item.productId);
-          continue; // hoặc throw new Error để debug rõ hơn
+          continue;
         }
+
+        // ✅ Kiểm tra số lượng tồn kho đủ hay không
+        if (product.quantity < item.quantity) {
+          return resolve({
+            errCode: 2,
+            errMessage: `Sản phẩm ${product.productName} không đủ số lượng tồn kho!`,
+          });
+        }
+
+        // ✅ Tính giá sau giảm giá
         const itemTotalPrice = product.productPrice * item.quantity;
+        // console.log(itemTotalPrice);
+
         const itemDiscount = item.discount || 0;
         const itemDiscountedPrice =
           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
 
         totalPrice += itemDiscountedPrice;
 
+        // ✅ Tạo bill item
         await db.Bill_Item.create({
           billId: customBillId,
-          billItemId: "ITEM-" + nanoid(8), // ✅ unique hơn
+          billItemId: "ITEM-" + nanoid(8),
           quantity: item.quantity,
           productId: item.productId,
           discount: billDiscount,
-          totalPrice: itemDiscountedPrice, // ✅ dùng giá trị đã tính
+          totalPrice: itemDiscountedPrice,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
+
+        // ✅ Giảm số lượng tồn kho trong Product
+        product.quantity -= item.quantity;
+        await product.save();
       }
 
       bill.totalPrice = totalPrice;
@@ -189,61 +211,6 @@ let createBill = async (data) => {
     }
   });
 };
-
-// let createBill = async (data) => {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       const billDiscount = data.discount || 0;
-//       let totalPrice = 0;
-
-//       // console.log(data.id);
-
-//       // Tạo billId custom
-//       const customBillId = generateBillId();
-
-//       // Tạo bill với custom billId
-//       let bill = await db.Bill.create({
-//         billId: customBillId, // Dùng ID custom
-//         userId: data.userId,
-//         paymentMedthod: data.paymentMedthod,
-//         totalPrice: 0,
-//       });
-
-//       // Tạo bill items
-//       for (let item of data.items) {
-//         const product = await db.Product.findOne({
-//           where: { productId: item.productId },
-//         });
-
-//         const itemTotalPrice = product.productPrice * item.quantity;
-//         const itemDiscount = item.discount || 0;
-//         const itemDiscountedPrice =
-//           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
-
-//         totalPrice += itemDiscountedPrice;
-
-//         await db.Bill_Item.create({
-//           billId: customBillId,
-//           itemId: `ITEM${Date.now()}-${Math.floor(Math.random() * 1000)}`, // Hoặc bạn tự tạo logic riêng
-//           quantity: item.quantity,
-//           productId: item.productId,
-//           discount: billDiscount,
-//           totalPrice: itemDiscountedPrice,
-//           createdAt: new Date(),
-//           updatedAt: new Date(),
-//         });
-//       }
-
-//       // Cập nhật tổng tiền
-//       bill.totalPrice = totalPrice;
-//       await bill.save();
-
-//       resolve({ message: "Bill created successfully", billId: customBillId });
-//     } catch (e) {
-//       reject(e);
-//     }
-//   });
-// };
 
 let updateBill = async (data) => {
   return new Promise(async (resolve, reject) => {

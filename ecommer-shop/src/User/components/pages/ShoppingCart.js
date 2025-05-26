@@ -57,8 +57,7 @@ const ShoppingCart = () => {
   };
 
   const total = cartItems.reduce(
-    (acc, item) =>
-      acc + item.productPrice.toLocaleString("vi-VN") * item.quantity,
+    (acc, item) => acc + item.productPrice * item.quantity,
     0
   );
 
@@ -75,10 +74,14 @@ const ShoppingCart = () => {
               <div className="grid grid-cols-6 mt-5 gap-8">
                 <div className="col-span-4">
                   <div className="border border-gray rounded-lg">
-                    <div className="grid grid-cols-4 gap-0">
+                    <div className="grid grid-cols-5 gap-0">
                       <div className="p-5 border border-gray flex items-center justify-center">
                         Product
                       </div>
+                      <div className="p-5 border border-gray flex items-center justify-center">
+                        Original Price
+                      </div>{" "}
+                      {/* Cột mới */}
                       <div className="p-5 border border-gray flex items-center justify-center">
                         Quantity
                       </div>
@@ -91,7 +94,7 @@ const ShoppingCart = () => {
                     {cartItems.map((item) => (
                       <div
                         key={item.id}
-                        className="grid grid-cols-4 gap-0 border-b items-center"
+                        className="grid grid-cols-5 gap-0 border-b items-center"
                       >
                         {/* Product Image */}
                         <div className="p-4 flex items-center gap-3">
@@ -106,13 +109,12 @@ const ShoppingCart = () => {
                             <p className="text-xs uppercase">
                               {item.productName}
                             </p>
-                            {/* <span className="text-xs">
-                              {typeof item.productPrice === "number"
-                                ? item.productPrice.toLocaleString("vi-VN")
-                                : Number(item.productPrice).toFixed(3)}
-                            </span> */}
-                            {/* <span className="text-xs">{formatPrice(item.productPrice)} ₫</span> */}
                           </div>
+                        </div>
+
+                        {/* Original Price */}
+                        <div className="p-4 flex justify-center">
+                          {Number(item.productPrice).toLocaleString("vi-VN")}₫
                         </div>
 
                         {/* Quantity Control */}
@@ -189,7 +191,11 @@ const ShoppingCart = () => {
                       placeholder="Coupon code"
                     />
                     <p className="mt-6 font-semibold">
-                      Total: {total.toFixed(3)}₫
+                      Total: {}
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(total)}
                     </p>
 
                     {/* <Link

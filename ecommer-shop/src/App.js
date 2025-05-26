@@ -23,170 +23,146 @@ import AboutUS from "./User/components/AboutUs";
 import WishList from "./User/components/pages/WishList";
 import { WishlistProvider } from "./User/context/WishlistContext";
 import CheckoutPage from "./User/components/pages/CheckoutPage";
-import OrdersPage from "./User/components/pages/OrdersPage";
+// import OrdersPage from "./User/components/pages/OrdersPage";
 import AdminDashBoard from "./Admin/components/AdminDashBoard";
 import PrivateRoute from "./User/components/services/PrivateRoute"; // Thêm dòng này
 import ResultPage from "./User/components/pages/ResultPage";
 import { ToastContainer } from "react-toastify";
+import { UserProvider } from "./User/context/UserContext";
 
 function App() {
   return (
     <div>
-      <WishlistProvider>
-        <Router>
-          <ScrollToTop />
-          <div className="App relative">
-            <Routes>
-              {/* ✅ Redirect trang root về /home */}
-              <Route path="/" element={<Navigate to="/home" />} />
-
-              {/* Đăng nhập & Đăng ký */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-
-              {/* Home page */}
-              <Route
-                path="/home"
-                element={
-                  <>
-                    <Header />
-                    <Banner />
-                    <Service />
-                    <Category />
-                    <Footer />
-                  </>
-                }
+      <UserProvider>
+        {" "}
+        {/* ✅ Thêm dòng này để bọc toàn bộ app */}
+        <WishlistProvider>
+          <Router>
+            <ScrollToTop />
+            <div className="App relative">
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/home"
+                  element={
+                    <>
+                      <Header />
+                      <Banner />
+                      <Service />
+                      <Category />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route path="/admin" element={<AdminDashBoard />} />
+                <Route
+                  path="/profile"
+                  element={
+                    <>
+                      <Header />
+                      <Profile />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route
+                  path="/ProductDetail/:productId"
+                  element={
+                    <>
+                      <Header />
+                      <ProductDetail />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route
+                  path="/shopping-cart"
+                  element={
+                    <>
+                      <Header />
+                      <ShoppingCart />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route
+                  path="/shop"
+                  element={
+                    <>
+                      <Header />
+                      <ProductList />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route
+                  path="/blog"
+                  element={
+                    <>
+                      <Header />
+                      <Blog />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route
+                  path="/about-us"
+                  element={
+                    <>
+                      <Header />
+                      <AboutUS />
+                      <Footer />
+                    </>
+                  }
+                />
+                <Route
+                  path="/wish-list"
+                  element={
+                    <>
+                      <Header />
+                      <WishList />
+                      <Footer />
+                    </>
+                  }
+                />
+                {/* ✅ Các trang yêu cầu đăng nhập */}
+                <Route
+                  path="/checkout"
+                  element={
+                    <PrivateRoute>
+                      <CheckoutPage />
+                    </PrivateRoute>
+                  }
+                />
+                {/* <Route
+                  path="/orders"
+                  element={
+                    <PrivateRoute>
+                      <OrdersPage />
+                    </PrivateRoute>
+                  }
+                /> */}
+                <Route path="/result" element={<ResultPage />} />
+              </Routes>
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
               />
-
-              {/* Admin */}
-              <Route
-                path="/admin"
-                element={
-                  <>
-                    <AdminDashBoard />
-                  </>
-                }
-              />
-
-              {/* Profile */}
-              <Route
-                path="/profile"
-                element={
-                  <>
-                    <Header />
-                    <Profile />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* Chi tiết sản phẩm */}
-              <Route
-                path="/ProductDetail/:productId"
-                element={
-                  <>
-                    <Header />
-                    <ProductDetail />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* Giỏ hàng */}
-              <Route
-                path="/shopping-cart"
-                element={
-                  <>
-                    <Header />
-                    <ShoppingCart />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* Danh sách sản phẩm */}
-              <Route
-                path="/shop"
-                element={
-                  <>
-                    <Header />
-                    <ProductList />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* Blog */}
-              <Route
-                path="/blog"
-                element={
-                  <>
-                    <Header />
-                    <Blog />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* About Us */}
-              <Route
-                path="/about-us"
-                element={
-                  <>
-                    <Header />
-                    <AboutUS />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* Wishlist */}
-              <Route
-                path="/wish-list"
-                element={
-                  <>
-                    <Header />
-                    <WishList />
-                    <Footer />
-                  </>
-                }
-              />
-
-              {/* ✅ Các trang yêu cầu đăng nhập */}
-              <Route
-                path="/checkout"
-                element={
-                  <PrivateRoute>
-                    <CheckoutPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <PrivateRoute>
-                    <OrdersPage />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route path="/result" element={<ResultPage />} />
-            </Routes>
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-            <GoTop />
-          </div>
-        </Router>
-      </WishlistProvider>
+              <GoTop />
+            </div>
+          </Router>
+        </WishlistProvider>
+      </UserProvider>{" "}
+      {/* ✅ Đóng lại ở đây */}
     </div>
   );
 }

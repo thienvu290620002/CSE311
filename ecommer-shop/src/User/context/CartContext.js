@@ -82,7 +82,7 @@ export const CartProvider = ({ children }) => {
 
       if (existingItem) {
         toast.success("Quantity updated in cart successfully!", {
-          position: "top-right",
+          position: "bottom-right",
           autoClose: 1000,
           toastId,
         });
@@ -93,7 +93,7 @@ export const CartProvider = ({ children }) => {
         );
       } else {
         toast.success("Added to cart successfully!", {
-          position: "top-right",
+          position: "bottom-right",
           autoClose: 1000,
           toastId,
         });
