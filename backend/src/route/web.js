@@ -67,8 +67,14 @@ let initWebRoutes = (app) => {
   router.post("/api/update-category", categoryController.updateCategoryCRUD);
 
   //WhistList
-  router.get("/api/get-wishlist-by-userId", wishListController.getWishListByUserID); //wishlist
-  router.post("/api/create-wishlist", wishListController.createWishlist); //create and updateupdate
+  router.get(
+    "/api/get-wishlist-by-userId",
+    wishListController.getWishListByUserID
+  ); //wishlist
+  router.post(
+    "/api/create-wishlist",
+    wishListController.createAndUpdateWishlist
+  ); //create and updateupdate
   router.get("/api/delete-wishlist", wishListController.deleteWishlist);
 
   //ZaloPayment

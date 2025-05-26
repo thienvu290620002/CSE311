@@ -1,11 +1,81 @@
-import React from "react";
+// import React, { useEffect } from "react";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import swal from "sweetalert";
+// import axios from "axios";
 
 const WishList = () => {
   const { wishItems, setWishItems } = useWishlist();
   const { cartItems, setCartItems } = useCart();
+
+  // ✅ Giả sử userId được lưu trong localStorage
+  // const userString = localStorage.getItem("user");
+
+  // let userId = null;
+  // if (userString) {
+  //   try {
+  //     const user = JSON.parse(userString); // 👉 Parse chuỗi JSON thành object
+  //     userId = user.id; // Bây giờ bạn có thể dùng user.id
+  //   } catch (e) {
+  //     console.error("Lỗi khi parse user từ localStorage:", e);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   const fetchWishlist = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
+  //       );
+
+  //       // Giả sử API trả về mảng sản phẩm
+  //       if (response.data.data && response.data.data.wishlist) {
+  //         setWishItems(response.data.data.wishlist); // ✅ Dữ liệu đúng dạng
+  //         console.log(response.data.data.wishlist, "agdfhgdhm");
+  //       } else {
+  //         setWishItems([]);
+  //       }
+  //       console.log(wishItems);
+  //     } catch (error) {
+  //       console.error("Failed to fetch wishlist:", error);
+  //       setWishItems([]);
+  //     }
+  //   };
+
+  //   if (userId) {
+  //     fetchWishlist();
+  //   }
+  // }, [userId, setWishItems]);
+  // useEffect(() => {
+  //   const fetchWishlist = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
+  //       );
+
+  //       if (response.data.data && response.data.data.wishlist) {
+  //         setWishItems(response.data.data.wishlist);
+  //         localStorage.setItem(
+  //           "wishlist",
+  //           JSON.stringify(response.data.data.wishlist)
+  //         ); // <-- lưu luôn
+  //       } else {
+  //         setWishItems([]);
+  //         localStorage.removeItem("wishlist"); // hoặc xóa đi
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch wishlist:", error);
+  //       setWishItems([]);
+  //       localStorage.removeItem("wishlist");
+  //     }
+  //   };
+  //   // console.log(wishItems);
+
+  //   if (userId) {
+  //     fetchWishlist();
+  //   }
+  // }, [userId, setWishItems]);
+  console.log(wishItems);
 
   const removeFromWishlist = (productId) => {
     swal({
@@ -75,17 +145,25 @@ const WishList = () => {
             </thead>
             <tbody>
               {wishItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 flex items-center ">
+                <tr key={item.productWishLists.id} className="hover:bg-gray-50">
+                  <td className="py-3 px-4 flex items-center">
                     <img
-                      src={`http://localhost:8080${item.image}`}
-                      alt={item.productName}
+                      src={`http://localhost:8080${item.productWishLists.image}`}
+                      alt={item.productWishLists.productName}
                       className="w-16 h-16 object-cover rounded-md mr-4"
                     />
-                    <span>{item.productName}</span>
+                    <span>{item.productWishLists.productName}</span>
                   </td>
-                  <td className="py-3 px-4 text-gray-800">
+                  {/* <td className="py-3 px-4 text-gray-800">
                     {item.productPrice.toLocaleString("vi-VN")} ₫
+                  </td> */}
+                  <td className="py-3 px-4 text-gray-800">
+                    {typeof item.productWishLists.productPrice === "number"
+                      ? item.productWishLists.productPrice.toLocaleString(
+                          "vi-VN"
+                        )
+                      : "0"}{" "}
+                    ₫
                   </td>
                   <td className="py-3 px-4 flex justify-center gap-4">
                     <button

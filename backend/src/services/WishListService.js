@@ -40,65 +40,30 @@ let getWishListByUserID = (inputId) => {
   });
 };
 
-const createWishlist = async (data) => {
+const createAndUpdateWishlist = async (data) => {
   return new Promise(async (resolve, reject) => {
-    console.log(data);
+    console.log(data, "checkcheck");
     try {
       // Check if the wishlist exists for this user
       let wishlist = await db.WishList.findOne({
-        where: { userId: data.userId },
-        raw: true,
+        where: { userId: data.userId, productId: data.productId },
+        // raw: true,
       });
 
-      console.log(wishlist, "aegdfbgnh");
+      console.log(wishlist, "da coco");
       if (!wishlist) {
         wishlist = await db.WishList.create({
           userId: data.userId,
           productId: data.productId,
           wishListStatus: "active", // new wishlist = active
         });
+      } else {
+        wishlist.wishListStatus = data.wishListStatus;
+        await wishlist.save();
       }
-      console.log(wishlist, "aegáá123123123123dfbgnh");
-      //   let wishlist2 = await db.WishList.findOne({
-      //     where: { userId: data.userId },
-      //     include: [
-      //       {
-      //         model: db.Product,
-      //         as: "products",
-      //       },
-      //     ],
-      //   });
+      console.log(wishlist, "save");
 
-      //   console.log(wishlist2, "lllll");
-      // If no items were provided, delete the wishlist
-      if (!data.items || data.items.length === 0) {
-        if (wishlist) {
-          await deleteWishlistIfEmpty(wishlist.wishListId);
-        }
-        return resolve("Empty wishlist. Wishlist deleted.");
-      }
-
-      // If not, create a new wishlist with status active
-
-      let addedNewProduct = false;
-
-      // Add the products to the wishlist
-      for (let item of data.items) {
-        const alreadyExists = wishlist.products.some(
-          (product) => product.productId === item.productId
-        );
-
-        if (!alreadyExists) {
-          await wishlist.addProduct(item.productId);
-          addedNewProduct = true;
-        }
-      }
-
-      // Nếu đã có wishlist và có thêm sản phẩm mới, cập nhật trạng thái active
-      if (addedNewProduct && wishlist.wishListStatus !== "active") {
-        await wishlist.update({ wishListStatus: "active" });
-      }
-
+ 
       resolve("WishList updated successfully");
     } catch (e) {
       reject(e);
@@ -121,6 +86,6 @@ const deleteWishlist = async (wishListId) => {
 
 module.exports = {
   getWishListByUserID: getWishListByUserID,
-  createWishlist: createWishlist,
+  createAndUpdateWishlist: createAndUpdateWishlist,
   deleteWishlist: deleteWishlist,
 };

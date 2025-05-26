@@ -1,10 +1,10 @@
 import db from "../models/index";
 import WishListService from "../services/WishListService";
 
-let createWishlist = async (req, res) => {
+let createAndUpdateWishlist = async (req, res) => {
   // console.log(req.body);
   try {
-    let data = await WishListService.createWishlist(req.body);
+    let data = await WishListService.createAndUpdateWishlist(req.body);
 
     return res.status(200).json(data);
   } catch (error) {
@@ -42,6 +42,6 @@ let deleteWishlist = async (req, res) => {
 };
 module.exports = {
   getWishListByUserID: getWishListByUserID,
-  createWishlist: createWishlist,
+  createAndUpdateWishlist: createAndUpdateWishlist,
   deleteWishlist: deleteWishlist,
 };
