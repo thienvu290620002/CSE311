@@ -4,9 +4,12 @@ import { useOrders } from "../../context/OrderContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+
 
 const Profile = () => {
   const { user, setUser } = useContext(UserContext);
+  const { addToCart } = useCart();
   const { orders } = useOrders();
   const { wishItems, setWishItems } = useWishlist();
   const navigate = useNavigate();
@@ -325,37 +328,48 @@ const Profile = () => {
               Danh sách yêu thích
             </h2>
             {wishItems && wishItems.length > 0 ? (
-              wishItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b py-3"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={`http://localhost:8080${item.image}`}
-                      alt={item.productName}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="text-left">
-                      <p className="font-semibold">{item.productName}</p>
-                      <p className="text-sm text-gray-600">
-                        {item.productPrice.toLocaleString("vi-VN")}₫
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeFromWishlist(item.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
-                  >
-                    Xóa
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-center">
-                Bạn chưa thêm sản phẩm nào vào yêu thích.
-              </p>
-            )}
+  wishItems.map((item) => (
+    <div
+      key={item.id}
+      className="flex items-center justify-between border-b py-3"
+    >
+      <div className="flex items-center gap-4">
+        <img
+          src={`http://localhost:8080${item.image}`}
+          alt={item.productName}
+          className="w-16 h-16 object-cover rounded"
+        />
+        <div className="text-left">
+          <p className="font-semibold">{item.productName}</p>
+          <p className="text-sm text-gray-600">
+            {item.productPrice.toLocaleString("vi-VN")}₫
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => addToCart(item)}
+          className="bg-green text-white px-4 py-1 rounded"
+        >
+          Thêm giỏ hàng
+        </button>
+
+        <button
+          onClick={() => removeFromWishlist(item.id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+        >
+          Xóa
+        </button>
+      </div>
+    </div>
+  ))
+) : (
+  <p className="text-center">
+    Bạn chưa thêm sản phẩm nào vào yêu thích.
+  </p>
+)}
+
           </div>
         )}
       </div>
