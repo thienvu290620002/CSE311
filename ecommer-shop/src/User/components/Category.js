@@ -1,11 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
+import { UserContext } from "../context/UserContext";
+import swal from "sweetalert";
+  import { useNavigate } from "react-router-dom";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+  import { FiRefreshCw, FiSearch } from "react-icons/fi";
+
 
 const Category = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -24,7 +32,45 @@ const Category = () => {
   }, []);
 
   const { addToCart } = useCart(); // Lấy hàm addToCart từ context
-  const { addToWishlist } = useWishlist();
+  // const { addToWishlist } = useWishlist();
+  const { wishItems, setWishItems, addToWishlist } = useWishlist();
+
+  // Kiểm tra sản phẩm có trong wishlist không
+  const isInWishlist = (productId) => {
+    return wishItems.some((item) => item.id === productId);
+  };
+
+  // Hàm toggle wishlist: nếu có thì xóa, không có thì thêm
+  const toggleWishlist = (product) => {
+    if (!user) {
+  swal({
+    title: "Login Required!",
+    text: "You need to log in to add this product to your wishlist.",
+    icon: "warning",
+    buttons: {
+      cancel: "Back to Home",
+      confirm: "Go to Login"
+    },
+    dangerMode: true,
+  }).then((willLogin) => {
+    if (willLogin) {
+      navigate("/login");
+    } else {
+      navigate("/");
+    }
+  });
+  return;
+}
+
+    if (isInWishlist(product.id)) {
+      // Xóa sản phẩm khỏi wishlist
+      const newWishList = wishItems.filter((item) => item.id !== product.id);
+      setWishItems(newWishList);
+    } else {
+      // Thêm sản phẩm vào wishlist
+      addToWishlist(product);
+    }
+  };
 
   const handleAddToCart = (product) => {
     // Tách quantity tồn kho ra
@@ -32,10 +78,6 @@ const Category = () => {
 
     // Gửi bản sao không chứa quantity tồn kho
     addToCart(productInfo);
-  };
-
-  const handleAddToWishlist = (product) => {
-    addToWishlist(product);
   };
 
   return (
@@ -97,124 +139,141 @@ const Category = () => {
           </div>
 
           <ul className="mt-8 lg:grid grid-cols-4 gap-7">
-            {products.slice(0, 4).map((product) => (
-              <li
-                key={product.id}
-                className="mt-6 md:mt-0 text-center group relative"
-                onClick={(e) => e.stopPropagation()} // Ngừng sự kiện click ở đây
+  {products.slice(0, 4).map((product) => (
+    <li
+      key={product.id}
+      className="mt-6 md:mt-0 text-center group relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative">
+        {/* Sale Banner */}
+        {product.sale && (
+          <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
+            -{product.salePercentage}%
+          </span>
+        )}
+
+        {/* Product Image */}
+        {/* <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
+          <Link to={`/productdetail/${product.productId}`}>
+            <img
+              className="block size-full object-cover"
+              src={`http://localhost:8080${product.image}`}
+              alt={product.productName}
+            />
+          </Link>
+        </div> */}
+        <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
+  {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
+  {isInWishlist(product.id) && (
+  <div className="absolute top-2 right-2 z-10">
+    <FaHeart size={24} color="red"/>
+  </div>
+)}
+
+  <Link to={`/productdetail/${product.productId}`}>
+    <img
+      className="block size-full object-cover"
+      src={`http://localhost:8080${product.image}`}
+      alt={product.productName}
+    />
+  </Link>
+</div>
+
+
+        {/* Hover Actions */}
+        <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
+          {/* Wishlist Button */}
+          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
+            <button
+              className={"shadow-lg p-3 rounded-full block transition-all bg-white hover:bg-slate-200"}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleWishlist(product);
+              }}
+            >
+              {isInWishlist(product.id) ? (
+  <FaHeart size={24} color="red" />
+) : (
+  <FaRegHeart size={24} color="black" />
+)}
+            </button>
+          </li>
+
+          {/* Refresh/Reload Button */}
+          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-100">
+            <button
+              type="button"
+              className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
+            >
+              <FiRefreshCw size={20} className="text-gray-600" />
+            </button>
+          </li>
+
+          {/* Search/View Button */}
+          <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
+            <Link to={`/productdetail/${product.productId}`}>
+              <button
+                type="button"
+                className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
               >
-                <div className="relative">
-                  {/* Sale Banner */}
-                  {product.sale && (
-                    <span className="absolute py-1 text-xs px-2 top-3 left-3 bg-red-600 text-white rounded-xl">
-                      -{product.salePercentage}%
+                 <FiSearch size={20} className="text-gray-600" />
+              </button>
+            </Link>
+          </li>
+        </ul>
+
+        {/* Star Rating */}
+        <div className="flex justify-center items-center gap-1 mt-5">
+          {[...Array(5)].map((_, index) => (
+            <img
+              key={index}
+              className="size-4"
+              src={
+                index < product.rating
+                  ? "/images/ico_star_active.png"
+                  : "/images/ico_star_gray.png"
+              }
+              alt="star"
+            />
+          ))}
+        </div>
+
+        {/* Product Name */}
+        <h3 className="text-15 mt-2">{product.productName}</h3>
+
+        {/* Price + Add to Cart */}
+        <div className="mt-2 relative h-7 overflow-hidden">
+          <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
+            <div className="flex items-center justify-center font-bold text-15 text-center">
+              <span className={product.sale ? "text-red-600" : ""}>
+                {product.sale && product.originalPrice && (
+                  <>
+                    <span className="line-through text-lightGray mr-1">
+                      <sup className="text-[10px] align-middle">₫</sup>
+                      {product.originalPrice.toLocaleString("vi-VN")}
                     </span>
-                  )}
+                    -{" "}
+                  </>
+                )}
+                <sup className="text-[10px] align-middle">₫</sup>
+                {product.productPrice.toLocaleString("vi-VN")}
+              </span>
+            </div>
 
-                  {/* Product Image */}
-                  <div className="rounded-xl overflow-hidden bg-white lg:h-[385px]">
-                    <Link to={`/productdetail/${product.productId}`}>
-                      <img
-                        className="block size-full object-cover"
-                        src={`http://localhost:8080${product.image}`}
-                        alt={product.productName}
-                      />
-                    </Link>
-                  </div>
+            <button
+              onClick={() => handleAddToCart(product)}
+              className="mt-2 text-sm text-black font-bold"
+            >
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </li>
+  ))}
+</ul>
 
-                  <ul className="absolute bottom-28 left-4 z-10 flex flex-col gap-3">
-                    <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
-                      <button
-                        className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToWishlist(product);
-                        }}
-                      >
-                        <img
-                          src="../images/ico_heart.png"
-                          className="image size-4 rounded-full"
-                          alt=""
-                        />
-                      </button>
-                    </li>
-                    <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-100">
-                      <button
-                        type="button"
-                        className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                      >
-                        <img
-                          src="../images/ico_reload.png"
-                          className="image size-4 rounded-full"
-                          alt=""
-                        />
-                      </button>
-                    </li>
-                    <li className="opacity-0 translate-y-4 duration-200 group-hover:opacity-100 group-hover:translate-y-0 transition-all delay-200">
-                      <Link to={`/productdetail/${product.productId}`}>
-                        <button
-                          type="button"
-                          className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                        >
-                          <img
-                            src="../images/ico_search.png"
-                            className="image size-4 rounded-full"
-                            alt=""
-                          />
-                        </button>
-                      </Link>
-                    </li>
-                  </ul>
-
-                  <div className="flex justify-center items-center gap-1 mt-5">
-                    {[...Array(5)].map((_, index) => (
-                      <img
-                        key={index}
-                        className="size-4"
-                        src={
-                          index < product.rating
-                            ? "/images/ico_star_active.png"
-                            : "/images/ico_star_gray.png"
-                        }
-                        alt="star"
-                      />
-                    ))}
-                  </div>
-
-                  <h3 className="text-15 mt-2">{product.productName}</h3>
-                  <div className="mt-2 relative h-7 overflow-hidden">
-                    <div className="absolute left-1/2 -translate-x-1/2 group-hover:bottom-0 -bottom-5 transition-all duration-300">
-                      <div className="flex items-center justify-center font-bold text-15 text-center">
-                        <span className={product.sale ? "text-red-600" : ""}>
-                          {product.sale && product.originalPrice && (
-                            <>
-                              <span className="line-through text-lightGray mr-1">
-                                <sup className="text-[10px] align-middle">
-                                  ₫
-                                </sup>
-                                {product.originalPrice.toLocaleString("vi-VN")}
-                              </span>
-                              -{" "}
-                            </>
-                          )}
-                          <sup className="text-[10px] align-middle">₫</sup>
-                          {product.productPrice.toLocaleString("vi-VN")}
-                        </span>
-                      </div>
-
-                      {/* Add to Cart Button */}
-                      <button
-                        onClick={() => handleAddToCart(product)} // Đảm bảo bạn gọi hàm đúng cách với đối số là sản phẩm
-                        className="mt-2 text-sm text-black font-bold"
-                      >
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 

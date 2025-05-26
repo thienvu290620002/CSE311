@@ -1,21 +1,12 @@
 import React from "react";
 import { useWishlist } from "../../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
 import swal from "sweetalert";
+
 const WishList = () => {
   const { wishItems, setWishItems } = useWishlist();
+  const { cartItems, setCartItems } = useCart();
 
-  // const removeFromWishlist = (productId) => {
-  //   swal({
-  //     title: "Are you sure?",
-  //     text: "Do you really want to remove this item from your cart?",
-  //     icon: "warning",
-  //     buttons: ["Cancel", "Yes, remove it"],
-  //     dangerMode: true,
-  //   })
-  //   setWishItems((prevItems) =>
-  //     prevItems.filter((item) => item.id !== productId)
-  //   );
-  // };
   const removeFromWishlist = (productId) => {
     swal({
       title: "Are you sure?",
@@ -26,7 +17,7 @@ const WishList = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setWishItems((prevItems) =>
-          prevItems.filter((item) => item.id !== productId)
+          prevItems.filter((item) => item.id !== productId),
         );
 
         swal("Removed!", "The item has been removed from your wishlist.", {
@@ -35,6 +26,29 @@ const WishList = () => {
       } else {
         swal("Cancelled", "The item is still in your wishlist.");
       }
+    });
+  };
+
+  const addToCartFromWishlist = (item) => {
+    const exists = cartItems.find((cartItem) => cartItem.id === item.id);
+    if (exists) {
+      setCartItems((prev) =>
+        prev.map((cartItem) =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem,
+        ),
+      );
+    } else {
+      setCartItems((prev) => [...prev, { ...item, quantity: 1 }]);
+    }
+
+    swal({
+      icon: "success",
+      title: "Added to Cart",
+      text: `${item.productName} has been added to your cart.`,
+      timer: 1500,
+      buttons: false,
     });
   };
 
@@ -55,7 +69,7 @@ const WishList = () => {
                   Price
                 </th>
                 <th className="py-3 px-4 text-sm font-semibold text-gray-600 border-b text-center">
-                  Remove
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -73,7 +87,14 @@ const WishList = () => {
                   <td className="py-3 px-4 text-gray-800">
                     {item.productPrice.toLocaleString("vi-VN")} ₫
                   </td>
-                  <td className="py-3 px-4 text-red-600">
+                  <td className="py-3 px-4 flex justify-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => addToCartFromWishlist(item)}
+                      className="bg-green hover:bg-green-600 text-black px-3 py-1 rounded"
+                    >
+                      Add to Cart
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeFromWishlist(item.id)}

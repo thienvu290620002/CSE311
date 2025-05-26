@@ -1,4 +1,3 @@
-// WishlistContext.js
 import React, { createContext, useState, useContext, useEffect } from "react";
 
 const WishlistContext = createContext();
@@ -10,7 +9,6 @@ export const useWishlist = () => {
 export const WishlistProvider = ({ children }) => {
   const [wishItems, setWishItems] = useState([]);
 
-  // Lấy wishlist từ localStorage khi component được mount
   useEffect(() => {
     const savedWishlist = localStorage.getItem("wishlist");
     if (savedWishlist) {
@@ -18,11 +16,8 @@ export const WishlistProvider = ({ children }) => {
     }
   }, []);
 
-  // Lưu wishlist vào localStorage khi wishItems thay đổi
   useEffect(() => {
-    if (wishItems.length > 0) {
-      localStorage.setItem("wishlist", JSON.stringify(wishItems));
-    }
+    localStorage.setItem("wishlist", JSON.stringify(wishItems));
   }, [wishItems]);
 
   const addToWishlist = (product) => {
@@ -34,9 +29,34 @@ export const WishlistProvider = ({ children }) => {
     });
   };
 
+  const isInWishlist = (productId) => {
+    return wishItems.some((item) => item.id === productId);
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId)
+    );
+  };
+
+  const toggleWishlist = (product) => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+
   return (
     <WishlistContext.Provider
-      value={{ wishItems, setWishItems, addToWishlist }}
+      value={{
+        wishItems,
+        setWishItems,
+        addToWishlist,
+        removeFromWishlist,
+        toggleWishlist,
+        isInWishlist,
+      }}
     >
       {children}
     </WishlistContext.Provider>

@@ -4,9 +4,13 @@ import { useOrders } from "../../context/OrderContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+
 
 const Profile = () => {
+  const { setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
+  const { addToCart } = useCart();
   const { orders } = useOrders();
   const { wishItems, setWishItems } = useWishlist();
   const navigate = useNavigate();
@@ -52,15 +56,19 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
-  };
+  localStorage.removeItem("user");
+  localStorage.removeItem("wishlist");
+  setWishItems([]);  // xóa wishlist trong state
+  setCartItems([]);  // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
+  setUser(null);
+  navigate("/");
+};
+
 
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const updatedUsers = users.map((u) =>
-      u.email === user.email ? { ...u, ...newUserData } : u
+      u.email === user.email ? { ...u, ...newUserData } : u,
     );
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUser(newUserData);
@@ -70,11 +78,11 @@ const Profile = () => {
 
   const removeFromWishlist = (productId) => {
     setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
+      prevItems.filter((item) => item.id !== productId),
     );
   };
 
-if (!user) {
+  if (!user) {
     return (
       <div className="text-center mt-10">
         <p className="mb-4">Bạn chưa đăng nhập</p>
@@ -325,37 +333,48 @@ if (!user) {
               Danh sách yêu thích
             </h2>
             {wishItems && wishItems.length > 0 ? (
-              wishItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b py-3"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={`http://localhost:8080${item.image}`}
-                      alt={item.productName}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="text-left">
-                      <p className="font-semibold">{item.productName}</p>
-                      <p className="text-sm text-gray-600">
-                        {item.productPrice.toLocaleString("vi-VN")}₫
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeFromWishlist(item.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
-                  >
-                    Xóa
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-center">
-                Bạn chưa thêm sản phẩm nào vào yêu thích.
-              </p>
-            )}
+  wishItems.map((item) => (
+    <div
+      key={item.id}
+      className="flex items-center justify-between border-b py-3"
+    >
+      <div className="flex items-center gap-4">
+        <img
+          src={`http://localhost:8080${item.image}`}
+          alt={item.productName}
+          className="w-16 h-16 object-cover rounded"
+        />
+        <div className="text-left">
+          <p className="font-semibold">{item.productName}</p>
+          <p className="text-sm text-gray-600">
+            {item.productPrice.toLocaleString("vi-VN")}₫
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => addToCart(item)}
+          className="bg-green text-white px-4 py-1 rounded"
+        >
+          Thêm giỏ hàng
+        </button>
+
+        <button
+          onClick={() => removeFromWishlist(item.id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+        >
+          Xóa
+        </button>
+      </div>
+    </div>
+  ))
+) : (
+  <p className="text-center">
+    Bạn chưa thêm sản phẩm nào vào yêu thích.
+  </p>
+)}
+
           </div>
         )}
       </div>

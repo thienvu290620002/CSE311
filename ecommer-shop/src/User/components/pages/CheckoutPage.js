@@ -12,7 +12,7 @@ const CheckoutPage = () => {
 
   const total = cartItems.reduce(
     (acc, item) => acc + item.productPrice * item.quantity,
-    0
+    0,
   );
 
   const displayPaymentMethod = paymentMethod === "cod" ? "Cash" : "ZaloPay";
