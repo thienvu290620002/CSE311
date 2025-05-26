@@ -5,7 +5,6 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
 const ProductDetail = () => {
-  // const { productId } = useParams(); // Get id from URL
   const { addToCart } = useCart(); // Add to cart function from context
   const { addToWishlist } = useWishlist(); // Add to wishlist function
   const [activeTab, setActiveTab] = useState("description");
@@ -73,10 +72,19 @@ const ProductDetail = () => {
     fetchAllProducts();
   }, []);
 
+  // const handleAddToCart = (product) => {
+  //   const { quantity, ...productInfo } = product;
+  //   addToCart(productInfo);
+  // };
+
   const handleAddToCart = (product) => {
-    const { quantity, ...productInfo } = product;
-    addToCart(productInfo);
+  const productWithQuantity = {
+    ...product,
+    quantity: quantity,
   };
+  addToCart(productWithQuantity);
+};
+
 
   const handleAddToWishlist = (product) => {
     addToWishlist(product);
@@ -147,33 +155,6 @@ const ProductDetail = () => {
                     </li>
                   ))}
               </ul>
-
-              {/* <div className="overflow-hidden">
-                <div
-                  className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
-                  onMouseEnter={() => setShowZoom(true)}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={() => setShowZoom(false)}
-                >
-                  <img
-                    src={`http://localhost:8080${product.image}`}
-                    alt={product.productName}
-                    className="w-full h-full object-cover"
-                    // alt="Main product"
-                  />
-                  {showZoom && (
-                    <div
-                      className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
-                      style={{
-                        backgroundImage: `url(${selectedImage})`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                        backgroundSize: "150%", // Zoom level
-                      }}
-                    ></div>
-                  )}
-                </div>
-              </div> */}
               <div className="overflow-hidden">
                 <div
                   className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
@@ -287,28 +268,13 @@ const ProductDetail = () => {
                   </div>
 
                   <button
-                    type="button"
-                    onClick={() => handleAddToCart(product)}
-                    className="h-[50px] bg-black text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
-                  >
-                    Add To Cart
-                  </button>
+  type="button"
+  onClick={() => handleAddToCart(product)}
+  className="h-[50px] bg-black text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
+>
+  Add To Cart
+</button>
 
-                  {/* <button type="button" className="p-4 bg-white rounded-full">
-                    <button
-                      className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToWishlist(product);
-                      }}
-                    >
-                      <img
-                        src="../images/ico_heart.png"
-                        className="image size-4 rouded-full"
-                        alt=""
-                      />
-                    </button>
-                  </button> */}
                   <button
                     className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
                     onClick={(e) => {

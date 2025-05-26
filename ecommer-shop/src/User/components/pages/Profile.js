@@ -8,6 +8,7 @@ import { useCart } from "../../context/CartContext";
 
 
 const Profile = () => {
+  const { setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
   const { addToCart } = useCart();
   const { orders } = useOrders();
@@ -55,10 +56,14 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
-  };
+  localStorage.removeItem("user");
+  localStorage.removeItem("wishlist");
+  setWishItems([]);  // xóa wishlist trong state
+  setCartItems([]);  // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
+  setUser(null);
+  navigate("/");
+};
+
 
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];

@@ -80,10 +80,6 @@ const Category = () => {
     addToCart(productInfo);
   };
 
-  // const handleAddToWishlist = (product) => {
-  //   addToWishlist(product);
-  // };
-
   return (
     <div>
       {/* Categories Section */}

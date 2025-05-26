@@ -5,15 +5,20 @@ import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
 
 const Header = () => {
+  const { cartItems, setCartItems } = useCart();
+  const { wishItems } = useWishlist();
+
   const [products, setProducts] = useState([]);
+  const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
 
   useEffect(() => {
+    // Load sản phẩm
     const fetchProducts = async () => {
       try {
         const response = await axios.get(
           "http://localhost:8080/api/get-all-product",
         );
-
         setProducts(response.data || []);
       } catch (error) {
         console.error("Lỗi khi tải danh sách sản phẩm:", error);
@@ -23,13 +28,11 @@ const Header = () => {
     fetchProducts();
   }, []);
 
-  const [query, setQuery] = useState("");
-  const [filtered, setFiltered] = useState([]);
+  useEffect(() => {
+    // Lưu cartItems vào localStorage mỗi khi thay đổi
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
-  const { cartItems, setCartItems } = useCart();
-  const { wishItems } = useWishlist();
-
-  // ✅ Hàm thêm vào giỏ hàng
   const addToCart = (product) => {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
@@ -45,7 +48,6 @@ const Header = () => {
     });
   };
 
-  // ✅ Hàm xử lý tìm kiếm
   const handleChange = (e) => {
     const value = e.target.value;
     setQuery(value);
