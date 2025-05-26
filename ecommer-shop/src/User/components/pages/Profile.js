@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../context/UserContext";
-import { useOrders } from "../../context/OrderContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -10,13 +9,17 @@ import { useCart } from "../../context/CartContext";
 const Profile = () => {
   const { setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
+<<<<<<< HEAD
+=======
   const { addToCart } = useCart();
   const { orders } = useOrders();
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const { wishItems, setWishItems } = useWishlist();
   const navigate = useNavigate();
+  const [userBills, setUserBills] = useState([]);
+
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
-
   const [newUserData, setNewUserData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -27,17 +30,46 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    if (isEditing && user) {
-      setNewUserData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        address: user.address || "",
-        phoneNumber: user.phoneNumber || "",
-        gender: user.gender || "",
-        image: user.image || "",
-      });
-    }
-  }, [isEditing, user]);
+    const fetchUserData = async () => {
+      try {
+        if (!user?.id) return;
+
+        const [userRes, billRes] = await Promise.all([
+          fetch(`http://localhost:8080/api/get-user-by-id?id=${user.id}`),
+          fetch(`http://localhost:8080/api/get-bill-by-user-id?id=${user.id}`),
+        ]);
+
+        const userData = await userRes.json();
+        const billData = await billRes.json();
+
+        if (userData && !userData.error) {
+          setUser(userData);
+          setNewUserData({
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            address: userData.address || "",
+            phoneNumber: userData.phoneNumber || "",
+            gender: userData.gender || "",
+            image: userData.image || "",
+          });
+        }
+
+        if (
+          billData &&
+          billData.errCode === 0 &&
+          Array.isArray(billData.data.bills)
+        ) {
+          setUserBills(billData.data.bills);
+        } else {
+          setUserBills([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info or bills:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [user?.id, setUser]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,29 +100,38 @@ const Profile = () => {
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const updatedUsers = users.map((u) =>
-      u.email === user.email ? { ...u, ...newUserData } : u,
+      u.email === user.email ? { ...u, ...newUserData } : u
     );
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUser(newUserData);
     localStorage.setItem("user", JSON.stringify(newUserData));
+    setUser(newUserData);
     setIsEditing(false);
   };
 
   const removeFromWishlist = (productId) => {
     setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId),
+      prevItems.filter((item) => item.id !== productId)
     );
   };
 
   if (!user) {
     return (
       <div className="text-center mt-10">
+<<<<<<< HEAD
+        <p className="mb-4">You are not logged in</p>
+=======
         <p className="mb-4">Bạn chưa đăng nhập</p>
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           onClick={() => navigate("/login")}
         >
+<<<<<<< HEAD
+          Login now
+=======
           Đăng nhập ngay
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
         </button>
       </div>
     );
@@ -100,7 +141,7 @@ const Profile = () => {
     <div className="flex min-h-screen bg-gray-100 overflow-x-hidden">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md p-6 space-y-6">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">Tài khoản</h2>
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Account</h2>
         <ul className="space-y-3 text-gray-600">
           <li>
             <div
@@ -109,7 +150,7 @@ const Profile = () => {
                 activeTab === "dashboard" ? "text-blue-600 font-semibold" : ""
               }`}
             >
-              <FaUser /> Dashboard
+              <FaUser /> Information
             </div>
           </li>
           <li>
@@ -119,7 +160,7 @@ const Profile = () => {
                 activeTab === "orders" ? "text-blue-600 font-semibold" : ""
               }`}
             >
-              <FaBox /> Đơn hàng
+              <FaBox /> Orders
             </div>
           </li>
           <li>
@@ -129,7 +170,7 @@ const Profile = () => {
                 activeTab === "wishlist" ? "text-blue-600 font-semibold" : ""
               }`}
             >
-              <FaHeart /> Yêu thích
+              <FaHeart /> Wishlist
             </div>
           </li>
           <li>
@@ -137,7 +178,7 @@ const Profile = () => {
               onClick={handleLogout}
               className="flex items-center gap-2 cursor-pointer text-red-500 hover:text-red-600"
             >
-              <FaSignOutAlt /> Đăng xuất
+              <FaSignOutAlt /> Logout
             </div>
           </li>
         </ul>
@@ -148,19 +189,23 @@ const Profile = () => {
         {activeTab === "dashboard" && (
           <>
             <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-              Thông tin người dùng
+              User Information
             </h2>
 
             <div className="flex justify-center mb-5">
-              <img
-                src={
-                  newUserData.image ||
-                  user.image ||
-                  "/images/default-avatar.png"
-                }
-                alt="Avatar"
-                className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
-              />
+              <div className="w-32 h-32 rounded-full border-2 border-gray-300 overflow-hidden">
+                <img
+                  src={
+                    newUserData.image
+                      ? newUserData.image
+                      : user.image
+                        ? user.image
+                        : "/images/user.jpg"
+                  }
+                  alt="Avatar"
+                  className="w-full h-full min-w-full min-h-full object-cover"
+                />
+              </div>
             </div>
 
             {isEditing && (
@@ -176,7 +221,7 @@ const Profile = () => {
 
             <div className="space-y-4">
               <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">Họ tên:</label>
+                <label className="font-medium w-1/4 text-lg">Full Name:</label>
                 {isEditing ? (
                   <div className="flex mt-2 w-3/4">
                     <input
@@ -184,7 +229,7 @@ const Profile = () => {
                       name="firstName"
                       value={newUserData.firstName}
                       onChange={handleInputChange}
-                      placeholder="Họ"
+                      placeholder="First Name"
                       className="flex-1 p-3 border rounded-md text-sm"
                     />
                     <input
@@ -192,7 +237,7 @@ const Profile = () => {
                       name="lastName"
                       value={newUserData.lastName}
                       onChange={handleInputChange}
-                      placeholder="Tên"
+                      placeholder="Last Name"
                       className="flex-1 p-3 border rounded-md text-sm"
                     />
                   </div>
@@ -204,7 +249,7 @@ const Profile = () => {
               </div>
 
               <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">Địa chỉ:</label>
+                <label className="font-medium w-1/4 text-lg">Address:</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -220,7 +265,7 @@ const Profile = () => {
 
               <div className="flex items-start">
                 <label className="font-medium w-1/4 text-lg">
-                  Số điện thoại:
+                  Phone Number:
                 </label>
                 {isEditing ? (
                   <input
@@ -236,7 +281,7 @@ const Profile = () => {
               </div>
 
               <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">Giới tính:</label>
+                <label className="font-medium w-1/4 text-lg">Gender:</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -258,13 +303,13 @@ const Profile = () => {
                     onClick={handleUpdateProfile}
                     className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-sm"
                   >
-                    Lưu thay đổi
+                    Save Changes
                   </button>
                   <button
                     onClick={() => setIsEditing(false)}
                     className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-500 text-sm"
                   >
-                    Hủy
+                    Cancel
                   </button>
                 </>
               ) : (
@@ -272,67 +317,142 @@ const Profile = () => {
                   onClick={() => setIsEditing(true)}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm"
                 >
-                  Chỉnh sửa
+                  Edit Profile
                 </button>
               )}
             </div>
           </>
         )}
 
-        {/* Đơn hàng tab */}
+        {/* Orders tab */}
         {activeTab === "orders" && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4 text-center">
-              Đơn hàng của bạn
+            <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+              Your Orders
             </h2>
-            {orders.length === 0 ? (
-              <p className="text-center">Bạn chưa có đơn hàng nào.</p>
+            {userBills.length === 0 ? (
+              <p className="text-center text-gray-600">
+                You have no orders yet.
+              </p>
             ) : (
-              orders
-                .slice() // clone mảng
+              userBills
+                .slice()
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                 .map((order) => (
                   <div
                     key={order.id}
-                    className="border rounded-lg p-4 mb-4 shadow"
+                    className="border border-gray-300 rounded-xl p-6 mb-6 shadow-md max-w-2xl mx-auto bg-white"
                   >
-                    <p className="text-sm text-gray-500">
-                      Mã đơn: #{order.id} -{" "}
-                      {new Date(order.createdAt).toLocaleString()}
-                    </p>
-                    <p className="mb-2">
-                      Phương thức:{" "}
-                      {order.paymentMethod === "cod"
-                        ? "Thanh toán khi nhận hàng"
-                        : "Chuyển khoản"}
-                    </p>
-                    <ul className="mb-2">
-                      {order.items.map((item) => (
-                        <li key={item.id} className="text-sm">
-                          {item.quantity} x {item.productName} ($
-                          {typeof item.productPrice === "number"
-                            ? item.productPrice.toFixed(2)
-                            : Number(item.productPrice).toFixed(2)}
-                          )
+                    {/* Header */}
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">
+                          Order ID:
+                        </span>{" "}
+                        #{order.billId}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">Date:</span>{" "}
+                        {new Date(order.createdAt).toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">
+                          Payment:
+                        </span>{" "}
+                        {order.paymentMethod}
+                      </p>
+                    </div>
+
+                    {/* Items */}
+                    <ul className="mb-4 divide-y divide-gray-200">
+                      {order.billItems?.map((item) => (
+                        <li
+                          key={item.id}
+                          className="py-2 flex items-center gap-4"
+                        >
+                          <img
+                            src={`http://localhost:8080${item.products.image}`}
+                            alt={item.products.productName}
+                            className="w-14 h-14 object-cover rounded-lg border"
+                          />
+                          <div className="flex flex-col text-sm">
+                            <span className="font-medium text-gray-800">
+                              {item.products.productName}
+                            </span>
+                            <span className="text-gray-600">
+                              {item.quantity} x{" "}
+                              {new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(item.products.productPrice)}
+                            </span>
+                          </div>
                         </li>
                       ))}
                     </ul>
+<<<<<<< HEAD
+
+                    {/* Total */}
+                    <div className="text-right">
+                      <p className="text-base font-bold text-gray-800">
+                        Total:{" "}
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(order.totalPrice)}
+                      </p>
+                    </div>
+=======
                     <p className="font-semibold">
                       Tổng cộng: {order.total.toFixed(2)}₫
                     </p>
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                   </div>
                 ))
             )}
           </div>
         )}
 
-        {/* Wishlist tab có thể thêm sau nếu muốn */}
+        {/* Wishlist tab */}
         {activeTab === "wishlist" && (
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-center">
-              Danh sách yêu thích
+              Wishlist
             </h2>
             {wishItems && wishItems.length > 0 ? (
+<<<<<<< HEAD
+              wishItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between border-b py-3"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={`http://localhost:8080${item.image}`}
+                      alt={item.productName}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="text-left">
+                      <p className="font-semibold">{item.productName}</p>
+                      <p className="text-sm text-gray-600">
+                        {item.productPrice.toLocaleString("en-US")}$
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeFromWishlist(item.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center">
+                You haven't added any products to your wishlist.
+              </p>
+            )}
+=======
   wishItems.map((item) => (
     <div
       key={item.id}
@@ -375,6 +495,7 @@ const Profile = () => {
   </p>
 )}
 
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
           </div>
         )}
       </div>

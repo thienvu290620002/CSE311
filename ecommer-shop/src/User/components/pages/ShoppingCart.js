@@ -10,8 +10,8 @@ const ShoppingCart = () => {
   const increaseQuantity = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
-      ),
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+      )
     );
   };
 
@@ -20,8 +20,8 @@ const ShoppingCart = () => {
       prev.map((item) =>
         item.id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
-          : item,
-      ),
+          : item
+      )
     );
   };
   const handleCheckoutClick = () => {
@@ -34,6 +34,29 @@ const ShoppingCart = () => {
     } else {
       navigate("/checkout"); // Nếu có sản phẩm, điều hướng tới trang thanh toán
     }
+<<<<<<< HEAD
+  };
+
+  const removeFromCart = (id) => {
+    swal({
+      title: "Are you sure?",
+      text: "Do you really want to remove this item from your cart?",
+      icon: "warning",
+      buttons: ["Cancel", "Yes, remove it"],
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        setCartItems((prev) => prev.filter((item) => item.id !== id));
+
+        swal("Removed!", "The item has been removed from your cart.", {
+          icon: "success",
+        });
+      } else {
+        swal("Cancelled", "Your item is still in the cart.");
+      }
+    });
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   };
 
   const removeFromCart = (id) => {
@@ -57,9 +80,14 @@ const ShoppingCart = () => {
   };
 
   const total = cartItems.reduce(
+<<<<<<< HEAD
+    (acc, item) => acc + item.productPrice * item.quantity,
+    0
+=======
     (acc, item) =>
       acc + item.productPrice.toLocaleString("vi-VN") * item.quantity,
     0,
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   );
 
   return (
@@ -76,6 +104,83 @@ const ShoppingCart = () => {
                 <div className="col-span-4">
                   <div className="border border-gray rounded-lg">
                     <div className="grid grid-cols-5 gap-0">
+<<<<<<< HEAD
+                      <div className="p-5 border border-gray flex items-center justify-center">
+                        Product
+                      </div>
+                      <div className="p-5 border border-gray flex items-center justify-center">
+                        Original Price
+                      </div>{" "}
+                      {/* Cột mới */}
+                      <div className="p-5 border border-gray flex items-center justify-center">
+                        Quantity
+                      </div>
+                      <div className="p-5 border border-gray flex items-center justify-center">
+                        Total
+                      </div>
+                      <div className="p-5 border border-gray flex items-center justify-center"></div>
+                    </div>
+
+                    {cartItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="grid grid-cols-5 gap-0 border-b items-center"
+                      >
+                        {/* Product Image */}
+                        <div className="p-4 flex items-center gap-3">
+                          <div className="w-20 h-20 overflow-hidden flex-shrink-0">
+                            <img
+                              className="object-cover w-full h-full"
+                              src={`http://localhost:8080${item.image}`}
+                              alt={item.productName}
+                            />
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase">
+                              {item.productName}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Original Price */}
+                        <div className="p-4 flex justify-center">
+                          {Number(item.productPrice).toLocaleString("vi-VN")}₫
+                        </div>
+
+                        {/* Quantity Control */}
+                        <div className="p-4 flex justify-center">
+                          <div className="flex items-center w-max relative">
+                            <button
+                              type="button"
+                              className="absolute left-2"
+                              onClick={() => decreaseQuantity(item.id)}
+                            >
+                              <span className="text-2xl leading-[24px]">-</span>
+                            </button>
+                            <input
+                              type="text"
+                              className="w-[70px] h-[40px] border px-4 border-black rounded-full text-center"
+                              value={item.quantity}
+                              readOnly
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-2"
+                              onClick={() => increaseQuantity(item.id)}
+                            >
+                              <span className="text-2xl leading-[24px]">+</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Total Price */}
+                        <div className="p-4 flex justify-center">
+                          {(item.productPrice * item.quantity).toLocaleString(
+                            "vi-VN"
+                          )}
+                          ₫
+                        </div>
+=======
   <div className="p-5 border border-gray flex items-center justify-center">Product</div>
   <div className="p-5 border border-gray flex items-center justify-center">Original Price</div>  {/* Cột mới */}
   <div className="p-5 border border-gray flex items-center justify-center">Quantity</div>
@@ -146,6 +251,7 @@ const ShoppingCart = () => {
     </div>
   </div>
 ))}
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
                   </div>
                 </div>
@@ -172,7 +278,15 @@ const ShoppingCart = () => {
                       placeholder="Coupon code"
                     />
                     <p className="mt-6 font-semibold">
+<<<<<<< HEAD
+                      Total: {}
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(total)}
+=======
                       Total: {total.toFixed(3)}₫
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
                     </p>
 
                     {/* <Link

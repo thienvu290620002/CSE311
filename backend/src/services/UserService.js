@@ -134,6 +134,8 @@ let deleteUserByID = (userId) => {
   });
 };
 
+<<<<<<< HEAD
+=======
 let getBillByUserID = (inputId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -325,6 +327,7 @@ let deleteBill = async (billId) => {
   });
 };
 
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 let handleLogin = (email, password) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -385,6 +388,8 @@ let checkUserEmail = (userEmail) => {
     }
   });
 };
+<<<<<<< HEAD
+=======
 let getWishListByUserID = (inputId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -483,6 +488,7 @@ const deleteWishlistIfEmpty = async (wishListId) => {
     });
   }
 };
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 
 module.exports = {
   createNewUser: createNewUser,
@@ -491,10 +497,13 @@ module.exports = {
   updateUserData: updateUserData,
   deleteUserByID: deleteUserByID,
   handleLogin: handleLogin,
+<<<<<<< HEAD
+=======
   getBillByUserID: getBillByUserID,
   createBill: createBill,
   updateBill: updateBill,
   deleteBill: deleteBill,
   getWishListByUserID: getWishListByUserID,
   createWishlist: createWishlist,
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 };

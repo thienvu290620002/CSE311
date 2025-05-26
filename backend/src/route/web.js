@@ -4,6 +4,11 @@ import productController from "../controllers/productController";
 import userController from "../controllers/userController";
 import billController from "../controllers/billController";
 import categoryController from "../controllers/categoryController";
+<<<<<<< HEAD
+import wishListController from "../controllers/wishListController";
+
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
 const { singleUpload } = require("../middleware/upload");
 import crypto from "crypto";
 import request from "request";
@@ -35,6 +40,10 @@ let initWebRoutes = (app) => {
   //User
   router.post("/api/login", userController.handleLogin);
   router.get("/api/get-all-user", userController.getAllUser);
+<<<<<<< HEAD
+  router.get("/api/get-user-by-id", userController.getUserInforByID);
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   router.post("/api/create-new-user", userController.createNewUser);
   router.get("/api/delete-user", userController.deleteUserByID);
   router.post("/api/update-user", userController.updateUserData);
@@ -64,9 +73,15 @@ let initWebRoutes = (app) => {
   router.post("/api/update-category", categoryController.updateCategoryCRUD);
 
   //WhistList
-  router.get("/api/get-wishlist", userController.getWishListByUserID); //wishlist
-  router.post("/api/create-wishlist", userController.createWishlist); //create and updateupdate
-  router.get("/api/delete-wishlist", userController.deleteWishlist);
+  router.get(
+    "/api/get-wishlist-by-userId",
+    wishListController.getWishListByUserID
+  ); //wishlist
+  router.post(
+    "/api/create-wishlist",
+    wishListController.createAndUpdateWishlist
+  ); //create and updateupdate
+  router.get("/api/delete-wishlist", wishListController.deleteWishlist);
 
   //ZaloPayment
   router.post("/api/zalopay-order", function (req, res) {

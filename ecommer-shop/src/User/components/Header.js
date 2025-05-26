@@ -5,6 +5,30 @@ import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
 
 const Header = () => {
+<<<<<<< HEAD
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/get-all-product"
+        );
+
+        setProducts(response.data || []);
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách sản phẩm:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
+
+=======
+>>>>>>> 92de85f5e845c27731c0f53f5cb90841135f08c8
   const { cartItems, setCartItems } = useCart();
   const { wishItems } = useWishlist();
 
@@ -40,7 +64,7 @@ const Header = () => {
         return prevItems.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item,
+            : item
         );
       } else {
         return [...prevItems, { ...product, quantity: 1 }];
@@ -56,7 +80,7 @@ const Header = () => {
       setFiltered([]);
     } else {
       const results = products.filter((item) =>
-        item.productName.toLowerCase().includes(value.toLowerCase()),
+        item.productName.toLowerCase().includes(value.toLowerCase())
       );
       setFiltered(results);
     }
