@@ -1,35 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
+import { useWishlist } from "../context/WishlistContext";
 
 const Header = () => {
-  const [products, setProducts] = useState([]);
+ const [products, setProducts] = useState([]);
+  const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
 
+  const { cartItems, setCartItems } = useCart();
+
+  // Lấy wishlist từ context, ko lấy từ localStorage nữa
+  const { wishItems } = useWishlist();
+
+  // Số lượng wishlist active tính dựa trên wishItems từ context
+  const activeWishCount = wishItems.filter(item => item.wishListStatus === "active").length;
+
+  // Load sản phẩm như cũ
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8080/api/get-all-product"
-        );
-
+        const response = await axios.get("http://localhost:8080/api/get-all-product");
         setProducts(response.data || []);
       } catch (error) {
         console.error("Lỗi khi tải danh sách sản phẩm:", error);
       }
     };
-
     fetchProducts();
   }, []);
 
-  const [query, setQuery] = useState("");
-  const [filtered, setFiltered] = useState([]);
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    if (value.trim() === "") {
+      setFiltered([]);
+    } else {
+      const results = products.filter((item) =>
+        item.productName.toLowerCase().includes(value.toLowerCase())
+      );
+      setFiltered(results);
+    }
+  };
 
-  const { cartItems, setCartItems } = useCart();
-  const { wishItems } = useWishlist();
-
-  // ✅ Hàm thêm vào giỏ hàng
   const addToCart = (product) => {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
@@ -45,20 +58,6 @@ const Header = () => {
     });
   };
 
-  // ✅ Hàm xử lý tìm kiếm
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setQuery(value);
-
-    if (value.trim() === "") {
-      setFiltered([]);
-    } else {
-      const results = products.filter((item) =>
-        item.productName.toLowerCase().includes(value.toLowerCase())
-      );
-      setFiltered(results);
-    }
-  };
   return (
     <header className="py-5 lg:py-8 sticky top-0 z-[60] bg-white shadow-lg">
       <div className="container flex items-center max-w-full px-4">
@@ -120,21 +119,11 @@ const Header = () => {
 
         <nav className="mr-28 hidden lg:block ml-auto">
           <ul className="flex items-center gap-10">
-            <li className="relative after:absolute after:h-[1.5px] after:bg-black after:left-0 after:bottom-[-2px] after:transition-all after:duration-300 after:w-full after:scale-x-0 hover:after:-scale-x-100">
-              <Link to="/home">Home</Link>
-            </li>
-            <li className="relative after:absolute after:h-[1.5px] after:bg-black after:left-0 after:bottom-[-2px] after:transition-all after:duration-300 after:w-full after:scale-x-0 hover:after:-scale-x-100">
-              <Link to="/shop">Shop</Link>
-            </li>
-            <li className="relative after:absolute after:h-[1.5px] after:bg-black after:left-0 after:bottom-[-2px] after:transition-all after:duration-300 after:w-full after:scale-x-0 hover:after:-scale-x-100">
-              <Link to="/about-us">About us</Link>
-            </li>
-            <li className="relative after:absolute after:h-[1.5px] after:bg-black after:left-0 after:bottom-[-2px] after:transition-all after:duration-300 after:w-full after:scale-x-0 hover:after:-scale-x-100">
-              <Link to="/blog">Blog</Link>
-            </li>
-            <li className="relative after:absolute after:h-[1.5px] after:bg-black after:left-0 after:bottom-[-2px] after:transition-all after:duration-300 after:w-full after:scale-x-0 hover:after:-scale-x-100">
-              <Link href="#none">Featured</Link>
-            </li>
+            <li><Link to="/home">Home</Link></li>
+            <li><Link to="/shop">Shop</Link></li>
+            <li><Link to="/about-us">About us</Link></li>
+            <li><Link to="/blog">Blog</Link></li>
+            <li><Link href="#none">Featured</Link></li>
           </ul>
         </nav>
 
@@ -145,10 +134,11 @@ const Header = () => {
           <Link to="/profile">
             <img className="size-5" src="images/ico_user.png" alt="" />
           </Link>
+
           <Link to="/wish-list" className="relative">
-            {Array.isArray(wishItems) && wishItems.length > 0 && (
+            {activeWishCount > 0 && (
               <span className="absolute -top-[8px] -right-[10px] size-[18px] bg-black text-white rounded-full text-xs grid place-items-center">
-                {wishItems.length}
+                {activeWishCount}
               </span>
             )}
             <img className="size-5" src="images/ico_heart.png" alt="Wishlist" />

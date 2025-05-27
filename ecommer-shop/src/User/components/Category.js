@@ -9,115 +9,60 @@ import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { FiRefreshCw, FiSearch } from "react-icons/fi";
 
-// const Category = () => {
-//   const navigate = useNavigate();
-//   const [products, setProducts] = useState([]);
-//   const { user } = useContext(UserContext);
-
-//   useEffect(() => {
-//     const fetchProducts = async () => {
-//       try {
-//         const response = await axios.get(
-//           "http://localhost:8080/api/get-all-product"
-//         );
-
-//         setProducts(response.data || []);
-//       } catch (error) {
-//         console.error("Lỗi khi tải danh sách sản phẩm:", error);
-//       }
-//     };
-
-//     fetchProducts();
-//   }, []);
-
-// const { addToCart } = useCart(); // Lấy hàm addToCart từ context
-//   // const { addToWishlist } = useWishlist();
-//   const { wishItems, setWishItems, addToWishlist } = useWishlist();
-
-//   // Kiểm tra sản phẩm có trong wishlist không
-//   const isInWishlist = (productId) => {
-//     return wishItems.some((item) => item.id === productId);
-//   };
-
-// const handleAddToCart = (product) => {
-//   // Tách quantity tồn kho ra
-//   const { quantity, ...productInfo } = product;
-
-//   // Gửi bản sao không chứa quantity tồn kho
-//   addToCart(productInfo);
-// };
-//   const toggleWishlist = async (product) => {
-//     if (!user) {
-//       swal({
-//         title: "Login Required!",
-//         text: "You need to log in to add this product to your wishlist.",
-//         icon: "warning",
-//         buttons: {
-//           cancel: "Back to Home",
-//           confirm: "Go to Login",
-//         },
-//         dangerMode: true,
-//       }).then((willLogin) => {
-//         if (willLogin) {
-//           navigate("/login");
-//         } else {
-//           navigate("/");
-//         }
-//       });
-//       return;
-//     }
-
-//     try {
-//       if (isInWishlist(product.id)) {
-//         // Nếu sản phẩm đã có trong wishlist → cập nhật trạng thái thành inactive
-//         await axios.post("http://localhost:8080/api/create-wishlist", {
-//           productId: product.id,
-//           userId: user.id,
-//           wishListStatus: "inactive",
-//         });
-
-//         // Cập nhật state
-//         const newWishList = wishItems.filter((item) => item.id !== product.id);
-//         setWishItems(newWishList);
-//       } else {
-//         // Nếu chưa có → thêm wishlist mới (active)
-//         await axios.post("http://localhost:8080/api/create-wishlist", {
-//           productId: product.id,
-//           userId: user.id,
-//           wishListStatus: "active",
-//         });
-
-//         addToWishlist(product);
-//       }
-//     } catch (error) {
-//       console.error("Lỗi xử lý wishlist:", error);
-//       swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
-//     }
-//   };
 const Category = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const { user } = useContext(UserContext);
   const { addToCart } = useCart();
-  const { wishItems, setWishItems, addToWishlist } = useWishlist();
+  const { setWishItems, addToWishlist } = useWishlist();
 
   // State lưu wishlist của user hiện tại
   const [userWishlist, setUserWishlist] = useState([]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:8080/api/get-all-product"
-        );
-        setProducts(response.data || []);
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách sản phẩm:", error);
-      }
-    };
+ useEffect(() => {
+  let isMounted = true;
 
-    fetchProducts();
-  }, []);
+  const fetchProductsAndWishlist = async () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (!userStr) return;
+      const user = JSON.parse(userStr);
+      const userId = user.id;
+
+      const [productRes, wishlistRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/get-all-product"),
+        axios.get("http://localhost:8080/api/get-wishlist-by-userId", { params: { id: userId } }),
+      ]);
+
+      const allProducts = Array.isArray(productRes.data) ? productRes.data : (productRes.data.data || []);
+      const wishlist = wishlistRes.data?.data?.wishlist || [];
+
+const enrichedProducts = allProducts.map((product) => {
+  const isInWish = wishlist.some(
+    (item) =>
+      item.productId?.toString() === product.id?.toString() &&
+      item.wishListStatus === "active"
+  );
+  return { ...product, isInWishlist: isInWish };
+});
+
+
+      if (isMounted) {
+        setProducts(enrichedProducts);
+      }
+    } catch (error) {
+      // Bạn có thể xử lý lỗi hoặc để trống
+    }
+  };
+
+  fetchProductsAndWishlist();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
+  
 
   // Khi user thay đổi (đăng nhập/đăng xuất), fetch wishlist của user đó
   useEffect(() => {
@@ -141,15 +86,12 @@ const Category = () => {
     fetchUserWishlist();
   }, [user]);
 
-  // Kiểm tra sản phẩm có trong wishlist user hay không (dựa vào userWishlist)
-  // const isInWishlist = (productId) => {
-  //   return userWishlist.some((item) => item.productId === productId);
-  // };
   const isInWishlist = (productId) => {
-    return userWishlist.some(
-      (item) => item.productId === productId && item.wishListStatus === "active"
-    );
-  };
+  return userWishlist.some(item => item.productId.toString() === productId.toString());
+};
+
+
+
   const handleAddToCart = (product) => {
     // Tách quantity tồn kho ra
     const { quantity, ...productInfo } = product;
@@ -159,60 +101,63 @@ const Category = () => {
   };
 
   const toggleWishlist = async (product) => {
-    if (!user) {
-      swal({
-        title: "Login Required!",
-        text: "You need to log in to add this product to your wishlist.",
-        icon: "warning",
-        buttons: {
-          cancel: "Back to Home",
-          confirm: "Go to Login",
-        },
-        dangerMode: true,
-      }).then((willLogin) => {
-        if (willLogin) {
-          navigate("/login");
-        } else {
-          navigate("/");
-        }
-      });
-      return;
+  if (!user) {
+    swal({
+      title: "Login Required!",
+      text: "You need to log in to add this product to your wishlist.",
+      icon: "warning",
+      buttons: {
+        cancel: "Back to Home",
+        confirm: "Go to Login",
+      },
+      dangerMode: true,
+    }).then((willLogin) => {
+      if (willLogin) {
+        navigate("/login");
+      } else {
+        navigate("/");
+      }
+    });
+    return;
+  }
+
+  try {
+    const productId = product.id;
+
+    const isWishlisted = isInWishlist(productId);
+
+    await axios.post("http://localhost:8080/api/create-wishlist", {
+      productId,
+      userId: user.id,
+      wishListStatus: isWishlisted ? "inactive" : "active",
+    });
+
+    // Cập nhật state sau thay đổi
+    if (isWishlisted) {
+      setUserWishlist((prev) =>
+        prev.filter((item) => item.productId !== productId)
+      );
+      setWishItems((prev) =>
+        prev.filter((item) => item.id !== productId)
+      );
+    } else {
+      setUserWishlist((prev) => [...prev, { productId }]);
+      addToWishlist(product);
     }
 
-    try {
-      if (isInWishlist(product.id)) {
-        // Xóa (hoặc cập nhật status inactive)
-        await axios.post("http://localhost:8080/api/create-wishlist", {
-          productId: product.id,
-          userId: user.id,
-          wishListStatus: "inactive",
-        });
-        // Cập nhật state sau khi xóa
-        setUserWishlist((prev) =>
-          prev.filter((item) => item.productId !== product.id)
-        );
-        // Cập nhật cả context wishlist
-        const newWishList = wishItems.filter((item) => item.id !== product.id);
-        setWishItems(newWishList);
-      } else {
-        // Thêm (hoặc cập nhật status active)
-        await axios.post("http://localhost:8080/api/create-wishlist", {
-          productId: product.id,
-          userId: user.id,
-          wishListStatus: "active",
-        });
-        // Cập nhật state sau khi thêm
-        setUserWishlist((prev) => [...prev, { productId: product.id }]);
-        addToWishlist(product);
-      }
-    } catch (error) {
-      console.error("Lỗi xử lý wishlist:", error);
-      swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
-    }
-  };
-  // const handleAddToWishlist = (product) => {
-  //   addToWishlist(product);
-  // };
+    // Cập nhật lại products để đổi màu trái tim nếu bạn dùng product.isInWishlist
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId ? { ...p, isInWishlist: !isWishlisted } : p
+      )
+    );
+
+  } catch (error) {
+    console.error("Lỗi xử lý wishlist:", error);
+    swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
+  }
+};
+
 
   return (
     <div>
@@ -289,7 +234,7 @@ const Category = () => {
 
                   <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
                     {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
-                    {isInWishlist(product.id) && (
+                    {product.isInWishlist && (
                       <div className="absolute top-2 right-2 z-10">
                         <FaHeart size={24} color="red" />
                       </div>
@@ -317,11 +262,12 @@ const Category = () => {
                           toggleWishlist(product);
                         }}
                       >
-                        {isInWishlist(product.id) ? (
-                          <FaHeart size={24} color="red" />
-                        ) : (
-                          <FaRegHeart size={24} color="black" />
-                        )}
+                        {product.isInWishlist ? (
+  <FaHeart size={24} color="red" />
+) : (
+  <FaRegHeart size={24} color="black" />
+)}
+
                       </button>
                     </li>
 

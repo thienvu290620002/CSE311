@@ -1,11 +1,11 @@
-// import React, { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import swal from "sweetalert";
 // import axios from "axios";
 
 const WishList = () => {
-  const { wishItems, setWishItems } = useWishlist();
+  const { wishItems, setWishItems, statusChanged } = useWishlist();
   const { cartItems, setCartItems } = useCart();
 
   const removeFromWishlist = (productId) => {
@@ -53,6 +53,11 @@ const WishList = () => {
     });
   };
 
+  useEffect(() => {
+  // Ví dụ fetch lại danh sách wishlist từ API hoặc lấy từ context
+  // fetchWishlist();
+}, [statusChanged]);
+
   return (
     <div className="container px-4 py-8">
       <h2 className="text-2xl font-semibold mb-6">Your Wishlist</h2>
@@ -75,7 +80,7 @@ const WishList = () => {
               </tr>
             </thead>
             <tbody>
-              {wishItems.map((item) => (
+              {wishItems.filter(item => item.wishListStatus === "active").map((item) => (
                 <tr key={item.productWishLists.id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 flex items-center">
                     <img
