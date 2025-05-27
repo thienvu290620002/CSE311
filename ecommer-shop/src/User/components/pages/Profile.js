@@ -396,44 +396,58 @@ const Profile = () => {
 
         {/* Wishlist tab */}
         {activeTab === "wishlist" && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 text-center">
-              Wishlist
-            </h2>
-            {wishItems && wishItems.length > 0 ? (
-              wishItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b py-3"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={`http://localhost:8080${item.image}`}
-                      alt={item.productName}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="text-left">
-                      <p className="font-semibold">{item.productName}</p>
-                      <p className="text-sm text-gray-600">
-                        {item.productPrice.toLocaleString("en-US")}$
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeFromWishlist(item.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-center">
-                You haven't added any products to your wishlist.
+  <div>
+    <h2 className="text-2xl font-semibold mb-4 text-center">
+      Danh sách yêu thích
+    </h2>
+    {wishItems && wishItems.length > 0 ? (
+      wishItems.map((item) => (
+        <div
+          key={item.id}
+          className="flex items-center justify-between border-b py-3"
+        >
+          <div className="flex items-center gap-4">
+            <img
+              src={`http://localhost:8080${item.productWishLists.image}`}
+              alt={item.productName}
+              className="w-16 h-16 object-cover rounded"
+            />
+            <div className="text-left">
+              <p className="font-semibold">{item.productWishLists.productName}</p>
+              <p className="text-sm text-gray-600">
+                {(typeof item.productPrice === "number"
+                  ? item.productWishLists.productPrice
+                  : Number(item.productWishLists.productPrice)
+                ).toLocaleString("vi-VN")}₫
               </p>
-            )}
+            </div>
           </div>
-        )}
+
+          <div className="flex gap-2">
+            {/* <button
+              onClick={() => addToCart(item)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
+            >
+              Thêm giỏ hàng
+            </button> */}
+
+            <button
+              onClick={() => removeFromWishlist(item.id)}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      ))
+    ) : (
+      <p className="text-center text-gray-500">
+        Bạn chưa thêm sản phẩm nào vào yêu thích.
+      </p>
+    )}
+  </div>
+)}
+
       </div>
     </div>
   );
