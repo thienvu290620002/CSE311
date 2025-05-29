@@ -80,6 +80,37 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
+  const handleCancelOrder = async (billId) => {
+    try {
+      // Gửi dữ liệu update billStatus về API
+      const response = await fetch("http://localhost:8080/api/update-bill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          billId,
+          billStatus: "Cancel",
+        }),
+      });
+
+      const result = await response.json();
+      if (result.errCode === 0) {
+        // Cập nhật lại trạng thái order trong userBills
+        setUserBills((prevBills) =>
+          prevBills.map((bill) =>
+            bill.billId === billId ? { ...bill, billStatus: "Cancel" } : bill
+          )
+        );
+      } else {
+        alert(
+          "Failed to cancel order: " + (result.errMessage || "Unknown error")
+        );
+      }
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -346,6 +377,12 @@ const Profile = () => {
                         </span>{" "}
                         {order.paymentMethod}
                       </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">
+                          Status:
+                        </span>{" "}
+                        {order.billStatus}
+                      </p>
                     </div>
 
                     {/* Items */}
@@ -375,6 +412,18 @@ const Profile = () => {
                         </li>
                       ))}
                     </ul>
+                    {order.billStatus !== "Cancel" ? (
+                      <button
+                        onClick={() => handleCancelOrder(order.billId)}
+                        className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                      >
+                        Cancel Order
+                      </button>
+                    ) : (
+                      <p className="mt-2 text-red-600 font-semibold">
+                        Cancelled
+                      </p>
+                    )}
 
                     {/* Total */}
                     <div className="text-right">

@@ -120,6 +120,50 @@ export const CartProvider = ({ children }) => {
   //     }
   //   });
   // };
+  // const addToCart = (product) => {
+  //   const normalized = normalizeProduct(product);
+  //   const productInStock = products.find(
+  //     (p) =>
+  //       p.id === normalized.productId || p.productId === normalized.productId
+  //   );
+  //   const stock = productInStock?.quantity ?? 1;
+
+  //   setCartItems((prevItems) => {
+  //     const existingItem = prevItems.find(
+  //       (item) => item.productId === normalized.productId
+  //     );
+
+  //     if (existingItem) {
+  //       const newQuantity = existingItem.quantity + normalized.quantity;
+
+  //       if (newQuantity > stock) {
+  //         swal(
+  //           "Out of Stock",
+  //           `Maximum available quantity for "${normalized.productName}" is ${stock}.`,
+  //           "warning"
+  //         );
+  //         return prevItems;
+  //       }
+
+  //       swal("Updated", "Quantity updated successfully!", "success");
+
+  //       return prevItems.map((item) =>
+  //         item.productId === normalized.productId
+  //           ? { ...item, quantity: newQuantity }
+  //           : item
+  //       );
+  //     } else {
+  //       if (normalized.quantity > stock) {
+  //         swal("Out of Stock", `Only ${stock} items left in stock.`, "warning");
+  //         return prevItems;
+  //       }
+
+  //       swal("Success", "Added to cart successfully!", "success");
+
+  //       return [...prevItems, { ...normalized, quantity: 1 }];
+  //     }
+  //   });
+  // };
   const addToCart = (product) => {
     const normalized = normalizeProduct(product);
     const productInStock = products.find(
@@ -160,11 +204,11 @@ export const CartProvider = ({ children }) => {
 
         swal("Success", "Added to cart successfully!", "success");
 
-        return [...prevItems, { ...normalized, quantity: 1 }];
+        // Sửa chỗ này:
+        return [...prevItems, { ...normalized, quantity: normalized.quantity }];
       }
     });
   };
-
   return (
     <CartContext.Provider value={{ cartItems, setCartItems, addToCart }}>
       {children}

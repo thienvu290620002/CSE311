@@ -21,73 +21,10 @@ const CheckoutPage = () => {
     return acc + getPrice(item) * getQuantity(item);
   }, 0);
 
-  // const total = (cartItems || []).reduce((acc, item) => {
-  //   const price = Number(item.productPrice) || 0;
-  //   const quantity = Number(item.quantity) || 0;
-  //   return acc + price * quantity;
-  // }, 0);
   const displayPaymentMethod = paymentMethod === "cod" ? "Cash" : "ZaloPay";
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
-  //console.log(userId);
 
-  // const handlePlaceOrder = async () => {
-  //   const newOrder = {
-  //     id: Date.now(),
-  //     items: cartItems,
-  //     total,
-  //     paymentMethod: displayPaymentMethod,
-  //     createdAt: new Date().toISOString(),
-  //   };
-
-  //   try {
-  //     const response = await fetch("http://localhost:8080/api/create-bill", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         userId,
-  //         items: cartItems,
-  //         total,
-  //         paymentMethod: displayPaymentMethod,
-  //       }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     // ✅ Xử lý khi không đủ tồn kho
-  //     if (data.errCode === 2) {
-  //       swal({
-  //         title: "Sản phẩm không đủ số lượng!",
-  //         text: data.errMessage,
-  //         icon: "warning",
-  //         button: "OK",
-  //       });
-  //       return;
-  //     }
-
-  //     // ✅ Nếu thành công
-  //     addOrder(newOrder);
-  //     swal({
-  //       title: "Thank you!",
-  //       text: "Order successful! You will pay upon receipt of goods.",
-  //       icon: "success",
-  //       button: "OK",
-  //     });
-  //     localStorage.removeItem("cartItems");
-  //     setCartItems([]);
-  //     navigate("/home");
-  //   } catch (error) {
-  //     console.error("Error creating bill:", error);
-  //     swal({
-  //       title: "Error!",
-  //       text: "There was a problem creating your bill. Please try again.",
-  //       icon: "error",
-  //       button: "OK",
-  //     });
-  //   }
-  // };
   const handlePlaceOrder = async () => {
     const newOrder = {
       id: Date.now(),
@@ -190,30 +127,6 @@ const CheckoutPage = () => {
         console.log("Error", error);
       });
   };
-
-  // const handleConfirmOrder = async (e) => {
-  //   e.preventDefault();
-  //   const isBillCreated = await handlePlaceOrder();
-
-  //   if (!isBillCreated) return; // dừng lại nếu lỗi
-  //   if (paymentMethod === "cod") {
-  //     handlePlaceOrder();
-  //   } else if (paymentMethod === "qr") {
-  //     try {
-  //       handleCheckOut();
-  //       // // Tạo bill trước
-  //       // await handlePlaceOrder();
-  //       // Sau đó tạo order ZaloPay và chuyển hướng
-  //     } catch (error) {
-  //       swal({
-  //         title: "Error!",
-  //         text: "Failed to create bill before payment. Please try again.",
-  //         icon: "error",
-  //         button: "OK",
-  //       });
-  //     }
-  //   }
-  // };
   const handleConfirmOrder = async (e) => {
     e.preventDefault();
 
@@ -244,22 +157,6 @@ const CheckoutPage = () => {
 
       {/* Danh sách sản phẩm */}
       <div className="mb-4">
-        {/* {cartItems.map((item, index) => (
-          <div
-            key={`${item.id}-${index}`}
-            className="flex justify-between items-center border-b py-2"
-          >
-            <div>
-              <p className="font-medium">{item.productName}</p>
-              <p className="text-sm text-gray-500 text-left">
-                {item.quantity} x {item.productPrice.toLocaleString("vi-VN")}₫
-              </p>
-            </div>
-            <div className="text-right font-medium">
-              {(item.productPrice * item.quantity).toLocaleString("vi-VN")}₫
-            </div>
-          </div>
-        ))} */}
         {(cartItems || []).map((item, index) => (
           <div
             key={`${item.id}-${index}`}

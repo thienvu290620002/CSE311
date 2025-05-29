@@ -22,43 +22,50 @@ const Category = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchProductsAndWishlist = async () => {
+    const fetchProducts = async () => {
       try {
-        const userStr = localStorage.getItem("user");
-        if (!userStr) return;
-        const user = JSON.parse(userStr);
-        const userId = user.id;
-
-        const [productRes, wishlistRes] = await Promise.all([
-          axios.get("http://localhost:8080/api/get-all-product"),
-          axios.get("http://localhost:8080/api/get-wishlist-by-userId", {
-            params: { id: userId },
-          }),
-        ]);
+        const productRes = await axios.get(
+          "http://localhost:8080/api/get-all-product"
+        );
 
         const allProducts = Array.isArray(productRes.data)
           ? productRes.data
           : productRes.data.data || [];
-        const wishlist = wishlistRes.data?.data?.wishlist || [];
 
-        const enrichedProducts = allProducts.map((product) => {
-          const isInWish = wishlist.some(
-            (item) =>
-              item.productId?.toString() === product.id?.toString() &&
-              item.wishListStatus === "active"
+        // Nếu user đã đăng nhập => fetch wishlist
+        let enrichedProducts = allProducts;
+
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const wishlistRes = await axios.get(
+            "http://localhost:8080/api/get-wishlist-by-userId",
+            {
+              params: { id: user.id },
+            }
           );
-          return { ...product, isInWishlist: isInWish };
-        });
+
+          const wishlist = wishlistRes.data?.data?.wishlist || [];
+
+          enrichedProducts = allProducts.map((product) => {
+            const isInWish = wishlist.some(
+              (item) =>
+                item.productId?.toString() === product.id?.toString() &&
+                item.wishListStatus === "active"
+            );
+            return { ...product, isInWishlist: isInWish };
+          });
+        }
 
         if (isMounted) {
           setProducts(enrichedProducts);
         }
       } catch (error) {
-        // Bạn có thể xử lý lỗi hoặc để trống
+        console.error("Lỗi khi load sản phẩm:", error);
       }
     };
 
-    fetchProductsAndWishlist();
+    fetchProducts();
 
     return () => {
       isMounted = false;

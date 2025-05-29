@@ -1,21 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
 const ProductDetail = () => {
-  // const { productId } = useParams(); // Get id from URL
-  const { addToCart } = useCart(); // Add to cart function from context
-  const { addToWishlist } = useWishlist(); // Add to wishlist function
-  const [activeTab, setActiveTab] = useState("description");
-
+  const { addToCart, cartItems } = useCart();
+  const { addToWishlist } = useWishlist();
+  const [activeTab, setActiveTab] = useState("recommend");
+  const { productId } = useParams(); // Get id from URL
   const [products, setProducts] = useState([]);
-  const [product, setProduct] = useState(null); // Single product
-  const [selectedImage, setSelectedImage] = useState(null); // Selected image state
-
+  const [product, setProduct] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [recommendedProduct, setRecommendedProduct] = useState(null);
 
+  const quantityInCart = product
+    ? cartItems.find((item) => item.productId === product.productId)
+        ?.quantity || 0
+    : 0;
   const handleDecrease = () => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
@@ -23,13 +26,49 @@ const ProductDetail = () => {
   };
 
   const handleIncrease = () => {
-    setQuantity(quantity + 1);
+    if (!product) return;
+    const maxAddable = product.quantity - quantityInCart;
+    if (quantity < maxAddable) {
+      setQuantity(quantity + 1);
+    }
   };
+  const fetchRecommendation = useCallback(
+    async (currentProductId) => {
+      try {
+        const res = await fetch(
+          "http://localhost:8080/api/get-All-BillItem-With-Recommendation"
+        );
+        const data = await res.json();
+
+        if (data.errCode === 0) {
+          const recommendations = data.data.recommendations;
+          const recommendedId = recommendations[currentProductId];
+
+          if (recommendedId) {
+            const product = products.find((p) => p.productId === recommendedId);
+            setRecommendedProduct(product || null);
+          } else {
+            setRecommendedProduct(null);
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy sản phẩm recommend:", error);
+        setRecommendedProduct(null);
+      }
+    },
+    [products]
+  ); // phụ thuộc vào products vì bạn dùng trong hàm
+
+  useEffect(() => {
+    if (productId && products.length > 0) {
+      fetchRecommendation(productId);
+    }
+  }, [productId, products, fetchRecommendation]);
 
   const getImageSrc = (img) => {
     return img?.startsWith("http") ? img : `http://localhost:8080${img}`;
   };
-  const { productId } = useParams(); // Get id from URL
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -73,14 +112,11 @@ const ProductDetail = () => {
     fetchAllProducts();
   }, []);
 
-  const handleAddToCart = (product) => {
-  const productWithQuantity = {
-    ...product,
-    quantity: quantity,
+  const handleAddToCart = (product, selectedQuantity) => {
+    const productWithQuantity = { ...product, quantity: selectedQuantity };
+    addToCart(productWithQuantity);
+    console.log(productWithQuantity);
   };
-  addToCart(productWithQuantity);
-};
-
 
   const handleAddToWishlist = (product) => {
     addToWishlist(product);
@@ -151,34 +187,6 @@ const ProductDetail = () => {
                     </li>
                   ))}
               </ul>
-
-              {/* <div className="overflow-hidden">
-                <div
-                  className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
-                  onMouseEnter={() => setShowZoom(true)}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={() => setShowZoom(false)}
-                >
-                  <img
-                    src={`http://localhost:8080${product.image}`}
-                    alt={product.productName}
-                    className="w-full h-full object-cover"
-                    // alt="Main product"
-                  />
-                  {showZoom && (
-                    <div
-                      className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
-                      style={{
-                        backgroundImage: `url(${getImageSrc(selectedImage || product.image)})`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                        backgroundSize: "150%",
-                        border: "3px solid black", // For debug
-                      }}
-                    />
-                  )}
-                </div>
-              </div> */}
               <div className="overflow-hidden">
                 <div
                   className="relative overflow-hidden rounded-xl w-[700px] h-[805px] group"
@@ -271,8 +279,9 @@ const ProductDetail = () => {
                   <div className="flex items-center w-max relative">
                     <button
                       type="button"
-                      className="text-lg block text-[0px] absolute left-4"
+                      className={`text-lg block text-[0px] absolute left-4 ${quantity <= 1 ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={handleDecrease}
+                      disabled={quantity <= 1}
                     >
                       <span className="text-2xl leading-[24px]">-</span>
                     </button>
@@ -284,46 +293,21 @@ const ProductDetail = () => {
                     />
                     <button
                       type="button"
-                      className="text-lg block text-[0px] absolute right-4"
+                      className={`text-lg block text-[0px] absolute right-4 ${quantity >= product.quantity - quantityInCart ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={handleIncrease}
+                      disabled={quantity >= product.quantity - quantityInCart}
                     >
                       <span className="text-2xl leading-[24px]">+</span>
                     </button>
                   </div>
 
                   <button
-  type="button"
-  onClick={() => handleAddToCart(product)}
-  className="h-[50px] bg-black text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
->
-  Add To Cart
-</button>
-
-                  <button
-                    className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToWishlist(product);
-                    }}
+                    type="button"
+                    onClick={() => handleAddToCart(product, quantity)}
+                    className="h-[50px] bg-black text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
                   >
                     Add To Cart
                   </button>
-
-                  {/* <button type="button" className="p-4 bg-white rounded-full">
-                    <button
-                      className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToWishlist(product);
-                      }}
-                    >
-                      <img
-                        src="../images/ico_heart.png"
-                        className="image size-4 rouded-full"
-                        alt=""
-                      />
-                    </button>
-                  </button> */}
                   <button
                     className="shadow-lg p-3 rounded-full bg-white block hover:bg-slate-200 transition-all"
                     onClick={(e) => {
@@ -452,20 +436,49 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
+          {/* {recommendedProduct ? (
+            <div className="recommended-product mt-12 p-6 border rounded-xl shadow-md bg-white">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">
+                Sản phẩm được đề xuất mua kèm
+              </h3>
+              <Link
+                to={`/productdetail/${recommendedProduct.productId}`}
+                className="flex items-center gap-6 hover:bg-gray-50 p-4 rounded-lg transition"
+              >
+                <img
+                  src={getImageSrc(recommendedProduct.image)}
+                  alt={recommendedProduct.productName}
+                  className="w-24 h-24 object-cover rounded-lg border"
+                />
+                <div>
+                  <p className="text-lg font-semibold text-gray-700">
+                    {recommendedProduct.productName}
+                  </p>
+                  <p className="text-md text-red-500 mt-1">
+                    {recommendedProduct.productPrice?.toLocaleString()}₫
+                  </p>
+                </div>
+              </Link>
+            </div>
+          ) : (
+            <p className="mt-10 text-gray-500 italic">
+              Không có sản phẩm đề xuất cho sản phẩm này.
+            </p>
+          )} */}
 
           <div className="mt-9 lg:mt-24">
             <ul className="flex items-center lg:justify-center gap-6">
               <li>
                 <button
                   type="button"
-                  onClick={() => setActiveTab("description")}
-                  className={`text-lg font-semibold py-2 px-4 rounded-full ${
-                    activeTab === "description"
+                  onClick={() => setActiveTab("recommend")}
+                  className={`lg:block hidden text-lg font-semibold py-2 px-4 ${
+                    activeTab === "recommend"
                       ? "bg-black text-white"
                       : "text-[#8a8a8a] hover:text-black transition-all"
                   }`}
                 >
-                  Description
+                  Recommend
                 </button>
               </li>
               <li>
@@ -510,6 +523,37 @@ const ProductDetail = () => {
             </ul>
 
             <div className="mt-9 lg:mt-20 text-base leading-7">
+              {activeTab === "recommend" &&
+                (recommendedProduct ? (
+                  <div className="recommended-product mt-12 p-6 border rounded-xl shadow-md bg-white">
+                    <h3 className="text-xl font-bold mb-4 text-gray-800">
+                      Sản phẩm được đề xuất mua kèm
+                    </h3>
+                    <Link
+                      to={`/productdetail/${recommendedProduct.productId}`}
+                      className="flex items-center gap-6 hover:bg-gray-50 p-4 rounded-lg transition"
+                    >
+                      <img
+                        src={getImageSrc(recommendedProduct.image)}
+                        alt={recommendedProduct.productName}
+                        className="w-24 h-24 object-cover rounded-lg border"
+                      />
+                      <div>
+                        <p className="text-lg font-semibold text-gray-700">
+                          {recommendedProduct.productName}
+                        </p>
+                        <p className="text-md text-red-500 mt-1">
+                          {recommendedProduct.productPrice?.toLocaleString()}₫
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="mt-10 text-gray-500 italic">
+                    Không có sản phẩm đề xuất cho sản phẩm này.
+                  </p>
+                ))}
+
               {activeTab === "description" && (
                 <div className="bg-[#f9f9f9] p-6 rounded-xl shadow-md text-gray-800">
                   <h3 className="text-2xl font-semibold mb-3 text-black">

@@ -91,7 +91,7 @@ const WishList = () => {
     };
 
     addToCart(itemWithQuantityOne);
-
+    // setWishItems([]);
     swal({
       title: "Added to Cart",
       text: `${item.productWishLists?.productName || item.productName} has been added to your cart.`,

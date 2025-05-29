@@ -16,6 +16,42 @@ let getAllBill = async (req, res) => {
     });
   }
 };
+// let getAllBillItemWithRecommendation = async (req, res) => {
+//   try {
+//     let bills = await BillService.getAllBillItemWithRecommendation();
+//     return res.status(200).json({
+//       errCode: 0,
+//       message: "OK",
+//       data: bills,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       errCode: 1,
+//       message: "Something went wrong",
+//     });
+//   }
+// };
+let getAllBillItemWithRecommendation = async (req, res) => {
+  try {
+    let result = await BillService.getAllBillItemWithRecommendation();
+    if (result.errCode !== 0) {
+      // Nếu service báo lỗi thì trả lỗi luôn
+      return res.status(400).json(result);
+    }
+    return res.status(200).json({
+      errCode: 0,
+      message: "OK",
+      data: result.data,
+    });
+  } catch (error) {
+    console.error("Error in getAllBillItemWithRecommendation:", error);
+    return res.status(500).json({
+      errCode: 1,
+      message: "Something went wrong",
+      error: error.message, // thêm để dễ debug
+    });
+  }
+};
 
 let getBillByUserID = async (req, res) => {
   try {
@@ -81,4 +117,5 @@ module.exports = {
   getCRUDBill: getCRUDBill,
   updateBill: updateBill,
   deleteBill: deleteBill,
+  getAllBillItemWithRecommendation: getAllBillItemWithRecommendation,
 };

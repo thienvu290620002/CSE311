@@ -18,6 +18,7 @@ const Header = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      setQuery("");
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setFiltered([]);
       }

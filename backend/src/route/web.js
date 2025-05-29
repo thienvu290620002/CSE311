@@ -42,12 +42,17 @@ let initWebRoutes = (app) => {
   router.get("/api/delete-user", userController.deleteUserByID);
   router.post("/api/update-user", userController.updateUserData);
 
-  //Bill User History
+  //Bill User
   router.get("/api/get-all-bill", billController.getAllBill);
   router.get("/api/get-bill-by-user-id", billController.getBillByUserID); //history Cart
   router.post("/api/create-bill", billController.createBill);
   router.post("/api/update-bill", billController.updateBill);
   //  router.get("/api/delete-bill", billController.deleteBill);
+  //Bill Item
+  router.get(
+    "/api/get-All-BillItem-With-Recommendation",
+    billController.getAllBillItemWithRecommendation
+  );
   //Product
   router.get("/api/get-all-product", productController.getAllProduct);
   router.get(
