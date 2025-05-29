@@ -1,17 +1,61 @@
-import React from "react";
-// import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import swal from "sweetalert";
 import { useNavigate } from "react-router-dom";
 
 const ShoppingCart = () => {
   const { cartItems, setCartItems } = useCart();
-  const navigate = useNavigate(); // Thêm hook này để điều hướng
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/get-all-product"
+        );
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+        swal("Error", "Failed to load product list.", "error");
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const getProductInfo = (item) => ({
+    productName:
+      item.productName ?? item.productWishLists?.productName ?? "No Name",
+    productPrice: item.productPrice ?? item.productWishLists?.productPrice ?? 0,
+    quantity: item.quantity ?? item.productWishLists?.quantity ?? 1,
+    image: item.image ?? item.productWishLists?.image ?? "/images/default.jpg",
+  });
+
   const increaseQuantity = (id) => {
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
+      prev.map((item) => {
+        if (item.id === id) {
+          // console.log(item, "ITEM");
+
+          const product = products.find((p) => p.productId === item.productId);
+          if (!product) return item;
+          const stock = product.quantity ?? 0;
+          const name = product.productName ?? "Unknown";
+
+          if (item.quantity < stock) {
+            return { ...item, quantity: item.quantity + 1 };
+          } else {
+            swal(
+              "Out of Stock",
+              `Maximum quantity for ${name} is ${stock}.`,
+              "warning"
+            );
+          }
+        }
+        return item;
+      })
     );
   };
 
@@ -24,42 +68,49 @@ const ShoppingCart = () => {
       )
     );
   };
+
   const handleCheckoutClick = () => {
     if (cartItems.length === 0) {
-      swal({
-        icon: "warning",
-        title: "There are no products to checkout!",
-        text: "Please add products to cart before checkout.",
-      });
+      swal(
+        "Cart is Empty",
+        "Please add products to cart before checkout.",
+        "warning"
+      );
     } else {
-      navigate("/checkout"); // Nếu có sản phẩm, điều hướng tới trang thanh toán
+      navigate("/checkout");
     }
   };
 
   const removeFromCart = (id) => {
+    // Dùng window.confirm thay vì swal vì react-toastify không có confirm modal sẵn
+    // if (
+    //   window.confirm("Do you really want to remove this item from your cart?")
+    // ) {
+    //   setCartItems((prev) => prev.filter((item) => item.id !== id));
+    //   toast.success("The item has been removed from your cart.");
+    // } else {
+    //   toast.info("Your item is still in the cart.");
+    // }
     swal({
       title: "Are you sure?",
       text: "Do you really want to remove this item from your cart?",
       icon: "warning",
-      buttons: ["Cancel", "Yes, remove it"],
+      buttons: ["Cancel", "Yes, remove it!"],
       dangerMode: true,
     }).then((willDelete) => {
       if (willDelete) {
         setCartItems((prev) => prev.filter((item) => item.id !== id));
-
-        swal("Removed!", "The item has been removed from your cart.", {
-          icon: "success",
-        });
+        swal("Deleted", "The item has been removed from your cart.", "success");
       } else {
-        swal("Cancelled", "Your item is still in the cart.");
+        swal("Cancelled", "Your item is still in the cart.", "info");
       }
     });
   };
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + item.productPrice * item.quantity,
-    0
-  );
+  const total = cartItems.reduce((acc, item) => {
+    const { productPrice, quantity } = getProductInfo(item);
+    return acc + productPrice * quantity;
+  }, 0);
 
   return (
     <div className="wrap">
@@ -80,8 +131,7 @@ const ShoppingCart = () => {
                       </div>
                       <div className="p-5 border border-gray flex items-center justify-center">
                         Original Price
-                      </div>{" "}
-                      {/* Cột mới */}
+                      </div>
                       <div className="p-5 border border-gray flex items-center justify-center">
                         Quantity
                       </div>
@@ -91,81 +141,125 @@ const ShoppingCart = () => {
                       <div className="p-5 border border-gray flex items-center justify-center"></div>
                     </div>
 
-                    {cartItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="grid grid-cols-5 gap-0 border-b items-center"
-                      >
-                        {/* Product Image */}
-                        <div className="p-4 flex items-center gap-3">
-                          <div className="w-20 h-20 overflow-hidden flex-shrink-0">
-                            <img
-                              className="object-cover w-full h-full"
-                              src={`http://localhost:8080${item.image}`}
-                              alt={item.productName}
-                            />
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase">
-                              {item.productName}
-                            </p>
-                          </div>
-                        </div>
+                    {cartItems.map((item) => {
+                      const productName =
+                        item.productName ??
+                        item.productWishLists?.productName ??
+                        "No Name";
 
-                        {/* Original Price */}
-                        <div className="p-4 flex justify-center">
-                          {Number(item.productPrice).toLocaleString("vi-VN")}₫
-                        </div>
+                      const productPrice =
+                        item.productPrice ??
+                        item.productWishLists?.productPrice ??
+                        0;
 
-                        {/* Quantity Control */}
-                        <div className="p-4 flex justify-center">
-                          <div className="flex items-center w-max relative">
+                      const quantity =
+                        item.quantity ?? item.productWishLists?.quantity ?? 1;
+
+                      const availableQuantity =
+                        products.find((p) => p.id === item.id)?.quantity ??
+                        item.productWishLists?.quantity ??
+                        1;
+
+                      const productImage =
+                        item.image ??
+                        item.productWishLists?.image ??
+                        "/images/default.jpg";
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="grid grid-cols-5 gap-0 border-b items-center"
+                        >
+                          {/* Product Image */}
+                          <div className="p-4 flex items-center gap-3">
+                            <div className="w-20 h-20 overflow-hidden flex-shrink-0">
+                              <img
+                                className="object-cover w-full h-full"
+                                src={`http://localhost:8080${productImage}`}
+                                alt={productName}
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase">{productName}</p>
+                            </div>
+                          </div>
+
+                          {/* Original Price */}
+                          <div className="p-4 flex justify-center">
+                            {Number(productPrice).toLocaleString("vi-VN")}₫
+                          </div>
+
+                          {/* Quantity Control */}
+                          <div className="p-4 flex justify-center">
+                            <div className="flex items-center w-max relative">
+                              <button
+                                type="button"
+                                className="absolute left-2"
+                                onClick={() => decreaseQuantity(item.id)}
+                              >
+                                <span className="text-2xl leading-[24px]">
+                                  -
+                                </span>
+                              </button>
+                              <input
+                                type="text"
+                                className="w-[70px] h-[40px] border px-4 border-black rounded-full text-center"
+                                value={quantity}
+                                onChange={(e) => {
+                                  let newQuantity = parseInt(e.target.value);
+                                  if (isNaN(newQuantity) || newQuantity < 1)
+                                    newQuantity = 1;
+                                  if (newQuantity > availableQuantity) {
+                                    swal(
+                                      "Out of Stock",
+                                      `Maximum quantity for ${productName} is ${availableQuantity}.`,
+                                      "warning"
+                                    );
+
+                                    newQuantity = availableQuantity;
+                                  }
+                                  setCartItems((prev) =>
+                                    prev.map((i) =>
+                                      i.id === item.id
+                                        ? { ...i, quantity: newQuantity }
+                                        : i
+                                    )
+                                  );
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className="absolute right-2"
+                                onClick={() => increaseQuantity(item.id)}
+                              >
+                                <span className="text-2xl leading-[24px]">
+                                  +
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Total Price */}
+                          <div className="p-4 flex justify-center">
+                            {(productPrice * quantity).toLocaleString("vi-VN")}₫
+                          </div>
+
+                          {/* Remove Button */}
+                          <div className="p-4 flex justify-center">
                             <button
                               type="button"
-                              className="absolute left-2"
-                              onClick={() => decreaseQuantity(item.id)}
+                              onClick={() => removeFromCart(item.id)}
                             >
-                              <span className="text-2xl leading-[24px]">-</span>
-                            </button>
-                            <input
-                              type="text"
-                              className="w-[70px] h-[40px] border px-4 border-black rounded-full text-center"
-                              value={item.quantity}
-                              readOnly
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-2"
-                              onClick={() => increaseQuantity(item.id)}
-                            >
-                              <span className="text-2xl leading-[24px]">+</span>
+                              <img
+                                className="block size-5"
+                                src="images/ico_trash.png"
+                                alt="Delete"
+                              />
                             </button>
                           </div>
                         </div>
-
-                        {/* Total Price */}
-                        <div className="p-4 flex justify-center">
-                          {(item.productPrice * item.quantity).toLocaleString(
-                            "vi-VN"
-                          )}
-                          ₫
-                        </div>
-
-                        {/* Remove from Cart Button */}
-                        <div className="p-4 flex justify-center">
-                          <button
-                            type="button"
-                            onClick={() => removeFromCart(item.id)}
-                          >
-                            <img
-                              className="block size-5"
-                              src="images/ico_trash.png"
-                              alt="Delete"
-                            />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -191,19 +285,13 @@ const ShoppingCart = () => {
                       placeholder="Coupon code"
                     />
                     <p className="mt-6 font-semibold">
-                      Total: {}
+                      Total:{" "}
                       {new Intl.NumberFormat("vi-VN", {
                         style: "currency",
                         currency: "VND",
                       }).format(total)}
                     </p>
 
-                    {/* <Link
-                      to="/checkout"
-                      className="flex items-center justify-center h-[50px] mt-6 bg-black w-full text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg hover:bg-white border hover:border-black hover:text-black transition-all"
-                    >
-                      Check out
-                    </Link> */}
                     <button
                       onClick={handleCheckoutClick}
                       className="flex items-center justify-center h-[50px] mt-6 bg-black w-full text-white font-semibold text-sm px-4 flex-1 rounded-full hover:bg-white border hover:border-black hover:text-black transition-all"

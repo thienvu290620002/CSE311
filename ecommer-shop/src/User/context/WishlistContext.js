@@ -1,78 +1,11 @@
-// // WishlistContext.js
-// import React, { createContext, useState, useContext, useEffect } from "react";
-
-// const WishlistContext = createContext();
-
-// export const useWishlist = () => {
-//   return useContext(WishlistContext);
-// };
-
-// export const WishlistProvider = ({ children }) => {
-//   const [wishItems, setWishItems] = useState([]);
-
-//   // Lấy wishlist từ localStorage khi component được mount
-//   // useEffect(() => {
-//   //   const savedWishlist = localStorage.getItem("wishlist");
-//   //   if (savedWishlist) {
-//   //     setWishItems(JSON.parse(savedWishlist));
-//   //   }
-//   // }, []);
-//   useEffect(() => {
-//     const fetchWishlist = async () => {
-//       try {
-//         const response = await axios.get(
-//           `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
-//         );
-
-//         if (response.data.data && response.data.data.wishlist) {
-//           setWishItems(response.data.data.wishlist);
-//           localStorage.setItem(
-//             "wishlist",
-//             JSON.stringify(response.data.data.wishlist)
-//           ); // <-- lưu luôn
-//         } else {
-//           setWishItems([]);
-//           localStorage.removeItem("wishlist"); // hoặc xóa đi
-//         }
-//       } catch (error) {
-//         console.error("Failed to fetch wishlist:", error);
-//         setWishItems([]);
-//         localStorage.removeItem("wishlist");
-//       }
-//     };
-//     // console.log(wishItems);
-
-//     if (userId) {
-//       fetchWishlist();
-//     }
-//   }, [userId, setWishItems]);
-
-//   // Lưu wishlist vào localStorage khi wishItems thay đổi
-//   useEffect(() => {
-//     if (wishItems.length > 0) {
-//       localStorage.setItem("wishlist", JSON.stringify(wishItems));
-//     }
-//   }, [wishItems]);
-
-//   const addToWishlist = (product) => {
-//     setWishItems((prevItems) => {
-//       if (!prevItems.find((item) => item.id === product.id)) {
-//         return [...prevItems, product];
-//       }
-//       return prevItems;
-//     });
-//   };
-
-//   return (
-//     <WishlistContext.Provider
-//       value={{ wishItems, setWishItems, addToWishlist }}
-//     >
-//       {children}
-//     </WishlistContext.Provider>
-//   );
-// };
-import React, { createContext, useState, useContext, useEffect } from "react";
-import axios from "axios"; // bạn quên import axios trong file này
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
+import axios from "axios";
 
 const WishlistContext = createContext();
 
@@ -82,83 +15,90 @@ export const useWishlist = () => {
 
 export const WishlistProvider = ({ children }) => {
   const [wishItems, setWishItems] = useState([]);
-
-  // Lấy userId từ localStorage (hoặc bạn có thể lấy từ context auth nếu có)
   const [userId, setUserId] = useState(null);
 
+  // Lấy userId khi component mount
   useEffect(() => {
     const userString = localStorage.getItem("user");
     if (userString) {
       try {
         const user = JSON.parse(userString);
-        if (user && user.id) {
-          setUserId(user.id);
-        }
+        if (user && user.id) setUserId(user.id);
       } catch (error) {
         console.error("Error parsing user from localStorage", error);
       }
     }
   }, []);
 
-  // Fetch wishlist từ API khi có userId
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
-        );
-
-        if (response.data.data && response.data.data.wishlist) {
-          setWishItems(response.data.data.wishlist);
-          localStorage.setItem(
-            "wishlist",
-            JSON.stringify(response.data.data.wishlist)
-          );
-        } else {
-          setWishItems([]);
-          localStorage.removeItem("wishlist");
-        }
-      } catch (error) {
-        console.error("Failed to fetch wishlist:", error);
+  // Hàm fetch wishlist từ backend, dùng useCallback để không bị tạo lại mỗi render
+  const fetchWishlist = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
+      );
+      if (response.data.data && response.data.data.wishlist) {
+        setWishItems(response.data.data.wishlist);
+      } else {
         setWishItems([]);
-        localStorage.removeItem("wishlist");
       }
-    };
-
-    if (userId) {
-      fetchWishlist();
+    } catch (error) {
+      console.error("Failed to fetch wishlist:", error);
+      setWishItems([]);
     }
   }, [userId]);
 
-  // Lưu wishlist vào localStorage khi wishItems thay đổi (không cần kiểm tra length > 0, có thể lưu mảng rỗng)
+  // Khi userId thay đổi, fetch lại wishlist
+  useEffect(() => {
+    fetchWishlist();
+  }, [userId, fetchWishlist]);
+
+  // Lưu wishlist vào localStorage mỗi khi wishItems thay đổi (nếu cần)
   useEffect(() => {
     localStorage.setItem("wishlist", JSON.stringify(wishItems));
   }, [wishItems]);
 
-  const addToWishlist = (product) => {
-    setWishItems((prevItems) => {
-      if (!prevItems.find((item) => item.id === product.id)) {
-        return [...prevItems, product];
-      }
-      return prevItems;
-    });
-  };
-
+  // Kiểm tra sản phẩm có trong wishlist hay không (so sánh với productId đúng)
   const isInWishlist = (productId) => {
-    return wishItems.some((item) => item.id === productId);
-  };
-
-  const removeFromWishlist = (productId) => {
-    setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
+    return wishItems.some(
+      (item) => item.productId?.toString() === productId?.toString()
     );
   };
 
-  const toggleWishlist = (product) => {
+  // Thêm product vào wishlist, gọi API và cập nhật lại state
+  const addToWishlist = async (product) => {
+    if (!userId) return;
+    try {
+      await axios.post("http://localhost:8080/api/add-to-wishlist", {
+        userId,
+        productId: product.id,
+      });
+      await fetchWishlist();
+    } catch (error) {
+      console.error("Failed to add to wishlist:", error);
+    }
+  };
+
+  // Xóa product khỏi wishlist, gọi API và cập nhật lại state
+  const removeFromWishlist = async (productId) => {
+    if (!userId) return;
+    try {
+      await axios.post("http://localhost:8080/api/remove-from-wishlist", {
+        userId,
+        productId,
+      });
+      await fetchWishlist();
+    } catch (error) {
+      console.error("Failed to remove from wishlist:", error);
+    }
+  };
+
+  // Chuyển đổi trạng thái wishlist (thêm hoặc xóa)
+  const toggleWishlist = async (product) => {
     if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+      await removeFromWishlist(product.id);
     } else {
-      addToWishlist(product);
+      await addToWishlist(product);
     }
   };
 

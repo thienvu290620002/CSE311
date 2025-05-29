@@ -1,138 +1,166 @@
-// import React, { createContext, useContext, useState } from "react";
-// import { toast } from "react-toastify"; // Ensure proper import
-// import "react-toastify/dist/ReactToastify.css"; // Ensure styles are imported
-
-// const CartContext = createContext();
-
-// export const useCart = () => useContext(CartContext);
-
-// export const CartProvider = ({ children }) => {
-//   const [cartItems, setCartItems] = useState([]);
-
-//   const addToCart = (product) => {
-//     setCartItems((prevItems) => {
-//       const existingItem = prevItems.find((item) => item.id === product.id);
-//       const toastId = "cart-toast"; // Unique ID for the toast
-
-//       // Check if the toast with this ID is already active
-//       if (toast.isActive(toastId)) {
-//         return prevItems; // Don't show toast again if active
-//       }
-
-//       if (existingItem) {
-//         toast.success("Quantity updated in cart successfully!", {
-//           position: "top-right",
-//           autoClose: 1000,
-//           toastId, // Pass the unique ID
-//         });
-//         return prevItems.map((item) =>
-//           item.id === product.id
-//             ? { ...item, quantity: item.quantity + 1 }
-//             : item
-//         );
-//       } else {
-//         toast.success("Added to cart successfully!", {
-//           position: "top-right",
-//           autoClose: 1000,
-//           toastId, // Pass the unique ID
-//         });
-//         return [...prevItems, { ...product, quantity: 1 }];
-//       }
-//     });
-//   };
-
-//   return (
-//     <CartContext.Provider value={{ cartItems, setCartItems, addToCart }}>
-//       {children}
-//     </CartContext.Provider>
-//   );
-// };
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import swal from "sweetalert";
 
 const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
-  // Lấy cartItems từ localStorage lúc khởi tạo, nếu không có thì là []
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem("cartItems");
-      return saved ? JSON.parse(saved) : [];
+      const parsed = saved ? JSON.parse(saved) : [];
+      return parsed.map((item) => ({
+        ...item,
+        quantity:
+          typeof item.quantity === "number"
+            ? item.quantity
+            : item.productWishLists?.quantity || 1,
+      }));
     } catch {
       return [];
     }
   });
 
-  // Lưu cartItems vào localStorage mỗi khi cartItems thay đổi
+  const [products, setProducts] = useState([]);
+
+  // Fetch all products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/get-all-product"
+        );
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching product list:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // Save cart to localStorage whenever cartItems changes
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Lưu cartItems vào localStorage mỗi khi cartItems thay đổi
-  useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-  }, [cartItems]);
+  // Normalize product object to a standard format
+  const normalizeProduct = (product) => {
+    const base = product.productWishLists ?? product;
+    // console.log(base, "normalizedProduct");
+
+    return {
+      id: base.id,
+      productId: base.productId ?? base.id,
+      productName: base.productName ?? "No Name",
+      productPrice: base.productPrice ?? 0,
+      image: base.image ?? "/images/default.jpg",
+      quantity: base.quantity ?? 1,
+    };
+  };
 
   // const addToCart = (product) => {
-  //   setCartItems((prevItems) => {
-  //     const existingItem = prevItems.find((item) => item.id === product.id);
-  //     const toastId = "cart-toast";
+  //   const normalized = normalizeProduct(product);
+  //   const productInStock = products.find(
+  //     (p) =>
+  //       p.id === normalized.productId || p.productId === normalized.productId
+  //   );
+  //   const stock = productInStock?.quantity ?? 1;
 
-  //     if (toast.isActive(toastId)) {
-  //       return prevItems;
-  //     }
+  //   setCartItems((prevItems) => {
+  //     const existingItem = prevItems.find(
+  //       (item) => item.productId === normalized.productId
+  //     );
 
   //     if (existingItem) {
-  //       toast.success("Quantity updated in cart successfully!", {
-  //         position: "top-right",
-  //         autoClose: 1000,
-  //         toastId,
+  //       const newQuantity = existingItem.quantity + normalized.quantity;
+
+  //       if (newQuantity > stock) {
+  //         swal(
+  //           "Out of Stock",
+  //           `Maximum available quantity for "${normalized.productName}" is ${stock}.`,
+  //           "warning"
+  //         );
+
+  //         return prevItems;
+  //       }
+
+  //       // toast.dismiss(); // hủy toast cũ nếu có
+  //       swal("Updated", "Quantity updated successfully!", "success", {
+  //         position: "bottom-right",
+  //         autoClose: 800,
+  //         toastId: `success-${normalized.productId}`,
   //       });
+
   //       return prevItems.map((item) =>
-  //         item.id === product.id
-  //           ? { ...item, quantity: item.quantity + 1 }
-  //           : item,
+  //         item.productId === normalized.productId
+  //           ? { ...item, quantity: newQuantity }
+  //           : item
   //       );
   //     } else {
+  //       if (normalized.quantity > stock) {
+  //         toast.warn(`Only ${stock} items left in stock.`, {
+  //           position: "bottom-right",
+  //           autoClose: 1000,
+  //           toastId: `warn-${normalized.productId}`,
+  //         });
+  //         return prevItems;
+  //       }
+
+  //       toast.dismiss();
   //       toast.success("Added to cart successfully!", {
-  //         position: "top-right",
-  //         autoClose: 1000,
-  //         toastId,
+  //         position: "bottom-right",
+  //         autoClose: 800,
+  //         toastId: `success-${normalized.productId}`,
   //       });
-  //       return [...prevItems, { ...product, quantity: 1 }];
+
+  //       return [...prevItems, { ...normalized, quantity: 1 }];
   //     }
   //   });
   // };
   const addToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      const toastId = "cart-toast";
+    const normalized = normalizeProduct(product);
+    const productInStock = products.find(
+      (p) =>
+        p.id === normalized.productId || p.productId === normalized.productId
+    );
+    const stock = productInStock?.quantity ?? 1;
 
-      if (toast.isActive(toastId)) {
-        return prevItems;
-      }
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find(
+        (item) => item.productId === normalized.productId
+      );
 
       if (existingItem) {
-        toast.success("Quantity updated in cart successfully!", {
-          position: "bottom-right",
-          autoClose: 1000,
-          toastId,
-        });
+        const newQuantity = existingItem.quantity + normalized.quantity;
+
+        if (newQuantity > stock) {
+          swal(
+            "Out of Stock",
+            `Maximum available quantity for "${normalized.productName}" is ${stock}.`,
+            "warning"
+          );
+          return prevItems;
+        }
+
+        swal("Updated", "Quantity updated successfully!", "success");
+
         return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          item.productId === normalized.productId
+            ? { ...item, quantity: newQuantity }
             : item
         );
       } else {
-        toast.success("Added to cart successfully!", {
-          position: "bottom-right",
-          autoClose: 1000,
-          toastId,
-        });
-        return [...prevItems, { ...product, quantity: 1 }];
+        if (normalized.quantity > stock) {
+          swal("Out of Stock", `Only ${stock} items left in stock.`, "warning");
+          return prevItems;
+        }
+
+        swal("Success", "Added to cart successfully!", "success");
+
+        return [...prevItems, { ...normalized, quantity: 1 }];
       }
     });
   };

@@ -5,7 +5,6 @@ import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 
-
 const Profile = () => {
   const { setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
@@ -83,14 +82,13 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-  localStorage.removeItem("user");
-  localStorage.removeItem("wishlist");
-  setWishItems([]);  // xóa wishlist trong state
-  setCartItems([]);  // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
-  setUser(null);
-  navigate("/");
-};
-
+    localStorage.removeItem("user");
+    localStorage.removeItem("wishlist");
+    setWishItems([]); // xóa wishlist trong state
+    setCartItems([]); // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
+    setUser(null);
+    navigate("/");
+  };
 
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
@@ -408,19 +406,24 @@ const Profile = () => {
                 >
                   <div className="flex items-center gap-4">
                     <img
-                      src={`http://localhost:8080${item.image}`}
-                      alt={item.productName}
+                      src={`http://localhost:8080${item.productWishLists.image}`}
+                      alt={item.productWishLists.productName}
                       className="w-16 h-16 object-cover rounded"
                     />
                     <div className="text-left">
-                      <p className="font-semibold">{item.productName}</p>
+                      <p className="font-semibold">
+                        {item.productWishLists.productName}
+                      </p>
                       <p className="text-sm text-gray-600">
-                        {item.productPrice.toLocaleString("en-US")}$
+                        {item.productWishLists.productPrice.toLocaleString(
+                          "en-US"
+                        )}
+                        $
                       </p>
                     </div>
                   </div>
                   <button
-                    onClick={() => removeFromWishlist(item.id)}
+                    onClick={() => removeFromWishlist(item.productWishLists.id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
                   >
                     Remove

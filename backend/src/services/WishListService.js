@@ -1,6 +1,44 @@
 import bcrypt from "bcrypt";
 import db from "../models/index";
 
+// let getWishListByUserID = (inputId) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       if (!inputId) {
+//         resolve({
+//           errCode: 1,
+//           errMessage: "Missing required parameter!",
+//         });
+//       } else {
+//         let user = await db.User.findOne({
+//           where: { id: inputId },
+//           attributes: { exclude: ["password", "image"] },
+//           include: [
+//             {
+//               model: db.WishList,
+//               as: "wishlist",
+//               include: [
+//                 {
+//                   model: db.Product,
+//                   as: "productWishLists",
+//                 },
+//               ],
+//             },
+//           ],
+//           nest: true,
+//         });
+//         // console.log(user.bills[0].bill_item);
+
+//         resolve({
+//           errCode: 0,
+//           data: user,
+//         });
+//       }
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
 let getWishListByUserID = (inputId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -17,6 +55,7 @@ let getWishListByUserID = (inputId) => {
             {
               model: db.WishList,
               as: "wishlist",
+              where: { wishListStatus: "active" },
               include: [
                 {
                   model: db.Product,
@@ -27,7 +66,6 @@ let getWishListByUserID = (inputId) => {
           ],
           nest: true,
         });
-        // console.log(user.bills[0].bill_item);
 
         resolve({
           errCode: 0,
@@ -63,7 +101,6 @@ const createAndUpdateWishlist = async (data) => {
       }
       console.log(wishlist, "save");
 
- 
       resolve("WishList updated successfully");
     } catch (e) {
       reject(e);

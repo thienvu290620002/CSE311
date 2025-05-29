@@ -9,12 +9,23 @@ const CheckoutPage = () => {
   const { cartItems, setCartItems } = useCart();
   const { addOrder } = useOrders();
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const getPrice = (item) =>
+    Number(item.productPrice) ||
+    Number(item.productWishLists?.productPrice) ||
+    Number(item.shop?.productPrice) ||
+    0;
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + item.productPrice * item.quantity,
-    0
-  );
+  const getQuantity = (item) => Number(item.quantity) || 0;
 
+  const total = (cartItems || []).reduce((acc, item) => {
+    return acc + getPrice(item) * getQuantity(item);
+  }, 0);
+
+  // const total = (cartItems || []).reduce((acc, item) => {
+  //   const price = Number(item.productPrice) || 0;
+  //   const quantity = Number(item.quantity) || 0;
+  //   return acc + price * quantity;
+  // }, 0);
   const displayPaymentMethod = paymentMethod === "cod" ? "Cash" : "ZaloPay";
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
@@ -123,7 +134,7 @@ const CheckoutPage = () => {
       });
       localStorage.removeItem("cartItems");
       setCartItems([]);
-      navigate("/home");
+      navigate("/profile");
       return true; // thành công
     } catch (error) {
       console.error("Error creating bill:", error);
@@ -180,19 +191,41 @@ const CheckoutPage = () => {
       });
   };
 
+  // const handleConfirmOrder = async (e) => {
+  //   e.preventDefault();
+  //   const isBillCreated = await handlePlaceOrder();
+
+  //   if (!isBillCreated) return; // dừng lại nếu lỗi
+  //   if (paymentMethod === "cod") {
+  //     handlePlaceOrder();
+  //   } else if (paymentMethod === "qr") {
+  //     try {
+  //       handleCheckOut();
+  //       // // Tạo bill trước
+  //       // await handlePlaceOrder();
+  //       // Sau đó tạo order ZaloPay và chuyển hướng
+  //     } catch (error) {
+  //       swal({
+  //         title: "Error!",
+  //         text: "Failed to create bill before payment. Please try again.",
+  //         icon: "error",
+  //         button: "OK",
+  //       });
+  //     }
+  //   }
+  // };
   const handleConfirmOrder = async (e) => {
     e.preventDefault();
-    const isBillCreated = await handlePlaceOrder();
 
-    if (!isBillCreated) return; // dừng lại nếu lỗi
     if (paymentMethod === "cod") {
-      await handlePlaceOrder();
+      const isBillCreated = await handlePlaceOrder();
+      if (!isBillCreated) return;
+      // Có thể thêm thông báo hoặc điều hướng nếu cần
     } else if (paymentMethod === "qr") {
-      try {
-        // // Tạo bill trước
-        // await handlePlaceOrder();
+      const isBillCreated = await handlePlaceOrder();
+      if (!isBillCreated) return;
 
-        // Sau đó tạo order ZaloPay và chuyển hướng
+      try {
         handleCheckOut();
       } catch (error) {
         swal({
@@ -211,9 +244,9 @@ const CheckoutPage = () => {
 
       {/* Danh sách sản phẩm */}
       <div className="mb-4">
-        {cartItems.map((item) => (
+        {/* {cartItems.map((item, index) => (
           <div
-            key={item.id}
+            key={`${item.id}-${index}`}
             className="flex justify-between items-center border-b py-2"
           >
             <div>
@@ -224,6 +257,41 @@ const CheckoutPage = () => {
             </div>
             <div className="text-right font-medium">
               {(item.productPrice * item.quantity).toLocaleString("vi-VN")}₫
+            </div>
+          </div>
+        ))} */}
+        {(cartItems || []).map((item, index) => (
+          <div
+            key={`${item.id}-${index}`}
+            className="flex justify-between items-center border-b py-2"
+          >
+            <div>
+              <p className="font-medium">
+                {item.productName ||
+                  (item.productWishLists &&
+                    item.productWishLists.productName) ||
+                  (item && item.productName) ||
+                  "Unknown Product"}
+              </p>
+              <p className="text-sm text-gray-500 text-left">
+                {Number(item.quantity) || 0} x{" "}
+                {(
+                  Number(item.productPrice) ||
+                  Number(item.productWishLists?.productPrice) ||
+                  Number(item?.productPrice) ||
+                  0
+                ).toLocaleString("vi-VN")}
+                ₫
+              </p>
+            </div>
+            <div className="text-right font-medium">
+              {(
+                (Number(item.productPrice) ||
+                  Number(item.productWishLists?.productPrice) ||
+                  Number(item?.productPrice) ||
+                  0) * (Number(item.quantity) || 0)
+              ).toLocaleString("vi-VN")}
+              ₫
             </div>
           </div>
         ))}
