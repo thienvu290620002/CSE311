@@ -5,7 +5,6 @@ import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 
-
 const Profile = () => {
   const { setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
@@ -81,21 +80,51 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
+  const handleCancelOrder = async (billId) => {
+    try {
+      // Gửi dữ liệu update billStatus về API
+      const response = await fetch("http://localhost:8080/api/update-bill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          billId,
+          billStatus: "Cancel",
+        }),
+      });
+
+      const result = await response.json();
+      if (result.errCode === 0) {
+        // Cập nhật lại trạng thái order trong userBills
+        setUserBills((prevBills) =>
+          prevBills.map((bill) =>
+            bill.billId === billId ? { ...bill, billStatus: "Cancel" } : bill,
+          ),
+        );
+      } else {
+        alert(
+          "Failed to cancel order: " + (result.errMessage || "Unknown error"),
+        );
+      }
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+    }
+  };
 
   const handleLogout = () => {
-  localStorage.removeItem("user");
-  localStorage.removeItem("wishlist");
-  setWishItems([]);  // xóa wishlist trong state
-  setCartItems([]);  // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
-  setUser(null);
-  navigate("/");
-};
-
+    localStorage.removeItem("user");
+    localStorage.removeItem("wishlist");
+    setWishItems([]); // xóa wishlist trong state
+    setCartItems([]); // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
+    setUser(null);
+    navigate("/");
+  };
 
   const handleUpdateProfile = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const updatedUsers = users.map((u) =>
-      u.email === user.email ? { ...u, ...newUserData } : u
+      u.email === user.email ? { ...u, ...newUserData } : u,
     );
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUser(newUserData);
@@ -106,7 +135,7 @@ const Profile = () => {
 
   const removeFromWishlist = (productId) => {
     setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
+      prevItems.filter((item) => item.id !== productId),
     );
   };
 
@@ -348,6 +377,12 @@ const Profile = () => {
                         </span>{" "}
                         {order.paymentMethod}
                       </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">
+                          Status:
+                        </span>{" "}
+                        {order.billStatus}
+                      </p>
                     </div>
 
                     {/* Items */}
@@ -377,6 +412,18 @@ const Profile = () => {
                         </li>
                       ))}
                     </ul>
+                    {order.billStatus !== "Cancel" ? (
+                      <button
+                        onClick={() => handleCancelOrder(order.billId)}
+                        className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                      >
+                        Cancel Order
+                      </button>
+                    ) : (
+                      <p className="mt-2 text-red-600 font-semibold">
+                        Cancelled
+                      </p>
+                    )}
 
                     {/* Total */}
                     <div className="text-right">
@@ -396,58 +443,49 @@ const Profile = () => {
 
         {/* Wishlist tab */}
         {activeTab === "wishlist" && (
-  <div>
-    <h2 className="text-2xl font-semibold mb-4 text-center">
-      Danh sách yêu thích
-    </h2>
-    {wishItems && wishItems.length > 0 ? (
-      wishItems.map((item) => (
-        <div
-          key={item.id}
-          className="flex items-center justify-between border-b py-3"
-        >
-          <div className="flex items-center gap-4">
-            <img
-              src={`http://localhost:8080${item.productWishLists.image}`}
-              alt={item.productName}
-              className="w-16 h-16 object-cover rounded"
-            />
-            <div className="text-left">
-              <p className="font-semibold">{item.productWishLists.productName}</p>
-              <p className="text-sm text-gray-600">
-                {(typeof item.productPrice === "number"
-                  ? item.productWishLists.productPrice
-                  : Number(item.productWishLists.productPrice)
-                ).toLocaleString("vi-VN")}₫
+          <div>
+            <h2 className="text-2xl font-semibold mb-4 text-center">
+              Wishlist
+            </h2>
+            {wishItems && wishItems.length > 0 ? (
+              wishItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between border-b py-3"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={`http://localhost:8080${item.productWishLists.image}`}
+                      alt={item.productWishLists.productName}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="text-left">
+                      <p className="font-semibold">
+                        {item.productWishLists.productName}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {item.productWishLists.productPrice.toLocaleString(
+                          "en-US",
+                        )}
+                        $
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeFromWishlist(item.productWishLists.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center">
+                You haven't added any products to your wishlist.
               </p>
-            </div>
+            )}
           </div>
-
-          <div className="flex gap-2">
-            {/* <button
-              onClick={() => addToCart(item)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
-            >
-              Thêm giỏ hàng
-            </button> */}
-
-            <button
-              onClick={() => removeFromWishlist(item.id)}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
-            >
-              Xóa
-            </button>
-          </div>
-        </div>
-      ))
-    ) : (
-      <p className="text-center text-gray-500">
-        Bạn chưa thêm sản phẩm nào vào yêu thích.
-      </p>
-    )}
-  </div>
-)}
-
+        )}
       </div>
     </div>
   );

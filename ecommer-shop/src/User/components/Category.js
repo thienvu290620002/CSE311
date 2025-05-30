@@ -19,50 +19,58 @@ const Category = () => {
   // State lưu wishlist của user hiện tại
   const [userWishlist, setUserWishlist] = useState([]);
 
- useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-  const fetchProductsAndWishlist = async () => {
-    try {
-      const userStr = localStorage.getItem("user");
-      if (!userStr) return;
-      const user = JSON.parse(userStr);
-      const userId = user.id;
+    const fetchProducts = async () => {
+      try {
+        const productRes = await axios.get(
+          "http://localhost:8080/api/get-all-product",
+        );
 
-      const [productRes, wishlistRes] = await Promise.all([
-        axios.get("http://localhost:8080/api/get-all-product"),
-        axios.get("http://localhost:8080/api/get-wishlist-by-userId", { params: { id: userId } }),
-      ]);
+        const allProducts = Array.isArray(productRes.data)
+          ? productRes.data
+          : productRes.data.data || [];
 
-      const allProducts = Array.isArray(productRes.data) ? productRes.data : (productRes.data.data || []);
-      const wishlist = wishlistRes.data?.data?.wishlist || [];
+        // Nếu user đã đăng nhập => fetch wishlist
+        let enrichedProducts = allProducts;
 
-const enrichedProducts = allProducts.map((product) => {
-  const isInWish = wishlist.some(
-    (item) =>
-      item.productId?.toString() === product.id?.toString() &&
-      item.wishListStatus === "active"
-  );
-  return { ...product, isInWishlist: isInWish };
-});
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const wishlistRes = await axios.get(
+            "http://localhost:8080/api/get-wishlist-by-userId",
+            {
+              params: { id: user.id },
+            },
+          );
 
+          const wishlist = wishlistRes.data?.data?.wishlist || [];
 
-      if (isMounted) {
-        setProducts(enrichedProducts);
+          enrichedProducts = allProducts.map((product) => {
+            const isInWish = wishlist.some(
+              (item) =>
+                item.productId?.toString() === product.id?.toString() &&
+                item.wishListStatus === "active",
+            );
+            return { ...product, isInWishlist: isInWish };
+          });
+        }
+
+        if (isMounted) {
+          setProducts(enrichedProducts);
+        }
+      } catch (error) {
+        console.error("Lỗi khi load sản phẩm:", error);
       }
-    } catch (error) {
-      // Bạn có thể xử lý lỗi hoặc để trống
-    }
-  };
+    };
 
-  fetchProductsAndWishlist();
+    fetchProducts();
 
-  return () => {
-    isMounted = false;
-  };
-}, []);
-
-  
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Khi user thay đổi (đăng nhập/đăng xuất), fetch wishlist của user đó
   useEffect(() => {
@@ -74,7 +82,7 @@ const enrichedProducts = allProducts.map((product) => {
     const fetchUserWishlist = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/get-wishlist-by-userId?userId=${user.id}`
+          `http://localhost:8080/api/get-wishlist-by-userId?userId=${user.id}`,
         );
         // Giả sử API trả về mảng sản phẩm hoặc mảng wishlist item có productId
         setUserWishlist(response.data.data || []);
@@ -87,10 +95,10 @@ const enrichedProducts = allProducts.map((product) => {
   }, [user]);
 
   const isInWishlist = (productId) => {
-  return userWishlist.some(item => item.productId.toString() === productId.toString());
-};
-
-
+    return userWishlist.some(
+      (item) => item.productId.toString() === productId.toString(),
+    );
+  };
 
   const handleAddToCart = (product) => {
     // Tách quantity tồn kho ra
@@ -98,66 +106,63 @@ const enrichedProducts = allProducts.map((product) => {
 
     // Gửi bản sao không chứa quantity tồn kho
     addToCart(productInfo);
+    swal("Success", "Add to cart Successful.", "success");
   };
 
   const toggleWishlist = async (product) => {
-  if (!user) {
-    swal({
-      title: "Login Required!",
-      text: "You need to log in to add this product to your wishlist.",
-      icon: "warning",
-      buttons: {
-        cancel: "Back to Home",
-        confirm: "Go to Login",
-      },
-      dangerMode: true,
-    }).then((willLogin) => {
-      if (willLogin) {
-        navigate("/login");
-      } else {
-        navigate("/");
-      }
-    });
-    return;
-  }
-
-  try {
-    const productId = product.id;
-
-    const isWishlisted = isInWishlist(productId);
-
-    await axios.post("http://localhost:8080/api/create-wishlist", {
-      productId,
-      userId: user.id,
-      wishListStatus: isWishlisted ? "inactive" : "active",
-    });
-
-    // Cập nhật state sau thay đổi
-    if (isWishlisted) {
-      setUserWishlist((prev) =>
-        prev.filter((item) => item.productId !== productId)
-      );
-      setWishItems((prev) =>
-        prev.filter((item) => item.id !== productId)
-      );
-    } else {
-      setUserWishlist((prev) => [...prev, { productId }]);
-      addToWishlist(product);
+    if (!user) {
+      swal({
+        title: "Login Required!",
+        text: "You need to log in to add this product to your wishlist.",
+        icon: "warning",
+        buttons: {
+          cancel: "Back to Home",
+          confirm: "Go to Login",
+        },
+        dangerMode: true,
+      }).then((willLogin) => {
+        if (willLogin) {
+          navigate("/login");
+        } else {
+          navigate("/");
+        }
+      });
+      return;
     }
 
-    // Cập nhật lại products để đổi màu trái tim nếu bạn dùng product.isInWishlist
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId ? { ...p, isInWishlist: !isWishlisted } : p
-      )
-    );
+    try {
+      const productId = product.id;
 
-  } catch (error) {
-    console.error("Lỗi xử lý wishlist:", error);
-    swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
-  }
-};
+      const isWishlisted = isInWishlist(productId);
 
+      await axios.post("http://localhost:8080/api/create-wishlist", {
+        productId,
+        userId: user.id,
+        wishListStatus: isWishlisted ? "inactive" : "active",
+      });
+
+      // Cập nhật state sau thay đổi
+      if (isWishlisted) {
+        setUserWishlist((prev) =>
+          prev.filter((item) => item.productId !== productId),
+        );
+        setWishItems((prev) => prev.filter((item) => item.id !== productId));
+      } else {
+        setUserWishlist((prev) => [...prev, { productId }]);
+        addToWishlist(product);
+      }
+
+      // Cập nhật lại products để đổi màu trái tim nếu bạn dùng product.isInWishlist
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId ? { ...p, isInWishlist: !isWishlisted } : p,
+        ),
+      );
+    } catch (error) {
+      console.error("Lỗi xử lý wishlist:", error);
+      swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
+    }
+  };
 
   return (
     <div>
@@ -263,11 +268,10 @@ const enrichedProducts = allProducts.map((product) => {
                         }}
                       >
                         {product.isInWishlist ? (
-  <FaHeart size={24} color="red" />
-) : (
-  <FaRegHeart size={24} color="black" />
-)}
-
+                          <FaHeart size={24} color="red" />
+                        ) : (
+                          <FaRegHeart size={24} color="black" />
+                        )}
                       </button>
                     </li>
 

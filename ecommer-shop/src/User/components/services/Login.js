@@ -52,8 +52,8 @@ const Login = () => {
 
       if (errCode === 0) {
         localStorage.setItem("user", JSON.stringify(user));
-        setUser(user);
         navigate(user.roleId === "admin" ? "/admin" : "/shop");
+        setUser(user);
       } else {
         setError("Invalid or unauthorized account");
       }
@@ -112,7 +112,7 @@ const Login = () => {
           </button>
 
           <p className="text-sm mt-3 text-center">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <Link to="/register" className="text-blue-600 hover:underline">
               Sign up
             </Link>

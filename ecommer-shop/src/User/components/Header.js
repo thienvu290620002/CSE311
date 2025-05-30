@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import axios from "axios";
+import swal from "sweetalert";
 import { useWishlist } from "../context/WishlistContext";
 
 const Header = () => {
- const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
 
@@ -13,15 +14,34 @@ const Header = () => {
 
   // Lấy wishlist từ context, ko lấy từ localStorage nữa
   const { wishItems } = useWishlist();
+  const searchRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      setQuery("");
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setFiltered([]);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Số lượng wishlist active tính dựa trên wishItems từ context
-  const activeWishCount = wishItems.filter(item => item.wishListStatus === "active").length;
+  const activeWishCount = wishItems.filter(
+    (item) => item.wishListStatus === "active",
+  ).length;
 
   // Load sản phẩm như cũ
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/get-all-product");
+        const response = await axios.get(
+          "http://localhost:8080/api/get-all-product",
+        );
         setProducts(response.data || []);
       } catch (error) {
         console.error("Lỗi khi tải danh sách sản phẩm:", error);
@@ -37,23 +57,59 @@ const Header = () => {
       setFiltered([]);
     } else {
       const results = products.filter((item) =>
-        item.productName.toLowerCase().includes(value.toLowerCase())
+        item.productName.toLowerCase().includes(value.toLowerCase()),
       );
       setFiltered(results);
     }
   };
 
   const addToCart = (product) => {
+    const stockProduct = products.find(
+      (p) => p.productId === product.productId,
+    );
+
+    const stock = stockProduct?.quantity ?? 0;
+    const name = stockProduct?.productName ?? product.productName ?? "Unknown";
+
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
+
       if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+        if (existingItem.quantity < stock) {
+          swal({
+            title: "Quantity Increased",
+            text: `Increased quantity for ${name}`,
+            icon: "success",
+            timer: 1000,
+            buttons: false,
+          });
+          return prevItems.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item,
+          );
+        } else {
+          swal(
+            "Out of Stock",
+            `Maximum quantity for ${name} is ${stock}.`,
+            "warning",
+          );
+          return prevItems;
+        }
       } else {
-        return [...prevItems, { ...product, quantity: 1 }];
+        if (stock > 0) {
+          swal({
+            title: "Added to Cart",
+            text: `Added ${name} to cart`,
+            icon: "success",
+            timer: 800,
+            buttons: false,
+          });
+          return [...prevItems, { ...product, quantity: 1 }];
+        } else {
+          swal("Out of Stock", `${name} is currently out of stock!`, "warning");
+          return prevItems;
+        }
       }
     });
   };
@@ -67,7 +123,10 @@ const Header = () => {
           </Link>
         </h1>
 
-        <div className="relative ml-auto lg:mr-20 max-w-[500px] w-full hidden xl:block z-50">
+        <div
+          className="relative ml-auto lg:mr-20 max-w-[500px] w-full hidden xl:block z-50"
+          ref={searchRef}
+        >
           <input
             type="text"
             placeholder="Search..."
@@ -119,11 +178,21 @@ const Header = () => {
 
         <nav className="mr-28 hidden lg:block ml-auto">
           <ul className="flex items-center gap-10">
-            <li><Link to="/home">Home</Link></li>
-            <li><Link to="/shop">Shop</Link></li>
-            <li><Link to="/about-us">About us</Link></li>
-            <li><Link to="/blog">Blog</Link></li>
-            <li><Link href="#none">Featured</Link></li>
+            <li>
+              <Link to="/home">Home</Link>
+            </li>
+            <li>
+              <Link to="/shop">Shop</Link>
+            </li>
+            <li>
+              <Link to="/about-us">About us</Link>
+            </li>
+            <li>
+              <Link to="/blog">Blog</Link>
+            </li>
+            <li>
+              <Link href="#none">Featured</Link>
+            </li>
           </ul>
         </nav>
 

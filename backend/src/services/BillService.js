@@ -28,6 +28,80 @@ let getAllBill = () => {
     }
   });
 };
+// getAllBillItem
+let getAllBillItemWithRecommendation = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Lấy tất cả hóa đơn kèm items và products
+      let bills = await db.Bill.findAll({
+        include: [
+          {
+            model: db.Bill_Item,
+            as: "billItems",
+            include: [
+              {
+                model: db.Product,
+                as: "products",
+                attributes: ["productId", "productName"], // Lấy ít thông tin sản phẩm cần thiết
+              },
+            ],
+          },
+        ],
+        nest: true,
+      });
+
+      // Tạo một map để đếm số lần mua chung sản phẩm
+      // key: productId, value: map của các productId khác và số lần mua chung
+      let coPurchaseMap = {};
+
+      // Duyệt qua từng bill để tính tần suất mua chung
+      bills.forEach((bill) => {
+        // Lấy danh sách productId của bill này
+        let productIds = bill.billItems.map((item) => item.products.productId);
+
+        // Với từng cặp sản phẩm trong cùng 1 hóa đơn, tăng count
+        for (let i = 0; i < productIds.length; i++) {
+          const p1 = productIds[i];
+          if (!coPurchaseMap[p1]) coPurchaseMap[p1] = {};
+
+          for (let j = 0; j < productIds.length; j++) {
+            if (i === j) continue;
+            const p2 = productIds[j];
+            if (!coPurchaseMap[p1][p2]) coPurchaseMap[p1][p2] = 0;
+            coPurchaseMap[p1][p2]++;
+          }
+        }
+      });
+
+      // Tạo kết quả recommend: với mỗi product, chọn sản phẩm được mua chung nhiều nhất
+      let recommendations = {};
+      for (let p1 in coPurchaseMap) {
+        let maxCount = 0;
+        let bestProduct = null;
+        for (let p2 in coPurchaseMap[p1]) {
+          if (coPurchaseMap[p1][p2] > maxCount) {
+            maxCount = coPurchaseMap[p1][p2];
+            bestProduct = p2;
+          }
+        }
+        if (bestProduct !== null) {
+          recommendations[p1] = bestProduct;
+        }
+      }
+
+      resolve({
+        errCode: 0,
+        data: {
+          bills,
+          recommendations,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 let getBillByUserID = (inputId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -74,71 +148,11 @@ let getBillByUserID = (inputId) => {
   });
 };
 
-function createDate() {
-  return new Date(); // returns current date and time as a Date object
-}
-
 const generateBillId = () => {
   const short = Date.now().toString(36).slice(-6).toUpperCase();
   return `BILL-${short}`; // Ví dụ: BILL-7F5A3C
 };
-// let createBill = async (data) => {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       const billDiscount = data.discount || 0;
-//       let totalPrice = 0;
-//       console.log(data.productId);
 
-//       const customBillId = generateBillId();
-
-//       // ✅ Tạo bill
-//       let bill = await db.Bill.create({
-//         billId: customBillId,
-//         userId: data.userId,
-//         paymentMethod: data.paymentMethod, // ✅ Đã sửa tên đúng
-//         totalPrice: 0,
-//         createdAt: new Date(),
-//         updatedAt: new Date(),
-//       });
-
-//       // ✅ Tạo các bill item
-//       for (let item of data.items) {
-//         const product = await db.Product.findOne({
-//           where: { productId: item.productId },
-//         });
-
-//         if (!product) {
-//           console.log("⚠️ Product not found for ID:", item.productId);
-//           continue; // hoặc throw new Error để debug rõ hơn
-//         }
-//         const itemTotalPrice = product.productPrice * item.quantity;
-//         const itemDiscount = item.discount || 0;
-//         const itemDiscountedPrice =
-//           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
-
-//         totalPrice += itemDiscountedPrice;
-
-//         await db.Bill_Item.create({
-//           billId: customBillId,
-//           billItemId: "ITEM-" + nanoid(8), // ✅ unique hơn
-//           quantity: item.quantity,
-//           productId: item.productId,
-//           discount: billDiscount,
-//           totalPrice: itemDiscountedPrice, // ✅ dùng giá trị đã tính
-//           createdAt: new Date(),
-//           updatedAt: new Date(),
-//         });
-//       }
-
-//       bill.totalPrice = totalPrice;
-//       await bill.save();
-
-//       resolve({ message: "Bill created successfully", billId: customBillId });
-//     } catch (e) {
-//       reject(e);
-//     }
-//   });
-// };
 let createBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -152,6 +166,7 @@ let createBill = async (data) => {
         billId: customBillId,
         userId: data.userId,
         paymentMethod: data.paymentMethod,
+        billStatus: "Delivered", // ✅ mặc định là Delivered
         totalPrice: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -212,7 +227,7 @@ let createBill = async (data) => {
   });
 };
 
-let updateBill = async (data) => {
+const updateBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Kiểm tra xem hóa đơn có tồn tại không
@@ -227,17 +242,16 @@ let updateBill = async (data) => {
         });
       }
 
-      // Cập nhật thông tin hóa đơn
+      // Cập nhật thông tin hóa đơn, bao gồm cả billStatus nếu có trong data
       const updatedBill = await bill.update({
         totalPrice: data.totalPrice,
         discount: data.discount || 0, // Nếu không có discount thì mặc định là 0
+        ...(data.billStatus && { billStatus: data.billStatus }), // Cập nhật billStatus nếu có
       });
 
       // Cập nhật các Bill_Item nếu có thay đổi
       if (data.items && data.items.length > 0) {
-        // Duyệt qua các item mới hoặc chỉnh sửa
         for (let item of data.items) {
-          // Kiểm tra xem Bill_Item đã tồn tại chưa
           let billItem = await db.Bill_Item.findOne({
             where: {
               billId: data.billId,
@@ -246,14 +260,12 @@ let updateBill = async (data) => {
           });
 
           if (billItem) {
-            // Nếu item đã có trong Bill_Item, cập nhật lại số lượng và giá trị
             await billItem.update({
               quantity: item.quantity,
               discount: item.discount || 0,
-              totalPrice: item.totalPrice || item.quantity * item.productPrice, // Cập nhật giá trị sau giảm giá
+              totalPrice: item.totalPrice || item.quantity * item.productPrice,
             });
           } else {
-            // Nếu chưa có item trong Bill_Item, tạo mới
             await db.Bill_Item.create({
               billId: data.billId,
               productId: item.productId,
@@ -265,12 +277,16 @@ let updateBill = async (data) => {
         }
       }
 
-      resolve("Bill updated successfully!");
+      resolve({ errCode: 0, message: "Bill updated successfully!" });
     } catch (e) {
-      reject(e);
+      reject({
+        errCode: -1,
+        errMessage: e.message || "Error from server",
+      });
     }
   });
 };
+
 let deleteBill = async (billId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -307,4 +323,5 @@ module.exports = {
   createBill: createBill,
   updateBill: updateBill,
   deleteBill: deleteBill,
+  getAllBillItemWithRecommendation: getAllBillItemWithRecommendation,
 };

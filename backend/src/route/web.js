@@ -42,12 +42,17 @@ let initWebRoutes = (app) => {
   router.get("/api/delete-user", userController.deleteUserByID);
   router.post("/api/update-user", userController.updateUserData);
 
-  //Bill User History
+  //Bill User
   router.get("/api/get-all-bill", billController.getAllBill);
   router.get("/api/get-bill-by-user-id", billController.getBillByUserID); //history Cart
   router.post("/api/create-bill", billController.createBill);
   router.post("/api/update-bill", billController.updateBill);
   //  router.get("/api/delete-bill", billController.deleteBill);
+  //Bill Item
+  router.get(
+    "/api/get-All-BillItem-With-Recommendation",
+    billController.getAllBillItemWithRecommendation
+  );
   //Product
   router.get("/api/get-all-product", productController.getAllProduct);
   router.get(
@@ -116,14 +121,27 @@ let initWebRoutes = (app) => {
         method: "POST",
         json: true,
         body: data,
+        timeout: 10000, // tăng timeout cho request tới ZaloPay (10s)
       },
       function (error, response, body) {
+        if (error) {
+          console.error("Request error:", error);
+          return res
+            .status(500)
+            .send({ message: "Error calling ZaloPay API", error });
+        }
+        if (!body) {
+          console.error("Empty body response");
+          return res
+            .status(500)
+            .send({ message: "Empty response from ZaloPay API" });
+        }
         if (body.return_code === 1) {
           console.log("Body:", body);
-          res.send(body);
+          return res.send(body);
         } else {
-          console.log("Error:", body);
-          res.status(500).send(body);
+          console.log("Error from ZaloPay:", body);
+          return res.status(500).send(body);
         }
       }
     );

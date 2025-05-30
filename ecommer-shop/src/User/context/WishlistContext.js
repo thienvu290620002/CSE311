@@ -1,4 +1,10 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
 import axios from "axios";
 
 const WishlistContext = createContext();
@@ -29,7 +35,7 @@ export const WishlistProvider = ({ children }) => {
     if (!userId) return;
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
+        `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`,
       );
       if (response.data.data && response.data.data.wishlist) {
         setWishItems(response.data.data.wishlist);
@@ -54,7 +60,9 @@ export const WishlistProvider = ({ children }) => {
 
   // Kiểm tra sản phẩm có trong wishlist hay không (so sánh với productId đúng)
   const isInWishlist = (productId) => {
-    return wishItems.some((item) => item.productId?.toString() === productId?.toString());
+    return wishItems.some(
+      (item) => item.productId?.toString() === productId?.toString(),
+    );
   };
 
   // Thêm product vào wishlist, gọi API và cập nhật lại state
