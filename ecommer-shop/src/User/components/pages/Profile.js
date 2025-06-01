@@ -1,12 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../context/UserContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
 import { FaUser, FaBox, FaHeart, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import swal from "sweetalert";
+import axios from "axios";
 
 const Profile = () => {
-  const { setCartItems } = useCart();
+  const { cartItems, setCartItems } = useCart();
   const { user, setUser } = useContext(UserContext);
   const { wishItems, setWishItems } = useWishlist();
   const navigate = useNavigate();
@@ -22,7 +24,47 @@ const Profile = () => {
     gender: user?.gender || "",
     image: user?.image || "",
   });
+  const { addToCart } = useCart();
+  const addToCartFromWishlist = (item) => {
+    // Lấy thông tin sản phẩm từ wishlist
+    const product = item.productWishLists || item;
 
+    const availableQuantity = product.quantity ?? 0;
+
+    // Tìm xem sản phẩm đã có trong giỏ chưa
+    const existingCartItem = cartItems.find(
+      (cartItem) => cartItem.productId === product.productId
+    );
+
+    const cartQuantity = existingCartItem?.quantity ?? 0;
+
+    if (cartQuantity >= availableQuantity) {
+      swal({
+        title: "Out of Stock",
+        text: `${product.productName} is already in your cart with the maximum available quantity.`,
+        icon: "error",
+        timer: 1500,
+        buttons: false,
+      });
+      return;
+    }
+
+    // Nếu còn hàng => thêm vào cart với số lượng 1
+    const itemWithQuantityOne = {
+      ...product,
+      quantity: 1,
+    };
+
+    addToCart(itemWithQuantityOne);
+
+    swal({
+      title: "Added to Cart",
+      text: `${product.productName} has been added to your cart.`,
+      icon: "success",
+      timer: 1000,
+      buttons: false,
+    });
+  };
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -121,22 +163,117 @@ const Profile = () => {
     navigate("/");
   };
 
-  const handleUpdateProfile = () => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const updatedUsers = users.map((u) =>
-      u.email === user.email ? { ...u, ...newUserData } : u
-    );
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUser(newUserData);
-    localStorage.setItem("user", JSON.stringify(newUserData));
-    setUser(newUserData);
-    setIsEditing(false);
-  };
+  const handleUpdateProfile = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/update-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: user.id,
+          firstName: newUserData.firstName,
+          lastName: newUserData.lastName,
+          gender: newUserData.gender,
+          phoneNumber: newUserData.phoneNumber,
+          address: newUserData.address,
+          image: newUserData.image,
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error("Cập nhật thất bại");
+      }
+
+      const data = await response.json();
+
+      const updatedUser = Array.isArray(data)
+        ? data.find((u) => u.id === user.id)
+        : data;
+
+      setUser(updatedUser);
+      setNewUserData({
+        firstName: updatedUser.firstName || "",
+        lastName: updatedUser.lastName || "",
+        gender: updatedUser.gender || "",
+        phoneNumber: updatedUser.phoneNumber || "",
+        address: updatedUser.address || "",
+        image: updatedUser.image || "",
+      });
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setIsEditing(false);
+
+      // ✅ Thông báo thành công bằng swal
+      swal({
+        title: "Success!",
+        text: "Your profile information has been updated successfully.",
+        icon: "success",
+        timer: 1500,
+        buttons: false,
+      });
+    } catch (error) {
+      console.error("Update profile error:", error);
+
+      // ❌ Thông báo lỗi bằng swal
+      swal({
+        title: "Error!",
+        text: "An error occurred while updating your profile.",
+        icon: "error",
+        buttons: true,
+      });
+    }
+  };
+  // const removeFromWishlist = (productId) => {
+  //   setWishItems((prevItems) =>
+  //     prevItems.filter((item) => item.id !== productId)
+  //   );
+  // };
   const removeFromWishlist = (productId) => {
-    setWishItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
-    );
+    const userString = localStorage.getItem("user");
+    const userId = userString ? JSON.parse(userString).id : null;
+
+    if (!userId) {
+      swal.error("User not found. Please log in.", "error");
+      return;
+    }
+
+    swal({
+      title: "Are you sure?",
+      text: "Do you really want to remove this item from your wishlist?",
+      icon: "warning",
+      buttons: ["Cancel", "Yes, remove it!"],
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        axios
+          .post("http://localhost:8080/api/create-wishlist", {
+            userId,
+            productId,
+            wishListStatus: "inactive",
+          })
+          .then(() => {
+            setWishItems((prevItems) =>
+              prevItems.filter(
+                (item) =>
+                  item.productWishLists &&
+                  item.productWishLists.productId !== productId
+              )
+            );
+
+            swal(
+              "Removed!",
+              "The item has been removed from your wishlist.",
+              "success"
+            );
+          })
+          .catch(() => {
+            swal("Error", "Could not remove item from wishlist.", "error");
+          });
+      } else {
+        swal("Cancelled", "The item is still in your wishlist.", "info");
+      }
+    });
   };
 
   if (!user) {
@@ -243,6 +380,7 @@ const Profile = () => {
                     <input
                       type="text"
                       name="firstName"
+                      required
                       value={newUserData.firstName}
                       onChange={handleInputChange}
                       placeholder="First Name"
@@ -251,6 +389,7 @@ const Profile = () => {
                     <input
                       type="text"
                       name="lastName"
+                      required
                       value={newUserData.lastName}
                       onChange={handleInputChange}
                       placeholder="Last Name"
@@ -270,6 +409,7 @@ const Profile = () => {
                   <input
                     type="text"
                     name="address"
+                    required
                     value={newUserData.address}
                     onChange={handleInputChange}
                     className="flex-1 p-3 border rounded-md text-sm"
@@ -287,6 +427,7 @@ const Profile = () => {
                   <input
                     type="text"
                     name="phoneNumber"
+                    required
                     value={newUserData.phoneNumber}
                     onChange={handleInputChange}
                     className="flex-1 p-3 border rounded-md text-sm"
@@ -299,13 +440,17 @@ const Profile = () => {
               <div className="flex items-start">
                 <label className="font-medium w-1/4 text-lg">Gender:</label>
                 {isEditing ? (
-                  <input
-                    type="text"
+                  <select
                     name="gender"
                     value={newUserData.gender}
                     onChange={handleInputChange}
                     className="flex-1 p-3 border rounded-md text-sm"
-                  />
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
                 ) : (
                   <p className="mt-1 text-lg">{user.gender}</p>
                 )}
@@ -451,19 +596,20 @@ const Profile = () => {
               wishItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between border-b py-3"
+                  className="flex items-center justify-between border-b py-4 px-2 gap-4"
                 >
-                  <div className="flex items-center gap-4">
+                  {/* Left: Product Info */}
+                  <div className="flex items-center gap-4 flex-1">
                     <img
                       src={`http://localhost:8080${item.productWishLists.image}`}
                       alt={item.productWishLists.productName}
-                      className="w-16 h-16 object-cover rounded"
+                      className="w-20 h-20 object-cover rounded-md border"
                     />
-                    <div className="text-left">
-                      <p className="font-semibold">
+                    <div>
+                      <p className="font-semibold text-lg">
                         {item.productWishLists.productName}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-gray-600 text-sm mt-1">
                         {item.productWishLists.productPrice.toLocaleString(
                           "en-US"
                         )}
@@ -471,16 +617,29 @@ const Profile = () => {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => removeFromWishlist(item.productWishLists.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
-                  >
-                    Remove
-                  </button>
+
+                  {/* Right: Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => addToCartFromWishlist(item)}
+                      className="bg-green text-white px-4 py-1.5 rounded-md text-sm"
+                    >
+                      Add to Cart
+                    </button>
+                    <button
+                      onClick={() =>
+                        removeFromWishlist(item.productWishLists.productId)
+                      }
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-md text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (
-              <p className="text-center">
+              <p className="text-center py-6 text-gray-500">
                 You haven't added any products to your wishlist.
               </p>
             )}

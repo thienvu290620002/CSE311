@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 import axios from "axios";
+import { useWishlist } from "../../context/WishlistContext";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,34 +11,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   //const [roleId] = useState("user");
   const [error, setError] = useState("");
-
-  // const handleLogin = async (e) => {
-  //   e.preventDefault();
-
-  //   try {
-  //     const response = await axios.post("http://localhost:8080/api/login", {
-  //       email,
-  //       password,
-  //     });
-
-  //     const { errCode, user } = response.data;
-
-  //     if (errCode === 0 && user.roleId === "admin") {
-  //       localStorage.setItem("user", JSON.stringify(user));
-  //       setUser(user);
-  //       navigate("/admin");
-  //     } else if (errCode === 0 && user.roleId === "user") {
-  //       localStorage.setItem("user", JSON.stringify(user));
-  //       setUser(user);
-  //       navigate("/shopping-cart");
-  //     } else {
-  //       setError("Invalid or unauthorized account");
-  //     }
-  //   } catch (err) {
-  //     setError("Incorrect email or password");
-  //   }
-  // };
+  // const { fetchWishlist } = useWishlist();
   const [loading, setLoading] = useState(false);
+  const { loginUser } = useWishlist();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -53,16 +29,23 @@ const Login = () => {
       if (errCode === 0) {
         localStorage.setItem("user", JSON.stringify(user));
         navigate(user.roleId === "admin" ? "/admin" : "/shop");
+        // await fetchWishlist(user.id);
         setUser(user);
       } else {
         setError("Invalid or unauthorized account");
       }
+      localStorage.setItem("user", JSON.stringify(user));
+      loginUser(user); // gọi update userId và fetch wishlist
     } catch (err) {
       setError("Incorrect email or password");
     } finally {
       setLoading(false);
     }
   };
+  // const handleLoginSuccess = (user) => {
+  //   localStorage.setItem("user", JSON.stringify(user));
+  //   loginUser(user); // gọi update userId và fetch wishlist
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300">

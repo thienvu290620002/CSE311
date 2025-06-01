@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import swal from "sweetalert";
+import Swal from "sweetalert2";
 import ReactPaginate from "react-paginate";
 import { v4 as uuidv4 } from "uuid";
 
@@ -150,7 +150,7 @@ const AdminProductPage = () => {
       return response.data.url;
     } catch (error) {
       console.error("Upload error:", error);
-      swal("Error", error.message, "error");
+      Swal.fire("Error", error.message, "error");
       return null;
     }
   };
@@ -169,6 +169,7 @@ const AdminProductPage = () => {
 
       updatedData.productStatus =
         parseInt(updatedData.quantity) > 0 ? "onShop" : "outDate";
+
       if (tempImages.image?.file) {
         const url = await uploadImageToServer(tempImages.image.file);
         updatedData.image = url;
@@ -181,9 +182,9 @@ const AdminProductPage = () => {
 
       fetchProducts();
       handleCancelEdit();
-      swal("Success!", "Product Created!", "success");
+      Swal.fire("Success!", "Product Created!", "success");
     } catch (error) {
-      swal("Error", "Creation failed", "error");
+      Swal.fire("Error", "Creation failed", "error");
     }
   };
 
@@ -204,37 +205,40 @@ const AdminProductPage = () => {
 
       fetchProducts();
       handleCancelEdit();
-      swal("Success!", "Product updated!", "success");
+      Swal.fire("Success!", "Product updated!", "success");
     } catch (error) {
-      swal("Error", "Update failed", "error");
+      Swal.fire("Error", "Update failed", "error");
     }
   };
 
   const handleDelete = async (id) => {
-    swal({
+    Swal.fire({
       title: "Are you sure?",
       text: "This will permanently delete the product!",
       icon: "warning",
-      buttons: ["Cancel", "Delete"],
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
       dangerMode: true,
-    }).then(async (willDelete) => {
-      if (willDelete) {
+      reverseButtons: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
         try {
           await axios.get("http://localhost:8080/api/delete-product-by-id", {
             params: { productId: id },
           });
           fetchProducts();
-          swal("Deleted!", "Product was successfully deleted.", {
-            icon: "success",
-          });
+          Swal.fire("Deleted!", "Product was successfully deleted.", "success");
         } catch (error) {
           console.error("Error deleting product:", error);
-          swal("Error!", "Failed to delete product. Please try again.", {
-            icon: "error",
-          });
+          Swal.fire(
+            "Error!",
+            "Failed to delete product. Please try again.",
+            "error"
+          );
         }
-      } else {
-        swal("Cancelled", "The product is still in the list.");
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire("Cancelled", "The product is still in the list.", "info");
       }
     });
   };

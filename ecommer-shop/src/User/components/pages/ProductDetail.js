@@ -266,7 +266,7 @@ const ProductDetail = () => {
                     alt=""
                   />{" "}
                   <span className="text-green font-medium text-sm">
-                    In stock
+                    {product.quantity} In stock
                   </span>
                 </p>
 
@@ -436,36 +436,6 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
-          {/* {recommendedProduct ? (
-            <div className="recommended-product mt-12 p-6 border rounded-xl shadow-md bg-white">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">
-                Sản phẩm được đề xuất mua kèm
-              </h3>
-              <Link
-                to={`/productdetail/${recommendedProduct.productId}`}
-                className="flex items-center gap-6 hover:bg-gray-50 p-4 rounded-lg transition"
-              >
-                <img
-                  src={getImageSrc(recommendedProduct.image)}
-                  alt={recommendedProduct.productName}
-                  className="w-24 h-24 object-cover rounded-lg border"
-                />
-                <div>
-                  <p className="text-lg font-semibold text-gray-700">
-                    {recommendedProduct.productName}
-                  </p>
-                  <p className="text-md text-red-500 mt-1">
-                    {recommendedProduct.productPrice?.toLocaleString()}₫
-                  </p>
-                </div>
-              </Link>
-            </div>
-          ) : (
-            <p className="mt-10 text-gray-500 italic">
-              Không có sản phẩm đề xuất cho sản phẩm này.
-            </p>
-          )} */}
-
           <div className="mt-9 lg:mt-24">
             <ul className="flex items-center lg:justify-center gap-6">
               <li>
@@ -527,7 +497,7 @@ const ProductDetail = () => {
                 (recommendedProduct ? (
                   <div className="recommended-product mt-12 p-6 border rounded-xl shadow-md bg-white">
                     <h3 className="text-xl font-bold mb-4 text-gray-800">
-                      Sản phẩm được đề xuất mua kèm
+                      Recommended products to buy with
                     </h3>
                     <Link
                       to={`/productdetail/${recommendedProduct.productId}`}

@@ -7,6 +7,7 @@ import axios from "axios";
 const WishList = () => {
   const { wishItems, setWishItems, statusChanged } = useWishlist();
   const { addToCart } = useCart();
+  const { cartItems } = useCart();
   useEffect(() => {
     const userString = localStorage.getItem("user");
     const userId = userString ? JSON.parse(userString).id : null;
@@ -64,8 +65,13 @@ const WishList = () => {
           })
           .then(() => {
             setWishItems((prevItems) =>
-              prevItems.filter((item) => item.productWishLists.id !== productId)
+              prevItems.filter(
+                (item) =>
+                  item.productWishLists &&
+                  item.productWishLists.productId !== productId
+              )
             );
+
             swal(
               "Removed!",
               "The item has been removed from your wishlist.",
@@ -81,20 +87,40 @@ const WishList = () => {
     });
   };
   const addToCartFromWishlist = (item) => {
+    // Lấy thông tin sản phẩm từ wishlist
+    const product = item.productWishLists || item;
+
+    const availableQuantity = product.quantity ?? 0;
+
+    // Tìm xem sản phẩm đã có trong giỏ chưa
+    const existingCartItem = cartItems.find(
+      (cartItem) => cartItem.productId === product.productId
+    );
+
+    const cartQuantity = existingCartItem?.quantity ?? 0;
+
+    if (cartQuantity >= availableQuantity) {
+      swal({
+        title: "Out of Stock",
+        text: `${product.productName} is already in your cart with the maximum available quantity.`,
+        icon: "error",
+        timer: 1500,
+        buttons: false,
+      });
+      return;
+    }
+
+    // Nếu còn hàng => thêm vào cart với số lượng 1
     const itemWithQuantityOne = {
-      ...item,
+      ...product,
       quantity: 1,
-      productWishLists: {
-        ...item.productWishLists,
-        quantity: 1,
-      },
     };
 
     addToCart(itemWithQuantityOne);
-    // setWishItems([]);
+
     swal({
       title: "Added to Cart",
-      text: `${item.productWishLists?.productName || item.productName} has been added to your cart.`,
+      text: `${product.productName} has been added to your cart.`,
       icon: "success",
       timer: 1000,
       buttons: false,
@@ -107,46 +133,43 @@ const WishList = () => {
   }, [statusChanged]);
 
   return (
-    <div className="container px-4 py-8">
-      <h2 className="text-2xl font-semibold mb-6">Your Wishlist</h2>
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold text-gray-800 mb-8">Your Wishlist</h2>
+
       {wishItems.length === 0 ? (
-        <p>Your wishlist is empty.</p>
+        <p className="text-gray-500 text-center">Your wishlist is empty.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto border-collapse border border-gray-200">
-            <thead className="bg-gray-100">
+        <div className="overflow-x-auto bg-gray-50 border border-gray-200 rounded-lg shadow-md">
+          <table className="min-w-full text-sm text-gray-800">
+            <thead className="bg-gray-200 text-gray-700 uppercase text-xs font-semibold">
               <tr>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600 border-b text-center">
-                  Product
-                </th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600 border-b text-center">
-                  Price
-                </th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600 border-b text-center">
-                  Actions
-                </th>
+                <th className="py-4 px-6 text-left border-b">Product</th>
+                <th className="py-4 px-6 text-center border-b">Price</th>
+                <th className="py-4 px-6 text-center border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
               {wishItems
-                .filter((item) => item.wishListStatus === "active")
+                .filter(
+                  (item) =>
+                    item.wishListStatus === "active" && item.productWishLists
+                )
                 .map((item) => (
                   <tr
-                    key={item.productWishLists.id}
-                    className="hover:bg-gray-50"
+                    key={item.productWishLists.productId}
+                    className="hover:bg-gray-100 transition"
                   >
-                    <td className="py-3 px-4 flex items-center">
+                    <td className="py-4 px-6 flex items-center gap-4">
                       <img
                         src={`http://localhost:8080${item.productWishLists.image}`}
                         alt={item.productWishLists.productName}
-                        className="w-16 h-16 object-cover rounded-md mr-4"
+                        className="w-16 h-16 object-cover rounded-md shadow"
                       />
-                      <span>{item.productWishLists.productName}</span>
+                      <span className="font-medium text-base">
+                        {item.productWishLists.productName}
+                      </span>
                     </td>
-                    {/* <td className="py-3 px-4 text-gray-800">
-                    {item.productPrice.toLocaleString("vi-VN")} ₫
-                  </td> */}
-                    <td className="py-3 px-4 text-gray-800">
+                    <td className="py-4 px-6 text-center font-semibold text-green-600">
                       {typeof item.productWishLists.productPrice === "number"
                         ? item.productWishLists.productPrice.toLocaleString(
                             "vi-VN"
@@ -154,24 +177,38 @@ const WishList = () => {
                         : "0"}{" "}
                       ₫
                     </td>
-                    <td className="py-3 px-4 flex justify-center gap-4">
-                      <button
-                        type="button"
-                        onClick={() => addToCartFromWishlist(item)}
-                        className="bg-green hover:bg-green-600 text-black px-3 py-1 rounded"
-                      >
-                        Add to Cart
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeFromWishlist(item.id)}
-                      >
-                        <img
-                          className="block size-5"
-                          src="images/ico_trash.png"
-                          alt="Delete"
-                        />
-                      </button>
+                    <td className="py-4 px-6 text-center align-middle">
+                      <div className="flex justify-center items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => addToCartFromWishlist(item)}
+                          className="bg-green text-white text-sm px-4 py-2 rounded-lg shadow transition"
+                        >
+                          Add to Cart
+                        </button>
+                        {/* <button
+                          type="button"
+                          onClick={() =>
+                            removeFromWishlist(item.productWishLists.productId)
+                          }
+                          className="bg-red-100 hover:bg-red-200 p-2 rounded-full shadow"
+                        >
+                          <img
+                            className="w-5 h-5"
+                            src="images/ico_trash.png"
+                            alt="Delete"
+                          />
+                        </button> */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeFromWishlist(item.productWishLists.productId)
+                          }
+                          className="bg-red-500 hover:bg-red-300 text-white text-sm px-4 py-2 rounded-lg shadow transition"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

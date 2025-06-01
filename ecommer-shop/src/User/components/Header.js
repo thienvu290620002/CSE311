@@ -72,7 +72,9 @@ const Header = () => {
     const name = stockProduct?.productName ?? product.productName ?? "Unknown";
 
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
+      const existingItem = prevItems.find(
+        (item) => item.productId === product.productId
+      );
 
       if (existingItem) {
         if (existingItem.quantity < stock) {
@@ -84,7 +86,7 @@ const Header = () => {
             buttons: false,
           });
           return prevItems.map((item) =>
-            item.id === product.id
+            item.productId === product.productId
               ? { ...item, quantity: item.quantity + 1 }
               : item
           );
@@ -142,11 +144,11 @@ const Header = () => {
             <ul className="absolute top-full left-0 w-full bg-white border border-gray-200 mt-2 rounded-xl shadow-xl max-h-96 overflow-y-auto z-50 p-2 space-y-2">
               {filtered.map((item) => (
                 <li
-                  key={item.id}
+                  key={item.productId}
                   className="flex items-center justify-between gap-4 p-2 hover:bg-amber-50 transition rounded-lg"
                 >
                   <Link
-                    to={`/ProductDetail/${item.id}`}
+                    to={`/productdetail/${item.productId}`}
                     className="flex items-center gap-4 flex-1"
                   >
                     <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">

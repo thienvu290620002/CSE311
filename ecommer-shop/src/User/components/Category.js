@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
-import swal from "sweetalert";
+import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { FiRefreshCw, FiSearch } from "react-icons/fi";
@@ -106,24 +106,24 @@ const Category = () => {
 
     // Gửi bản sao không chứa quantity tồn kho
     addToCart(productInfo);
-    swal("Success", "Add to cart Successful.", "success");
+    Swal.fire("Success", "Add to cart Successful.", "success");
   };
 
   const toggleWishlist = async (product) => {
     if (!user) {
-      swal({
+      Swal.fire({
         title: "Login Required!",
         text: "You need to log in to add this product to your wishlist.",
         icon: "warning",
-        buttons: {
-          cancel: "Back to Home",
-          confirm: "Go to Login",
-        },
+        showCancelButton: true,
+        confirmButtonText: "Go to Login",
+        cancelButtonText: "Back to Home",
+        reverseButtons: true,
         dangerMode: true,
-      }).then((willLogin) => {
-        if (willLogin) {
+      }).then((result) => {
+        if (result.isConfirmed) {
           navigate("/login");
-        } else {
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
           navigate("/");
         }
       });
@@ -160,10 +160,9 @@ const Category = () => {
       );
     } catch (error) {
       console.error("Lỗi xử lý wishlist:", error);
-      swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
+      Swal.fire("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
     }
   };
-
   return (
     <div>
       {/* Categories Section */}

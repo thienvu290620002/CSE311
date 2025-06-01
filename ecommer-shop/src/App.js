@@ -68,7 +68,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/ProductDetail/:productId"
+                  path="/productdetail/:productId"
                   element={
                     <>
                       <Header />

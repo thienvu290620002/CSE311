@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import swal from "sweetalert";
+import Swal from "sweetalert2";
 import ReactPaginate from "react-paginate";
 
 const AdminUserPage = ({ goBack }) => {
@@ -89,7 +89,7 @@ const AdminUserPage = ({ goBack }) => {
     // Kiểm tra trùng email trước khi gửi request
     const isDuplicate = users.some((user) => user.email === formData.email);
     if (isDuplicate) {
-      swal("Error", "Email already exists in the system!", "error");
+      Swal.fire("Error", "Email already exists in the system!", "error");
       return;
     }
 
@@ -101,16 +101,16 @@ const AdminUserPage = ({ goBack }) => {
       const data = response.data;
 
       if (data.errCode !== 0) {
-        swal("Error", data.errMessage || "Failed to add user", "error");
+        Swal.fire("Error", data.errMessage || "Failed to add user", "error");
         return;
       }
 
       fetchUsers();
       handleCancelEdit();
-      swal("Success!", "User added successfully.", "success");
+      Swal.fire("Success!", "User added successfully.", "success");
     } catch (error) {
       console.error("Error adding user:", error);
-      swal(
+      Swal.fire(
         "Error",
         error.response?.data?.errMessage || "Server error while adding user.",
         "error"
@@ -118,21 +118,6 @@ const AdminUserPage = ({ goBack }) => {
     }
   };
 
-  // const handleUpdateUser = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     await axios.post("http://localhost:8080/api/update-user", {
-  //       ...formData,
-  //       id: userId,
-  //     });
-  //     fetchUsers();
-  //     handleCancelEdit();
-  //     swal("Success!", "User updated successfully.", "success");
-  //   } catch (error) {
-  //     console.error("Error updating user:", error);
-  //     swal("Error", "Failed to update user.", "error");
-  //   }
-  // };
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     console.log("Updating user with data:", formData); // In ra formData trước khi gửi
@@ -148,22 +133,24 @@ const AdminUserPage = ({ goBack }) => {
 
       fetchUsers();
       handleCancelEdit();
-      swal("Success!", "User updated successfully.", "success");
+      Swal.fire("Success!", "User updated successfully.", "success");
     } catch (error) {
       console.error("Error updating user:", error);
-      swal("Error", "Failed to update user.", "error");
+      Swal.fire("Error", "Failed to update user.", "error");
     }
   };
 
   const handleDelete = async (id) => {
-    swal({
+    Swal.fire({
       title: "Are you sure?",
       text: "This will permanently delete the user!",
       icon: "warning",
-      buttons: ["Cancel", "Delete"],
-      dangerMode: true,
-    }).then(async (willDelete) => {
-      if (willDelete) {
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
         try {
           await axios.get("http://localhost:8080/api/delete-user", {
             params: { id },
@@ -172,13 +159,13 @@ const AdminUserPage = ({ goBack }) => {
           if (id === userId) {
             handleCancelEdit();
           }
-          swal("Deleted!", "User was successfully deleted.", {
-            icon: "success",
-          });
+          Swal.fire("Deleted!", "User was successfully deleted.", "success");
         } catch (error) {
           console.error("Error deleting user:", error);
-          swal("Error!", "Failed to delete user.", { icon: "error" });
+          Swal.fire("Error!", "Failed to delete user.", "error");
         }
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire("Cancelled", "The user is still in the list.", "info");
       }
     });
   };
@@ -286,6 +273,7 @@ const AdminUserPage = ({ goBack }) => {
             <label className="mb-1 font-medium text-left">Email</label>
             <input
               name="email"
+              type="email"
               value={formData.email}
               onChange={handleInputChange}
               className="border px-4 py-2 rounded-md"
@@ -349,13 +337,36 @@ const AdminUserPage = ({ goBack }) => {
           <div className="flex flex-col">
             <label className="mb-1 font-medium text-left">Phone Number</label>
             <input
+              type="text"
               name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, ""); // Bỏ tất cả không phải số
+                if (value.length > 10) value = value.slice(0, 10); // Cắt còn 10 số
+
+                setFormData((prev) => ({
+                  ...prev,
+                  phoneNumber: value,
+                }));
+              }}
+              className="border px-4 py-2 rounded-md"
+              required={!userId}
+              inputMode="numeric"
+              maxLength={10}
+            />
+          </div>
+
+          {/* <div className="flex flex-col">
+            <label className="mb-1 font-medium text-left">Phone Number</label>
+            <input
+              name="phoneNumber"
+              type="number"
               value={formData.phoneNumber}
               onChange={handleInputChange}
               className="border px-4 py-2 rounded-md"
               required={!userId} // Set required only when adding a new user
             />
-          </div>
+          </div> */}
 
           {/* Image URL */}
           {/* <div className="flex flex-col">
