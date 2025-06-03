@@ -346,7 +346,7 @@ const ProductList = () => {
                           <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
                             {/* Banner Out of Stock góc trên phải */}
                             {product.quantity === 0 && (
-                              <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                              <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
                                 Out of Stock
                               </div>
                             )}

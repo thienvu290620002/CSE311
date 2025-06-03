@@ -153,6 +153,79 @@ const generateBillId = () => {
   return `BILL-${short}`; // Ví dụ: BILL-7F5A3C
 };
 
+// let createBill = async (data) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const billDiscount = data.discount || 0;
+//       let totalPrice = 0;
+
+//       const customBillId = generateBillId();
+
+//       // ✅ Tạo bill
+//       let bill = await db.Bill.create({
+//         billId: customBillId,
+//         userId: data.userId,
+//         paymentMethod: data.paymentMethod,
+//         billStatus: "Delivered", // ✅ mặc định là Delivered
+//         totalPrice: 0,
+//         createdAt: new Date(),
+//         updatedAt: new Date(),
+//       });
+
+//       for (let item of data.items) {
+//         const product = await db.Product.findOne({
+//           where: { productId: item.productId },
+//         });
+
+//         if (!product) {
+//           console.log("⚠️ Product not found for ID:", item.productId);
+//           continue;
+//         }
+
+//         // ✅ Kiểm tra số lượng tồn kho đủ hay không
+//         if (product.quantity < item.quantity) {
+//           return resolve({
+//             errCode: 2,
+//             errMessage: `Sản phẩm ${product.productName} không đủ số lượng tồn kho!`,
+//           });
+//         }
+
+//         // ✅ Tính giá sau giảm giá
+//         const itemTotalPrice = product.productPrice * item.quantity;
+//         // console.log(itemTotalPrice);
+
+//         const itemDiscount = item.discount || 0;
+//         const itemDiscountedPrice =
+//           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
+
+//         totalPrice += itemDiscountedPrice;
+
+//         // ✅ Tạo bill item
+//         await db.Bill_Item.create({
+//           billId: customBillId,
+//           billItemId: "ITEM-" + nanoid(8),
+//           quantity: item.quantity,
+//           productId: item.productId,
+//           discount: billDiscount,
+//           totalPrice: itemDiscountedPrice,
+//           createdAt: new Date(),
+//           updatedAt: new Date(),
+//         });
+
+//         // ✅ Giảm số lượng tồn kho trong Product
+//         product.quantity -= item.quantity;
+//         await product.save();
+//       }
+
+//       bill.totalPrice = totalPrice;
+//       await bill.save();
+
+//       resolve({ message: "Bill created successfully", billId: customBillId });
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
 let createBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -161,16 +234,18 @@ let createBill = async (data) => {
 
       const customBillId = generateBillId();
 
-      // ✅ Tạo bill
+      // ✅ Thay đổi billStatus mặc định thành "Pending"
       let bill = await db.Bill.create({
         billId: customBillId,
         userId: data.userId,
         paymentMethod: data.paymentMethod,
-        billStatus: "Delivered", // ✅ mặc định là Delivered
+        billStatus: "Pending", // <--- THAY ĐỔI Ở ĐÂY
         totalPrice: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+
+      // ... (phần còn lại của logic tạo bill item và cập nhật số lượng sản phẩm)
 
       for (let item of data.items) {
         const product = await db.Product.findOne({
@@ -182,7 +257,6 @@ let createBill = async (data) => {
           continue;
         }
 
-        // ✅ Kiểm tra số lượng tồn kho đủ hay không
         if (product.quantity < item.quantity) {
           return resolve({
             errCode: 2,
@@ -190,17 +264,13 @@ let createBill = async (data) => {
           });
         }
 
-        // ✅ Tính giá sau giảm giá
         const itemTotalPrice = product.productPrice * item.quantity;
-        // console.log(itemTotalPrice);
-
         const itemDiscount = item.discount || 0;
         const itemDiscountedPrice =
           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
 
         totalPrice += itemDiscountedPrice;
 
-        // ✅ Tạo bill item
         await db.Bill_Item.create({
           billId: customBillId,
           billItemId: "ITEM-" + nanoid(8),
@@ -212,7 +282,6 @@ let createBill = async (data) => {
           updatedAt: new Date(),
         });
 
-        // ✅ Giảm số lượng tồn kho trong Product
         product.quantity -= item.quantity;
         await product.save();
       }
@@ -220,13 +289,65 @@ let createBill = async (data) => {
       bill.totalPrice = totalPrice;
       await bill.save();
 
-      resolve({ message: "Bill created successfully", billId: customBillId });
+      resolve({
+        errCode: 0,
+        message: "Bill created successfully",
+        billId: customBillId,
+      }); // Thêm errCode để đồng bộ với các response khác
     } catch (e) {
-      reject(e);
+      console.error("Error creating bill:", e);
+      reject({
+        errCode: -1,
+        errMessage: "Error from Server during bill creation",
+      });
     }
   });
 };
+let autoUpdateBillStatus = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Lấy tất cả các hóa đơn có trạng thái "Pending"
+      let pendingBills = await db.Bill.findAll({
+        where: {
+          billStatus: "Pending",
+        },
+        attributes: ["billId", "createdAt"], // Chỉ lấy billId và createdAt để kiểm tra
+      });
 
+      const now = new Date();
+      let updatedCount = 0;
+
+      for (let bill of pendingBills) {
+        const createdAt = new Date(bill.createdAt);
+        const timeDiff = now.getTime() - createdAt.getTime(); // Thời gian chênh lệch tính bằng miligiây
+
+        // Nếu đã qua 1 phút (60000 miligiây)
+        if (timeDiff >= 60000) {
+          await db.Bill.update(
+            { billStatus: "Delivered" },
+            { where: { billId: bill.billId } }
+          );
+          updatedCount++;
+          console.log(
+            `Bill ${bill.billId} automatically updated to Delivered.`
+          );
+        }
+      }
+      resolve({
+        errCode: 0,
+        message: `Successfully updated ${updatedCount} bills.`,
+        updatedCount: updatedCount,
+      });
+    } catch (e) {
+      console.error("Error in autoUpdateBillStatus:", e);
+      reject({
+        errCode: -1,
+        errMessage: "Error from server during auto update",
+        error: e,
+      });
+    }
+  });
+};
 const updateBill = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -234,6 +355,7 @@ const updateBill = async (data) => {
       let bill = await db.Bill.findOne({
         where: { billId: data.billId },
       });
+      // console.log(bill, "bills");
 
       if (!bill) {
         return reject({
@@ -241,15 +363,35 @@ const updateBill = async (data) => {
           errMessage: "Bill not found!",
         });
       }
-
       // Cập nhật thông tin hóa đơn, bao gồm cả billStatus nếu có trong data
-      const updatedBill = await bill.update({
-        totalPrice: data.totalPrice,
-        discount: data.discount || 0, // Nếu không có discount thì mặc định là 0
-        ...(data.billStatus && { billStatus: data.billStatus }), // Cập nhật billStatus nếu có
-      });
+      // const updatedBill = await bill.update({
+      //   totalPrice: data.totalPrice,
+      //   discount: data.discount || 0, // Nếu không có discount thì mặc định là 0
+      //   ...(data.billStatus && { billStatus: data.billStatus }), // Cập nhật billStatus nếu có
+      // });
 
       // Cập nhật các Bill_Item nếu có thay đổi
+      // console.log(data);
+      if (data.billStatus && data.billStatus === "Cancel") {
+        const billItems = await db.Bill_Item.findAll({
+          where: { billId: data.billId },
+        });
+        // console.log(billItems, "billItems");
+
+        for (let item of billItems) {
+          await db.Product.increment("quantity", {
+            by: item.quantity,
+            where: { productId: item.productId },
+          });
+        }
+
+        await bill.update({ billStatus: "Cancel" });
+        return resolve({
+          errCode: 0,
+          message: "Bill cancelled and product quantity restored.",
+        });
+      }
+
       if (data.items && data.items.length > 0) {
         for (let item of data.items) {
           let billItem = await db.Bill_Item.findOne({
@@ -258,6 +400,7 @@ const updateBill = async (data) => {
               productId: item.productId,
             },
           });
+          // console.log(billItem, "items");
 
           if (billItem) {
             await billItem.update({
@@ -324,4 +467,5 @@ module.exports = {
   updateBill: updateBill,
   deleteBill: deleteBill,
   getAllBillItemWithRecommendation: getAllBillItemWithRecommendation,
+  autoUpdateBillStatus: autoUpdateBillStatus,
 };

@@ -7,13 +7,13 @@ import { UserContext } from "../context/UserContext";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { FiRefreshCw, FiSearch } from "react-icons/fi";
+import { FiSearch, FiShoppingCart } from "react-icons/fi";
 
 const Category = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const { user } = useContext(UserContext);
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { setWishItems, addToWishlist } = useWishlist();
 
   // State lưu wishlist của user hiện tại
@@ -100,13 +100,44 @@ const Category = () => {
     );
   };
 
-  const handleAddToCart = (product) => {
-    // Tách quantity tồn kho ra
-    const { quantity, ...productInfo } = product;
+  // const handleAddToCart = (product) => {
+  //   // Tách quantity tồn kho ra
+  //   const { quantity, ...productInfo } = product;
 
-    // Gửi bản sao không chứa quantity tồn kho
+  //   // Gửi bản sao không chứa quantity tồn kho
+  //   addToCart(productInfo);
+  //   Swal.fire("Success", "Add to cart Successful.", "success");
+  // };
+  const handleAddToCart = (product) => {
+    const { quantity: stock, ...productInfo } = product;
+
+    // Kiểm tra số lượng trong giỏ hàng
+    const existingItem = cartItems.find(
+      (item) => item.productId === product.id
+    );
+
+    const cartQuantity = existingItem?.quantity || 0;
+
+    if (cartQuantity >= product.quantity) {
+      Swal.fire({
+        title: "❗ Out of Stock",
+        text: `${product.productName} is already in your cart with the maximum available quantity.`,
+        icon: "error",
+        timer: 1800,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    // Nếu còn trong kho thì thêm
     addToCart(productInfo);
-    Swal.fire("Success", "Add to cart Successful.", "success");
+    // Swal.fire({
+    //   title: "✅ Success",
+    //   text: "Product added to cart!",
+    //   icon: "success",
+    //   timer: 1200,
+    //   showConfirmButton: false,
+    // });
   };
 
   const toggleWishlist = async (product) => {
@@ -279,8 +310,9 @@ const Category = () => {
                       <button
                         type="button"
                         className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
+                        onClick={() => handleAddToCart(product)}
                       >
-                        <FiRefreshCw size={20} className="text-gray-600" />
+                        <FiShoppingCart size={20} className="text-gray-600" />
                       </button>
                     </li>
 

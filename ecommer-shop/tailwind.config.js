@@ -26,6 +26,9 @@ module.exports = {
       maxWidth: {
         1480: "1480px",
       },
+      maxWidthUser: {
+        1164: "1164px",
+      },
       size: {
         13: "13px",
       },

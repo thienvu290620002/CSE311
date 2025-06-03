@@ -164,6 +164,51 @@ export const CartProvider = ({ children }) => {
   //     }
   //   });
   // };
+  // const addToCart = (product) => {
+  //   const normalized = normalizeProduct(product);
+  //   const productInStock = products.find(
+  //     (p) =>
+  //       p.id === normalized.productId || p.productId === normalized.productId
+  //   );
+  //   const stock = productInStock?.quantity ?? 1;
+
+  //   setCartItems((prevItems) => {
+  //     const existingItem = prevItems.find(
+  //       (item) => item.productId === normalized.productId
+  //     );
+
+  //     if (existingItem) {
+  //       const newQuantity = existingItem.quantity + normalized.quantity;
+
+  //       if (newQuantity > stock) {
+  //         swal(
+  //           "Out of Stock",
+  //           // `Maximum available quantity for "${normalized.productName}" is ${stock}.`,
+  //           "warning"
+  //         );
+  //         return prevItems;
+  //       }
+
+  //       swal("Updated", "Quantity updated successfully!", "success");
+
+  //       return prevItems.map((item) =>
+  //         item.productId === normalized.productId
+  //           ? { ...item, quantity: newQuantity }
+  //           : item
+  //       );
+  //     } else {
+  //       if (normalized.quantity > stock) {
+  //         swal("Out of Stock", "warning");
+  //         return prevItems;
+  //       }
+
+  //       // swal("Success", "Added to cart successfully!", "success");
+
+  //       // Sửa chỗ này:
+  //       return [...prevItems, { ...normalized, quantity: normalized.quantity }];
+  //     }
+  //   });
+  // };
   const addToCart = (product) => {
     const normalized = normalizeProduct(product);
     const productInStock = products.find(
@@ -181,15 +226,24 @@ export const CartProvider = ({ children }) => {
         const newQuantity = existingItem.quantity + normalized.quantity;
 
         if (newQuantity > stock) {
-          swal(
-            "Out of Stock",
-            `Maximum available quantity for "${normalized.productName}" is ${stock}.`,
-            "warning"
-          );
+          swal({
+            title: "Out of Stock",
+            text: `Only ${stock} items available in stock.`,
+            icon: "warning",
+            timer: 1500,
+            buttons: false,
+          });
           return prevItems;
         }
 
-        swal("Updated", "Quantity updated successfully!", "success");
+        swal({
+          title: "Updated",
+          text: `"Quantity updated successfully!"`,
+          icon: "success",
+          timer: 1500,
+          buttons: false,
+        });
+        // swal("Updated", "Quantity updated successfully!", "success");
 
         return prevItems.map((item) =>
           item.productId === normalized.productId
@@ -198,17 +252,23 @@ export const CartProvider = ({ children }) => {
         );
       } else {
         if (normalized.quantity > stock) {
-          swal("Out of Stock", `Only ${stock} items left in stock.`, "warning");
+          swal({
+            title: "Out of Stock",
+            text: `Only ${stock} items available in stock.`,
+            icon: "error",
+            timer: 1500,
+            buttons: false,
+          });
           return prevItems;
         }
 
         swal("Success", "Added to cart successfully!", "success");
 
-        // Sửa chỗ này:
         return [...prevItems, { ...normalized, quantity: normalized.quantity }];
       }
     });
   };
+
   return (
     <CartContext.Provider value={{ cartItems, setCartItems, addToCart }}>
       {children}

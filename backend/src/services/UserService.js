@@ -82,6 +82,7 @@ let updateUserData = (data) => {
       if (user) {
         user.firstName = data.firstName;
         user.lastName = data.lastName;
+        user.image = data.image;
         user.address = data.address;
         user.phoneNumber = data.phoneNumber;
         user.gender = data.gender;

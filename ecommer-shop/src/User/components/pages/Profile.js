@@ -22,16 +22,47 @@ const Profile = () => {
     address: user?.address || "",
     phoneNumber: user?.phoneNumber || "",
     gender: user?.gender || "",
-    image: user?.image || "",
+    image: user?.image || "", // This will hold the base64 or URL
   });
+
   const { addToCart } = useCart();
+
+  const uploadImageToServer = async (file) => {
+    try {
+      const imageFormData = new FormData();
+      imageFormData.append("image", file);
+      imageFormData.append("userId", user.id); // Add userId to FormData
+
+      const response = await axios.post(
+        "http://localhost:8080/api/upload-user-image",
+        imageFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          validateStatus: (status) => status < 500,
+        }
+      );
+
+      if (response.status >= 400) {
+        throw new Error(response.data.error || "Upload failed");
+      }
+
+      return response.data.url;
+    } catch (error) {
+      console.error("Upload error:", error);
+      swal("Error", error.message, "error");
+      return null;
+    }
+  };
+
   const addToCartFromWishlist = (item) => {
-    // Lấy thông tin sản phẩm từ wishlist
+    // Get product information from wishlist
     const product = item.productWishLists || item;
 
     const availableQuantity = product.quantity ?? 0;
 
-    // Tìm xem sản phẩm đã có trong giỏ chưa
+    // Check if the product is already in the cart
     const existingCartItem = cartItems.find(
       (cartItem) => cartItem.productId === product.productId
     );
@@ -49,7 +80,7 @@ const Profile = () => {
       return;
     }
 
-    // Nếu còn hàng => thêm vào cart với số lượng 1
+    // If in stock, add to cart with quantity 1
     const itemWithQuantityOne = {
       ...product,
       quantity: 1,
@@ -65,6 +96,7 @@ const Profile = () => {
       buttons: false,
     });
   };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -115,16 +147,18 @@ const Profile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewUserData({ ...newUserData, image: reader.result });
-      };
-      reader.readAsDataURL(file);
+      const previewURL = URL.createObjectURL(file);
+      setNewUserData((prev) => ({
+        ...prev,
+        image: previewURL, // Set the image to the blob URL for preview
+        imageFile: file, // Store the file itself to send to the server
+      }));
     }
   };
+
   const handleCancelOrder = async (billId) => {
     try {
-      // Gửi dữ liệu update billStatus về API
+      // Send update billStatus data to API
       const response = await fetch("http://localhost:8080/api/update-bill", {
         method: "POST",
         headers: {
@@ -138,33 +172,50 @@ const Profile = () => {
 
       const result = await response.json();
       if (result.errCode === 0) {
-        // Cập nhật lại trạng thái order trong userBills
+        // Update order status in userBills
         setUserBills((prevBills) =>
           prevBills.map((bill) =>
             bill.billId === billId ? { ...bill, billStatus: "Cancel" } : bill
           )
         );
+        swal("Success!", "Your order has been cancelled.", "success");
       } else {
-        alert(
-          "Failed to cancel order: " + (result.errMessage || "Unknown error")
-        );
+        swal("Error", result.errMessage || "Failed to cancel order", "error");
       }
     } catch (error) {
       console.error("Error cancelling order:", error);
+      swal("Error", "An error occurred while cancelling the order.", "error");
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("wishlist");
-    setWishItems([]); // xóa wishlist trong state
-    setCartItems([]); // reset cartItems trong state -> sẽ kích hoạt useEffect lưu [] vào localStorage
+    setWishItems([]); // Clear wishlist in state
+    setCartItems([]); // Reset cartItems in state -> will trigger useEffect to save [] to localStorage
     setUser(null);
     navigate("/");
   };
 
   const handleUpdateProfile = async () => {
     try {
+      let imageUrl = newUserData.image;
+
+      // If there's a user.id and a new image file is selected
+      if (user?.id && newUserData.imageFile) {
+        const uploadedUrl = await uploadImageToServer(newUserData.imageFile);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        } else {
+          swal(
+            "Error",
+            "Failed to upload image. Profile not updated.",
+            "error"
+          );
+          return;
+        }
+      }
+
       const response = await fetch("http://localhost:8080/api/update-user", {
         method: "POST",
         headers: {
@@ -177,12 +228,12 @@ const Profile = () => {
           gender: newUserData.gender,
           phoneNumber: newUserData.phoneNumber,
           address: newUserData.address,
-          image: newUserData.image,
+          image: imageUrl, // Save the new URL to the database
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Cập nhật thất bại");
+        throw new Error("Update failed");
       }
 
       const data = await response.json();
@@ -199,12 +250,12 @@ const Profile = () => {
         phoneNumber: updatedUser.phoneNumber || "",
         address: updatedUser.address || "",
         image: updatedUser.image || "",
+        imageFile: null, // Clear the file after successful upload/update
       });
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setIsEditing(false);
 
-      // ✅ Thông báo thành công bằng swal
       swal({
         title: "Success!",
         text: "Your profile information has been updated successfully.",
@@ -215,7 +266,6 @@ const Profile = () => {
     } catch (error) {
       console.error("Update profile error:", error);
 
-      // ❌ Thông báo lỗi bằng swal
       swal({
         title: "Error!",
         text: "An error occurred while updating your profile.",
@@ -224,17 +274,13 @@ const Profile = () => {
       });
     }
   };
-  // const removeFromWishlist = (productId) => {
-  //   setWishItems((prevItems) =>
-  //     prevItems.filter((item) => item.id !== productId)
-  //   );
-  // };
+
   const removeFromWishlist = (productId) => {
     const userString = localStorage.getItem("user");
     const userId = userString ? JSON.parse(userString).id : null;
 
     if (!userId) {
-      swal.error("User not found. Please log in.", "error");
+      swal("User Not Found", "Please log in.", "error");
       return;
     }
 
@@ -278,10 +324,12 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="text-center mt-10">
-        <p className="mb-4">You are not logged in</p>
+      <div className="text-center mt-10 p-5 bg-white shadow-lg rounded-lg max-w-md mx-auto">
+        <p className="mb-4 text-lg font-semibold text-gray-700">
+          You are not logged in
+        </p>
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-base font-medium shadow-md"
           onClick={() => navigate("/login")}
         >
           Login now
@@ -291,92 +339,112 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100 overflow-x-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 overflow-x-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md p-6 space-y-6">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">Account</h2>
-        <ul className="space-y-3 text-gray-600">
+      <aside className="w-64 bg-gradient-to-br from-purple-700 to-indigo-800 text-white shadow-2xl p-5 md:p-6 space-y-6 md:rounded-tr-2xl md:rounded-br-2xl rounded-b-xl md:rounded-bl-none transform transition-all duration-500 ease-in-out">
+        <h2 className="text-3xl font-extrabold text-white mb-6 border-b-2 border-purple-400 pb-3 text-center tracking-wide">
+          My Account
+        </h2>
+        <ul className="space-y-3">
           <li>
             <div
               onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                activeTab === "dashboard" ? "text-blue-600 font-semibold" : ""
-              }`}
+              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
+          ${
+            activeTab === "dashboard"
+              ? "bg-white text-purple-800 shadow-lg"
+              : "hover:bg-purple-600 hover:text-white"
+          }`}
             >
-              <FaUser /> Information
+              <FaUser className="text-xl" />{" "}
+              <span className=" text-lg">Information</span>
             </div>
           </li>
           <li>
             <div
               onClick={() => setActiveTab("orders")}
-              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                activeTab === "orders" ? "text-blue-600 font-semibold" : ""
-              }`}
+              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
+          ${
+            activeTab === "orders"
+              ? "bg-white text-purple-800 shadow-lg"
+              : "hover:bg-purple-600 hover:text-white"
+          }`}
             >
-              <FaBox /> Orders
+              <FaBox className="text-xl" />{" "}
+              <span className=" text-lg">Orders</span>
             </div>
           </li>
           <li>
             <div
               onClick={() => setActiveTab("wishlist")}
-              className={`flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                activeTab === "wishlist" ? "text-blue-600 font-semibold" : ""
-              }`}
+              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
+          ${
+            activeTab === "wishlist"
+              ? "bg-white text-purple-800 shadow-lg"
+              : "hover:bg-purple-600 hover:text-white"
+          }`}
             >
-              <FaHeart /> Wishlist
+              <FaHeart className="text-xl" />{" "}
+              <span className=" text-lg">Wishlist</span>
             </div>
           </li>
           <li>
             <div
               onClick={handleLogout}
-              className="flex items-center gap-2 cursor-pointer text-red-500 hover:text-red-600"
+              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer text-red-100 bg-red-600 hover:bg-red-700 hover:text-white transition-all duration-300 ease-in-out transform hover:scale-105 mt-6 shadow-md"
             >
-              <FaSignOutAlt /> Logout
+              <FaSignOutAlt className="text-xl" />{" "}
+              <span className=" text-lg">Logout</span>
             </div>
           </li>
         </ul>
       </aside>
-
       {/* Content */}
-      <div className="bg-white shadow-lg rounded-xl p-8 max-w-screen-lg w-full mx-auto">
+      <div className="flex-1 p-5 md:p-8 bg-gray-100 flex justify-center items-start">
         {activeTab === "dashboard" && (
-          <>
-            <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-              User Information
+          <div className="bg-white shadow-xl rounded-xl p-6 md:p-8 max-w-4xl w-full transform transition-all duration-500 ease-in-out">
+            <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center border-b-2 border-indigo-600 pb-3">
+              Your Profile
             </h2>
-
-            <div className="flex justify-center mb-5">
-              <div className="w-32 h-32 rounded-full border-2 border-gray-300 overflow-hidden">
+            {/* Avatar Section */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-36 h-36 rounded-full border-4 border-indigo-500 overflow-hidden shadow-lg mb-4 flex items-center justify-center bg-gray-200">
                 <img
                   src={
-                    newUserData.image
+                    newUserData.image?.startsWith("blob:")
                       ? newUserData.image
-                      : user.image
-                        ? user.image
-                        : "/images/user.jpg"
+                      : `http://localhost:8080${newUserData.image}`
                   }
-                  alt="Avatar"
-                  className="w-full h-full min-w-full min-h-full object-cover"
+                  alt={newUserData.firstName}
+                  className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-105"
                 />
               </div>
+              {isEditing && (
+                <div className="text-center">
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors duration-300 shadow-md"
+                  >
+                    Upload New Image
+                  </label>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden" // Hide the default file input
+                  />
+                </div>
+              )}
             </div>
-
-            {isEditing && (
-              <div className="mb-4 text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="mx-auto"
-                />
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">Full Name:</label>
+            {/* User Information Fields */}
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-blue-50 rounded-lg shadow-sm border border-blue-100">
+                <label className="font-semibold w-full sm:w-1/4 text-lg text-gray-800 mb-2 sm:mb-0">
+                  Full Name:
+                </label>
                 {isEditing ? (
-                  <div className="flex mt-2 w-3/4">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-3/4">
                     <input
                       type="text"
                       name="firstName"
@@ -384,7 +452,7 @@ const Profile = () => {
                       value={newUserData.firstName}
                       onChange={handleInputChange}
                       placeholder="First Name"
-                      className="flex-1 p-3 border rounded-md text-sm"
+                      className="flex-1 p-2 border border-gray-300 rounded-md text-base focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 shadow-sm"
                     />
                     <input
                       type="text"
@@ -393,18 +461,20 @@ const Profile = () => {
                       value={newUserData.lastName}
                       onChange={handleInputChange}
                       placeholder="Last Name"
-                      className="flex-1 p-3 border rounded-md text-sm"
+                      className="flex-1 p-2 border border-gray-300 rounded-md text-base focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 shadow-sm"
                     />
                   </div>
                 ) : (
-                  <p className="mt-1 text-lg">
+                  <p className="text-lg text-gray-900 font-medium w-full sm:w-3/4">
                     {user.firstName} {user.lastName}
                   </p>
                 )}
               </div>
 
-              <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">Address:</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-blue-50 rounded-lg shadow-sm border border-blue-100">
+                <label className="font-semibold w-full sm:w-1/4 text-lg text-gray-800 mb-2 sm:mb-0">
+                  Address:
+                </label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -412,15 +482,18 @@ const Profile = () => {
                     required
                     value={newUserData.address}
                     onChange={handleInputChange}
-                    className="flex-1 p-3 border rounded-md text-sm"
+                    placeholder="Your Address"
+                    className="flex-1 p-2 border border-gray-300 rounded-md text-base focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 w-full sm:w-3/4 shadow-sm"
                   />
                 ) : (
-                  <p className="mt-1 text-lg">{user.address}</p>
+                  <p className="text-lg text-gray-900 font-medium w-full sm:w-3/4">
+                    {user.address}
+                  </p>
                 )}
               </div>
 
-              <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-blue-50 rounded-lg shadow-sm border border-blue-100">
+                <label className="font-semibold w-full sm:w-1/4 text-lg text-gray-800 mb-2 sm:mb-0">
                   Phone Number:
                 </label>
                 {isEditing ? (
@@ -430,21 +503,26 @@ const Profile = () => {
                     required
                     value={newUserData.phoneNumber}
                     onChange={handleInputChange}
-                    className="flex-1 p-3 border rounded-md text-sm"
+                    placeholder="Your Phone Number"
+                    className="flex-1 p-2 border border-gray-300 rounded-md text-base focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 w-full sm:w-3/4 shadow-sm"
                   />
                 ) : (
-                  <p className="mt-1 text-lg">{user.phoneNumber}</p>
+                  <p className="text-lg text-gray-900 font-medium w-full sm:w-3/4">
+                    {user.phoneNumber}
+                  </p>
                 )}
               </div>
 
-              <div className="flex items-start">
-                <label className="font-medium w-1/4 text-lg">Gender:</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-blue-50 rounded-lg shadow-sm border border-blue-100">
+                <label className="font-semibold w-full sm:w-1/4 text-lg text-gray-800 mb-2 sm:mb-0">
+                  Gender:
+                </label>
                 {isEditing ? (
                   <select
                     name="gender"
                     value={newUserData.gender}
                     onChange={handleInputChange}
-                    className="flex-1 p-3 border rounded-md text-sm"
+                    className="flex-1 p-2 border border-gray-300 rounded-md text-base focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 w-full sm:w-3/4 shadow-sm"
                   >
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
@@ -452,23 +530,37 @@ const Profile = () => {
                     <option value="Other">Other</option>
                   </select>
                 ) : (
-                  <p className="mt-1 text-lg">{user.gender}</p>
+                  <p className="text-lg text-gray-900 font-medium w-full sm:w-3/4">
+                    {user.gender}
+                  </p>
                 )}
               </div>
             </div>
-
-            <div className="mt-6 flex justify-start flex-wrap">
+            {/* Action Buttons */}
+            <div className="mt-8 flex justify-center sm:justify-start flex-wrap gap-3">
               {isEditing ? (
                 <>
                   <button
                     onClick={handleUpdateProfile}
-                    className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-sm"
+                    className="bg-green text-white px-6 py-2 rounded-lg hover:bg-green-700 text-base font-bold transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
                   >
                     Save Changes
                   </button>
                   <button
-                    onClick={() => setIsEditing(false)}
-                    className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-500 text-sm"
+                    onClick={() => {
+                      setIsEditing(false);
+                      // Reset newUserData to current user data on cancel
+                      setNewUserData({
+                        firstName: user?.firstName || "",
+                        lastName: user?.lastName || "",
+                        address: user?.address || "",
+                        phoneNumber: user?.phoneNumber || "",
+                        gender: user?.gender || "",
+                        image: user?.image || "",
+                        imageFile: null,
+                      });
+                    }}
+                    className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-500 text-base font-bold transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
                   >
                     Cancel
                   </button>
@@ -476,23 +568,22 @@ const Profile = () => {
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-base font-bold transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
                 >
                   Edit Profile
                 </button>
               )}
             </div>
-          </>
+          </div>
         )}
-
         {/* Orders tab */}
         {activeTab === "orders" && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+          <div className="bg-white shadow-xl rounded-xl p-6 md:p-8 max-w-6xl w-full transform transition-all duration-500 ease-in-out">
+            <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 border-b-2 border-indigo-600 pb-3">
               Your Orders
             </h2>
             {userBills.length === 0 ? (
-              <p className="text-center text-gray-600">
+              <p className="text-center text-gray-500 text-xl font-medium py-8">
                 You have no orders yet.
               </p>
             ) : (
@@ -502,77 +593,116 @@ const Profile = () => {
                 .map((order) => (
                   <div
                     key={order.id}
-                    className="border border-gray-300 rounded-xl p-6 mb-6 shadow-md max-w-2xl mx-auto bg-white"
+                    className="bg-blue-50 rounded-lg shadow-md border border-blue-200 mb-6 hover:shadow-lg transition-shadow duration-300 p-5 md:p-6"
                   >
                     {/* Header */}
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium text-gray-700">
-                          Order ID:
-                        </span>{" "}
-                        #{order.billId}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 border-b pb-3 border-blue-200">
+                      <p className="text-xl font-bold text-gray-900 mb-2 sm:mb-0">
+                        Order ID:{" "}
+                        <span className="text-indigo-700">#{order.billId}</span>
                       </p>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium text-gray-700">Date:</span>{" "}
+                      <p className="text-sm text-gray-600">
                         {new Date(order.createdAt).toLocaleString()}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium text-gray-700">
-                          Payment:
-                        </span>{" "}
-                        {order.paymentMethod}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium text-gray-700">
-                          Status:
-                        </span>{" "}
-                        {order.billStatus}
                       </p>
                     </div>
 
+                    <div className="flex flex-wrap gap-4 mb-5">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-semibold text-gray-700 text-base">
+                          Payment:
+                        </span>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            order.paymentMethod === "Cash"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {order.paymentMethod}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-semibold text-gray-700 text-base">
+                          Status:
+                        </span>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            order.billStatus === "Cancel"
+                              ? "bg-red-100 text-red-800"
+                              : order.billStatus === "Pending"
+                                ? "bg-yellow-500 text-white"
+                                : "bg-green text-white"
+                          }`}
+                        >
+                          {order.billStatus === "Cancel"
+                            ? "Cancelled"
+                            : order.billStatus === "Pending"
+                              ? "Pending"
+                              : "Delivered"}
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Items */}
-                    <ul className="mb-4 divide-y divide-gray-200">
+                    <ul className="space-y-3 mb-5">
                       {order.billItems?.map((item) => (
                         <li
                           key={item.id}
-                          className="py-2 flex items-center gap-4"
+                          className="flex flex-col sm:flex-row items-center gap-4 bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200"
                         >
                           <img
                             src={`http://localhost:8080${item.products.image}`}
                             alt={item.products.productName}
-                            className="w-14 h-14 object-cover rounded-lg border"
+                            className="w-20 h-20 object-cover rounded-md border border-gray-300 shadow-sm"
                           />
-                          <div className="flex flex-col text-sm">
-                            <span className="font-medium text-gray-800">
+                          <div className="flex-1 text-center sm:text-left">
+                            <p className="text-gray-900 font-bold text-lg mb-1">
                               {item.products.productName}
-                            </span>
-                            <span className="text-gray-600">
-                              {item.quantity} x{" "}
-                              {new Intl.NumberFormat("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              }).format(item.products.productPrice)}
-                            </span>
+                            </p>
+                            <p className="text-gray-600 text-sm">
+                              Quantity:{" "}
+                              <span className="font-semibold">
+                                {item.quantity}
+                              </span>
+                            </p>
                           </div>
+                          <p className="text-indigo-700 font-bold text-lg whitespace-nowrap">
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(item.products.productPrice)}
+                          </p>
                         </li>
                       ))}
                     </ul>
-                    {order.billStatus !== "Cancel" ? (
+
+                    {/* Cancel button or cancelled status */}
+                    {order.billStatus === "Pending" ? (
+                      // new Date() - new Date(order.createdAt) < 60000
+                      // 60000 milliseconds = 1 minute
                       <button
                         onClick={() => handleCancelOrder(order.billId)}
-                        className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                        className="mt-5 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition duration-300 font-medium text-base shadow-md"
                       >
                         Cancel Order
                       </button>
                     ) : (
-                      <p className="mt-2 text-red-600 font-semibold">
-                        Cancelled
+                      <p
+                        className={`mt-5 font-bold text-lg ${
+                          order.billStatus === "Cancel"
+                            ? "text-red-600"
+                            : "text-green"
+                        }`}
+                      >
+                        {order.billStatus === "Cancel"
+                          ? "Cancelled"
+                          : "Delivered"}
                       </p>
                     )}
 
                     {/* Total */}
-                    <div className="text-right">
-                      <p className="text-base font-bold text-gray-800">
+                    <div className="text-right mt-6 pt-4 border-t border-gray-200">
+                      <p className="text-2xl font-extrabold text-green-700">
                         Total:{" "}
                         {new Intl.NumberFormat("vi-VN", {
                           style: "currency",
@@ -585,62 +715,64 @@ const Profile = () => {
             )}
           </div>
         )}
-
         {/* Wishlist tab */}
         {activeTab === "wishlist" && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 text-center">
-              Wishlist
+          <div className="bg-white shadow-xl rounded-xl p-6 md:p-8 max-w-6xl w-full transform transition-all duration-500 ease-in-out">
+            <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center border-b-2 border-indigo-600 pb-3">
+              Your Wishlist
             </h2>
             {wishItems && wishItems.length > 0 ? (
-              wishItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b py-4 px-2 gap-4"
-                >
-                  {/* Left: Product Info */}
-                  <div className="flex items-center gap-4 flex-1">
-                    <img
-                      src={`http://localhost:8080${item.productWishLists.image}`}
-                      alt={item.productWishLists.productName}
-                      className="w-20 h-20 object-cover rounded-md border"
-                    />
-                    <div>
-                      <p className="font-semibold text-lg">
-                        {item.productWishLists.productName}
-                      </p>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {item.productWishLists.productPrice.toLocaleString(
-                          "en-US"
-                        )}
-                        $
-                      </p>
+              <div className="space-y-5">
+                {wishItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col sm:flex-row items-center justify-between bg-blue-50 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-blue-200"
+                  >
+                    {/* Left: Product Info */}
+                    <div className="flex items-center gap-5 flex-1 mb-4 sm:mb-0">
+                      <img
+                        src={`http://localhost:8080${item.productWishLists.image}`}
+                        alt={item.productWishLists.productName}
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 shadow-sm"
+                      />
+                      <div className="text-center sm:text-left">
+                        <p className="font-bold text-xl text-gray-900 mb-1">
+                          {item.productWishLists.productName}
+                        </p>
+                        <p className="text-indigo-700 font-semibold text-lg">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(item.productWishLists.productPrice)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: Action Buttons */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => addToCartFromWishlist(item)}
+                        className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg text-base font-medium hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={() =>
+                          removeFromWishlist(item.productWishLists.productId)
+                        }
+                        className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg text-base font-medium transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
-
-                  {/* Right: Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => addToCartFromWishlist(item)}
-                      className="bg-green text-white px-4 py-1.5 rounded-md text-sm"
-                    >
-                      Add to Cart
-                    </button>
-                    <button
-                      onClick={() =>
-                        removeFromWishlist(item.productWishLists.productId)
-                      }
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-md text-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
-              <p className="text-center py-6 text-gray-500">
-                You haven't added any products to your wishlist.
+              <p className="text-center py-8 text-gray-500 text-xl font-medium">
+                You haven't added any products to your wishlist yet. Start
+                exploring!
               </p>
             )}
           </div>
