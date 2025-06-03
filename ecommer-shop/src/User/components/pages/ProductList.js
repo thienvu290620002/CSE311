@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { FiRefreshCw, FiSearch } from "react-icons/fi";
+import { FiShoppingCart, FiSearch } from "react-icons/fi";
 import swal from "sweetalert";
 import { UserContext } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ const ProductList = () => {
 
   const isInWishlist = (productId) => {
     return userWishlist.some(
-      (item) => item.productId.toString() === productId.toString(),
+      (item) => item.productId.toString() === productId.toString()
     );
   };
 
@@ -28,7 +28,7 @@ const ProductList = () => {
     const fetchProducts = async () => {
       try {
         const productRes = await axios.get(
-          "http://localhost:8080/api/get-all-product",
+          "http://localhost:8080/api/get-all-product"
         );
 
         const allProducts = Array.isArray(productRes.data)
@@ -45,7 +45,7 @@ const ProductList = () => {
             "http://localhost:8080/api/get-wishlist-by-userId",
             {
               params: { id: user.id },
-            },
+            }
           );
 
           const wishlist = wishlistRes.data?.data?.wishlist || [];
@@ -53,8 +53,8 @@ const ProductList = () => {
           enrichedProducts = allProducts.map((product) => {
             const isInWish = wishlist.some(
               (item) =>
-                item.productId?.toString() === product.id?.toString() &&
-                item.wishListStatus === "active",
+                item.productId?.toString() === product.productId?.toString() &&
+                item.wishListStatus === "active"
             );
             return { ...product, isInWishlist: isInWish };
           });
@@ -85,7 +85,7 @@ const ProductList = () => {
     const fetchUserWishlist = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/get-wishlist-by-userId?userId=${user.id}`,
+          `http://localhost:8080/api/get-wishlist-by-userId?userId=${user.id}`
         );
         // Giả sử API trả về mảng sản phẩm hoặc mảng wishlist item có productId
         setUserWishlist(response.data.data || []);
@@ -110,11 +110,11 @@ const ProductList = () => {
         return sorted.sort((a, b) => b.productPrice - a.productPrice); // High to low
       case "3":
         return sorted.sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
         ); // Old to New
       case "4":
         return sorted.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         ); // New to Old
       default:
         return products;
@@ -141,10 +141,10 @@ const ProductList = () => {
 
   // Tính số lượng sản phẩm còn hàng và hết hàng
   const inStockCount = products.filter(
-    (product) => product.quantity > 0,
+    (product) => product.quantity > 0
   ).length;
   const outOfStockCount = products.filter(
-    (product) => product.quantity === 0,
+    (product) => product.quantity === 0
   ).length;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -183,7 +183,7 @@ const ProductList = () => {
     }
 
     try {
-      const productId = product.id;
+      const productId = product.productId;
 
       const isWishlisted = isInWishlist(productId);
 
@@ -196,9 +196,11 @@ const ProductList = () => {
       // Cập nhật state sau thay đổi
       if (isWishlisted) {
         setUserWishlist((prev) =>
-          prev.filter((item) => item.productId !== productId),
+          prev.filter((item) => item.productId !== productId)
         );
-        setWishItems((prev) => prev.filter((item) => item.id !== productId));
+        setWishItems((prev) =>
+          prev.filter((item) => item.productId !== productId)
+        );
       } else {
         setUserWishlist((prev) => [...prev, { productId }]);
         addToWishlist(product);
@@ -207,8 +209,8 @@ const ProductList = () => {
       // Cập nhật lại products để đổi màu trái tim nếu bạn dùng product.isInWishlist
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, isInWishlist: !isWishlisted } : p,
-        ),
+          p.productId === productId ? { ...p, isInWishlist: !isWishlisted } : p
+        )
       );
     } catch (error) {
       console.error("Lỗi xử lý wishlist:", error);
@@ -255,7 +257,7 @@ const ProductList = () => {
                             products.filter(
                               (product) =>
                                 product.categoryType &&
-                                product.categoryType.toUpperCase() === category,
+                                product.categoryType.toUpperCase() === category
                             ).length
                           }
                           )
@@ -325,11 +327,11 @@ const ProductList = () => {
                   {sortProducts(filteredProducts, sortOption)
                     .slice(
                       (currentPage - 1) * itemsPerPage,
-                      currentPage * itemsPerPage,
+                      currentPage * itemsPerPage
                     )
                     .map((product) => (
                       <li
-                        key={product.id}
+                        key={product.productId}
                         className="mt-6 md:mt-0 text-center group relative"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -342,6 +344,13 @@ const ProductList = () => {
                           )}
 
                           <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
+                            {/* Banner Out of Stock góc trên phải */}
+                            {product.quantity === 0 && (
+                              <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                                Out of Stock
+                              </div>
+                            )}
+
                             {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
                             {product.isInWishlist && (
                               <div className="absolute top-2 right-2 z-10">
@@ -383,7 +392,7 @@ const ProductList = () => {
                                 className="shadow-lg p-3 rounded-full block transition-all bg-white hover:bg-slate-200"
                                 onClick={() => handleAddToCart(product)}
                               >
-                                <FiRefreshCw size={24} />
+                                <FiShoppingCart size={24} />
                               </button>
                             </li>
 
@@ -433,7 +442,7 @@ const ProductList = () => {
                                           ₫
                                         </sup>
                                         {product.originalPrice.toLocaleString(
-                                          "vi-VN",
+                                          "vi-VN"
                                         )}
                                       </span>
                                       -{" "}
@@ -496,7 +505,7 @@ const ProductList = () => {
                       <button
                         onClick={() =>
                           setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages),
+                            Math.min(prev + 1, totalPages)
                           )
                         }
                         disabled={currentPage === totalPages}

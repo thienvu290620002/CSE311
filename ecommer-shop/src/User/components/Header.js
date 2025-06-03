@@ -32,7 +32,7 @@ const Header = () => {
 
   // Số lượng wishlist active tính dựa trên wishItems từ context
   const activeWishCount = wishItems.filter(
-    (item) => item.wishListStatus === "active",
+    (item) => item.wishListStatus === "active"
   ).length;
 
   // Load sản phẩm như cũ
@@ -40,7 +40,7 @@ const Header = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/get-all-product",
+          "http://localhost:8080/api/get-all-product"
         );
         setProducts(response.data || []);
       } catch (error) {
@@ -57,7 +57,7 @@ const Header = () => {
       setFiltered([]);
     } else {
       const results = products.filter((item) =>
-        item.productName.toLowerCase().includes(value.toLowerCase()),
+        item.productName.toLowerCase().includes(value.toLowerCase())
       );
       setFiltered(results);
     }
@@ -65,14 +65,16 @@ const Header = () => {
 
   const addToCart = (product) => {
     const stockProduct = products.find(
-      (p) => p.productId === product.productId,
+      (p) => p.productId === product.productId
     );
 
     const stock = stockProduct?.quantity ?? 0;
     const name = stockProduct?.productName ?? product.productName ?? "Unknown";
 
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
+      const existingItem = prevItems.find(
+        (item) => item.productId === product.productId
+      );
 
       if (existingItem) {
         if (existingItem.quantity < stock) {
@@ -84,15 +86,15 @@ const Header = () => {
             buttons: false,
           });
           return prevItems.map((item) =>
-            item.id === product.id
+            item.productId === product.productId
               ? { ...item, quantity: item.quantity + 1 }
-              : item,
+              : item
           );
         } else {
           swal(
             "Out of Stock",
             `Maximum quantity for ${name} is ${stock}.`,
-            "warning",
+            "warning"
           );
           return prevItems;
         }
@@ -142,11 +144,11 @@ const Header = () => {
             <ul className="absolute top-full left-0 w-full bg-white border border-gray-200 mt-2 rounded-xl shadow-xl max-h-96 overflow-y-auto z-50 p-2 space-y-2">
               {filtered.map((item) => (
                 <li
-                  key={item.id}
+                  key={item.productId}
                   className="flex items-center justify-between gap-4 p-2 hover:bg-amber-50 transition rounded-lg"
                 >
                   <Link
-                    to={`/ProductDetail/${item.id}`}
+                    to={`/productdetail/${item.productId}`}
                     className="flex items-center gap-4 flex-1"
                   >
                     <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">

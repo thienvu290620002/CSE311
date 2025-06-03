@@ -12,7 +12,7 @@ const ShoppingCart = () => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/api/get-all-product",
+          "http://localhost:8080/api/get-all-product"
         );
         const data = await response.json();
         setProducts(data);
@@ -50,12 +50,12 @@ const ShoppingCart = () => {
             swal(
               "Out of Stock",
               `Maximum quantity for ${name} is ${stock}.`,
-              "warning",
+              "warning"
             );
           }
         }
         return item;
-      }),
+      })
     );
   };
 
@@ -64,8 +64,8 @@ const ShoppingCart = () => {
       prev.map((item) =>
         item.id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
-          : item,
-      ),
+          : item
+      )
     );
   };
 
@@ -74,7 +74,7 @@ const ShoppingCart = () => {
       swal(
         "Cart is Empty",
         "Please add products to cart before checkout.",
-        "warning",
+        "warning"
       );
     } else {
       navigate("/checkout");
@@ -213,7 +213,7 @@ const ShoppingCart = () => {
                                     swal(
                                       "Out of Stock",
                                       `Maximum quantity for ${productName} is ${availableQuantity}.`,
-                                      "warning",
+                                      "warning"
                                     );
 
                                     newQuantity = availableQuantity;
@@ -222,8 +222,8 @@ const ShoppingCart = () => {
                                     prev.map((i) =>
                                       i.id === item.id
                                         ? { ...i, quantity: newQuantity }
-                                        : i,
-                                    ),
+                                        : i
+                                    )
                                   );
                                 }}
                               />

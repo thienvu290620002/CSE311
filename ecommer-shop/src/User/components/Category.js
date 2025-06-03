@@ -4,16 +4,16 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
-import swal from "sweetalert";
+import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { FiRefreshCw, FiSearch } from "react-icons/fi";
+import { FiSearch, FiShoppingCart } from "react-icons/fi";
 
 const Category = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const { user } = useContext(UserContext);
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { setWishItems, addToWishlist } = useWishlist();
 
   // State lưu wishlist của user hiện tại
@@ -25,7 +25,7 @@ const Category = () => {
     const fetchProducts = async () => {
       try {
         const productRes = await axios.get(
-          "http://localhost:8080/api/get-all-product",
+          "http://localhost:8080/api/get-all-product"
         );
 
         const allProducts = Array.isArray(productRes.data)
@@ -42,7 +42,7 @@ const Category = () => {
             "http://localhost:8080/api/get-wishlist-by-userId",
             {
               params: { id: user.id },
-            },
+            }
           );
 
           const wishlist = wishlistRes.data?.data?.wishlist || [];
@@ -51,7 +51,7 @@ const Category = () => {
             const isInWish = wishlist.some(
               (item) =>
                 item.productId?.toString() === product.id?.toString() &&
-                item.wishListStatus === "active",
+                item.wishListStatus === "active"
             );
             return { ...product, isInWishlist: isInWish };
           });
@@ -82,7 +82,7 @@ const Category = () => {
     const fetchUserWishlist = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/get-wishlist-by-userId?userId=${user.id}`,
+          `http://localhost:8080/api/get-wishlist-by-userId?userId=${user.id}`
         );
         // Giả sử API trả về mảng sản phẩm hoặc mảng wishlist item có productId
         setUserWishlist(response.data.data || []);
@@ -96,34 +96,65 @@ const Category = () => {
 
   const isInWishlist = (productId) => {
     return userWishlist.some(
-      (item) => item.productId.toString() === productId.toString(),
+      (item) => item.productId.toString() === productId.toString()
     );
   };
 
-  const handleAddToCart = (product) => {
-    // Tách quantity tồn kho ra
-    const { quantity, ...productInfo } = product;
+  // const handleAddToCart = (product) => {
+  //   // Tách quantity tồn kho ra
+  //   const { quantity, ...productInfo } = product;
 
-    // Gửi bản sao không chứa quantity tồn kho
+  //   // Gửi bản sao không chứa quantity tồn kho
+  //   addToCart(productInfo);
+  //   Swal.fire("Success", "Add to cart Successful.", "success");
+  // };
+  const handleAddToCart = (product) => {
+    const { quantity: stock, ...productInfo } = product;
+
+    // Kiểm tra số lượng trong giỏ hàng
+    const existingItem = cartItems.find(
+      (item) => item.productId === product.id
+    );
+
+    const cartQuantity = existingItem?.quantity || 0;
+
+    if (cartQuantity >= product.quantity) {
+      Swal.fire({
+        title: "❗ Out of Stock",
+        text: `${product.productName} is already in your cart with the maximum available quantity.`,
+        icon: "error",
+        timer: 1800,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    // Nếu còn trong kho thì thêm
     addToCart(productInfo);
-    swal("Success", "Add to cart Successful.", "success");
+    // Swal.fire({
+    //   title: "✅ Success",
+    //   text: "Product added to cart!",
+    //   icon: "success",
+    //   timer: 1200,
+    //   showConfirmButton: false,
+    // });
   };
 
   const toggleWishlist = async (product) => {
     if (!user) {
-      swal({
+      Swal.fire({
         title: "Login Required!",
         text: "You need to log in to add this product to your wishlist.",
         icon: "warning",
-        buttons: {
-          cancel: "Back to Home",
-          confirm: "Go to Login",
-        },
+        showCancelButton: true,
+        confirmButtonText: "Go to Login",
+        cancelButtonText: "Back to Home",
+        reverseButtons: true,
         dangerMode: true,
-      }).then((willLogin) => {
-        if (willLogin) {
+      }).then((result) => {
+        if (result.isConfirmed) {
           navigate("/login");
-        } else {
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
           navigate("/");
         }
       });
@@ -144,7 +175,7 @@ const Category = () => {
       // Cập nhật state sau thay đổi
       if (isWishlisted) {
         setUserWishlist((prev) =>
-          prev.filter((item) => item.productId !== productId),
+          prev.filter((item) => item.productId !== productId)
         );
         setWishItems((prev) => prev.filter((item) => item.id !== productId));
       } else {
@@ -155,15 +186,14 @@ const Category = () => {
       // Cập nhật lại products để đổi màu trái tim nếu bạn dùng product.isInWishlist
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, isInWishlist: !isWishlisted } : p,
-        ),
+          p.id === productId ? { ...p, isInWishlist: !isWishlisted } : p
+        )
       );
     } catch (error) {
       console.error("Lỗi xử lý wishlist:", error);
-      swal("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
+      Swal.fire("Error", "Có lỗi xảy ra khi cập nhật wishlist!", "error");
     }
   };
-
   return (
     <div>
       {/* Categories Section */}
@@ -280,8 +310,9 @@ const Category = () => {
                       <button
                         type="button"
                         className="shadow-lg p-3 rounded-full bg-white hover:bg-slate-200 transition-all"
+                        onClick={() => handleAddToCart(product)}
                       >
-                        <FiRefreshCw size={20} className="text-gray-600" />
+                        <FiShoppingCart size={20} className="text-gray-600" />
                       </button>
                     </li>
 

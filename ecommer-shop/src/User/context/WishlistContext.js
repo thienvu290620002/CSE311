@@ -17,6 +17,68 @@ export const WishlistProvider = ({ children }) => {
   const [wishItems, setWishItems] = useState([]);
   const [userId, setUserId] = useState(null);
 
+  // // Lấy userId khi component mount
+  // useEffect(() => {
+  //   const userString = localStorage.getItem("user");
+  //   if (userString) {
+  //     try {
+  //       const user = JSON.parse(userString);
+  //       if (user && user.id) setUserId(user.id);
+  //       fetchWishlist(user.id);
+  //     } catch (error) {
+  //       console.error("Error parsing user from localStorage", error);
+  //     }
+  //   }
+  // }, []);
+
+  // Hàm fetch wishlist từ backend, dùng useCallback để không bị tạo lại mỗi render
+  // const fetchWishlist = useCallback(async () => {
+  //   if (!userId) return;
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`
+  //     );
+  //     if (response.data.data && response.data.data.wishlist) {
+  //       setWishItems(response.data.data.wishlist);
+  //     } else {
+  //       setWishItems([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch wishlist:", error);
+  //     setWishItems([]);
+  //   }
+  // }, [userId]);
+  const fetchWishlist = useCallback(
+    async (uid = userId) => {
+      if (!uid) return;
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/get-wishlist-by-userId?id=${uid}`
+        );
+        if (response.data.data && response.data.data.wishlist) {
+          setWishItems(response.data.data.wishlist);
+        } else {
+          setWishItems([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch wishlist:", error);
+        setWishItems([]);
+      }
+    },
+    [userId]
+  );
+  // Lấy userId khi component mount
+  // useEffect(() => {
+  //   const userString = localStorage.getItem("user");
+  //   if (userString) {
+  //     try {
+  //       const user = JSON.parse(userString);
+  //       if (user && user.id) setUserId(user.id);
+  //     } catch (error) {
+  //       console.error("Error parsing user from localStorage", error);
+  //     }
+  //   }
+  // }, []);
   // Lấy userId khi component mount
   useEffect(() => {
     const userString = localStorage.getItem("user");
@@ -30,29 +92,10 @@ export const WishlistProvider = ({ children }) => {
     }
   }, []);
 
-  // Hàm fetch wishlist từ backend, dùng useCallback để không bị tạo lại mỗi render
-  const fetchWishlist = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/get-wishlist-by-userId?id=${userId}`,
-      );
-      if (response.data.data && response.data.data.wishlist) {
-        setWishItems(response.data.data.wishlist);
-      } else {
-        setWishItems([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch wishlist:", error);
-      setWishItems([]);
-    }
-  }, [userId]);
-
   // Khi userId thay đổi, fetch lại wishlist
   useEffect(() => {
-    fetchWishlist();
+    if (userId) fetchWishlist(userId);
   }, [userId, fetchWishlist]);
-
   // Lưu wishlist vào localStorage mỗi khi wishItems thay đổi (nếu cần)
   useEffect(() => {
     localStorage.setItem("wishlist", JSON.stringify(wishItems));
@@ -61,7 +104,7 @@ export const WishlistProvider = ({ children }) => {
   // Kiểm tra sản phẩm có trong wishlist hay không (so sánh với productId đúng)
   const isInWishlist = (productId) => {
     return wishItems.some(
-      (item) => item.productId?.toString() === productId?.toString(),
+      (item) => item.productId?.toString() === productId?.toString()
     );
   };
 
@@ -69,9 +112,9 @@ export const WishlistProvider = ({ children }) => {
   const addToWishlist = async (product) => {
     if (!userId) return;
     try {
-      await axios.post("http://localhost:8080/api/add-to-wishlist", {
+      await axios.post("http://localhost:8080/api/create-wishlist", {
         userId,
-        productId: product.id,
+        productId: product.productId,
       });
       await fetchWishlist();
     } catch (error) {
@@ -83,9 +126,8 @@ export const WishlistProvider = ({ children }) => {
   const removeFromWishlist = async (productId) => {
     if (!userId) return;
     try {
-      await axios.post("http://localhost:8080/api/remove-from-wishlist", {
-        userId,
-        productId,
+      await axios.get("http://localhost:8080/api/delete-wishlist", {
+        params: { userId, productId },
       });
       await fetchWishlist();
     } catch (error) {
@@ -101,6 +143,13 @@ export const WishlistProvider = ({ children }) => {
       await addToWishlist(product);
     }
   };
+  const loginUser = useCallback(
+    (user) => {
+      setUserId(user.id);
+      fetchWishlist(user.id);
+    },
+    [fetchWishlist]
+  );
 
   return (
     <WishlistContext.Provider
@@ -111,6 +160,7 @@ export const WishlistProvider = ({ children }) => {
         removeFromWishlist,
         toggleWishlist,
         isInWishlist,
+        loginUser,
       }}
     >
       {children}

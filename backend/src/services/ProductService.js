@@ -148,7 +148,7 @@ let updateProduct = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
       let product = await db.Product.findOne({
-        where: { id: data.id },
+        where: { productId: data.productId },
       });
 
       if (!product) {
@@ -157,22 +157,6 @@ let updateProduct = (data) => {
           errMessage: "Cannot find product",
         });
       }
-
-      // Nếu có quantityToReduce, giảm số lượng
-      // if (
-      //   data.quantityToReduce !== undefined &&
-      //   !isNaN(Number(data.quantityToReduce))
-      // ) {
-      //   if (product.quantity >= data.quantityToReduce) {
-      //     product.quantity -= Number(data.quantityToReduce);
-      //   } else {
-      //     return reject({
-      //       errCode: 2,
-      //       errMessage: "Insufficient product quantity in stock",
-      //     });
-      //   }
-      // } else {
-      // Cập nhật các thông tin khác
       product.productId = data.productId || product.productId;
       product.productName = data.productName || product.productName;
       product.productPrice = data.productPrice || product.productPrice;
@@ -186,6 +170,17 @@ let updateProduct = (data) => {
         product.quantity = Number(data.quantity);
       }
       // }
+      // Cập nhật số lượng
+      // if (data.quantity !== undefined && !isNaN(Number(data.quantity))) {
+      //   if (data.isRestock) {
+      //     product.quantity += Number(data.quantity); // cộng thêm
+      //   } else {
+      //     product.quantity = Number(data.quantity); // ghi đè
+      //   }
+      // }
+
+      // Cập nhật trạng thái theo số lượng
+      // product.productStatus = product.quantity <= 0 ? "outDate" : "onShop";
 
       await product.save();
 

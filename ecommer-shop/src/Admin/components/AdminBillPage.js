@@ -2,18 +2,15 @@ import React, { useEffect, useState } from "react";
 
 const AdminBillPage = () => {
   const [bills, setBills] = useState([]);
-  const [, setOrderDetails] = useState(null);
-  const [, setIsModalOpen] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch all bills (use userId if needed)
   const fetchBills = async () => {
     try {
       const res = await fetch("http://localhost:8080/api/get-all-bill");
       const data = await res.json();
-      console.log(data);
-
       if (data.errCode === 0) {
-        setBills(data.data); // ✅ lấy danh sách bill đúng chỗ
+        setBills(data.data);
       } else {
         console.error("Error from API:", data.message);
       }
@@ -32,8 +29,8 @@ const AdminBillPage = () => {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-8 w-full mx-auto">
-      <h2 className="text-2xl font-semibold mb-4 text-center">
+    <div className="max-w-6xl mx-auto p-8 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800">
         Bill Management
       </h2>
 
@@ -43,66 +40,187 @@ const AdminBillPage = () => {
           .map((bill) => (
             <div
               key={bill.id}
-              className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md shadow-md"
+              className="bg-white rounded-lg shadow-md border border-gray-200 mb-6 hover:shadow-lg transition-shadow duration-300 p-6"
             >
-              <div className="text-sm">
-                <p className="mb-2">
-                  <strong>Mã đơn:</strong> #{bill.id}{" "}
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-lg font-semibold text-gray-900">
+                  Order ID: <span className="text-indigo-600">#{bill.id}</span>
+                </p>
+                <p className="text-sm text-gray-500">
                   {bill.createdAt
                     ? new Date(bill.createdAt).toLocaleString()
                     : new Date().toLocaleString()}
                 </p>
+              </div>
+              <div className="flex flex-wrap gap-6 mb-4">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-gray-700">Payment:</span>
+                  <span
+                    className={`px-2 py-1 rounded text-sm font-semibold ${
+                      bill.paymentMethod === "Cash"
+                        ? "bg-blue-800 text-white"
+                        : "bg-blue-800 text-white"
+                    }`}
+                  >
+                    {bill.paymentMethod}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-gray-700">Status:</span>
+                  <span
+                    className={`px-2 py-1 rounded text-sm font-semibold ${
+                      bill.billStatus === "Delivered"
+                        ? "bg-green text-white"
+                        : bill.billStatus === "Pending"
+                          ? "bg-yellow-400 text-white"
+                          : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {bill.billStatus}
+                  </span>
+                </div>
+              </div>
 
-                <p className="mb-2">
-                  <strong>Phương thức:</strong>{" "}
-                  {bill.paymentMethod === "Cash" ? "Cash" : "ZaloPay"}
-                </p>
-                <p className="mb-2">
-                  <strong>Trạng Thái:</strong>{" "}
-                  {bill.billStatus === "Delivered" ? "Delivered" : "Cancelled"}
-                </p>
-                <ul className="list-none ml-6 my-2">
-                  {bill.billItems.map((item, index) => (
-                    <li key={index} className="my-2">
-                      <span>
-                        {item.quantity} x{" "}
-                        {item.products?.productName ||
-                          "Sản phẩm không xác định"}
-                      </span>
-                      <span className="text-gray-600">
-                        (
-                        {item.products?.productPrice
-                          ? Number(item.products.productPrice).toLocaleString(
-                              "vi-VN",
-                            )
-                          : "Giá không xác định"}
-                        ₫)
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mb-4">
-                  <strong>Tổng cộng:</strong>
-                  <span className="text-green-700 font-semibold ml-2">
+              <ul className="space-y-4 mb-6">
+                {bill.billItems.map((item, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center gap-4 border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200"
+                  >
+                    <img
+                      src={
+                        item.products?.image
+                          ? `http://localhost:8080${item.products.image}`
+                          : "https://via.placeholder.com/60"
+                      }
+                      alt="Product"
+                      className="w-16 h-16 object-cover rounded-md"
+                    />
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-semibold text-lg">
+                        {item.products?.productName || "Unknown Product"}
+                      </p>
+                      <p className="text-gray-600">
+                        Quantity:{" "}
+                        <span className="font-medium">{item.quantity}</span>
+                      </p>
+                    </div>
+                    <p className="text-indigo-700 font-semibold text-lg whitespace-nowrap">
+                      {item.products?.productPrice
+                        ? Number(item.products.productPrice).toLocaleString(
+                            "vi-VN"
+                          )
+                        : "N/A"}{" "}
+                      ₫
+                    </p>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex justify-between items-center">
+                <p className="text-xl font-bold text-green-700">
+                  Total:{" "}
+                  <span>
                     {bill.totalPrice && bill.totalPrice > 0
                       ? bill.totalPrice.toLocaleString("vi-VN")
-                      : "0.00"}{" "}
+                      : "0"}{" "}
                     ₫
                   </span>
                 </p>
                 <button
                   onClick={() => openOrderDetails(bill)}
-                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition-colors duration-200"
                 >
-                  Xem chi tiết
+                  View Details
                 </button>
               </div>
             </div>
           ))
       ) : (
-        <p className="text-center text-gray-500 font-semibold text-xl">
-          Không có đơn hàng nào.
+        <p className="text-center text-gray-400 text-lg font-medium">
+          No orders found.
         </p>
+      )}
+
+      {/* MODAL */}
+      {isModalOpen && orderDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-8 relative">
+            <h3 className="text-2xl font-bold mb-6 text-gray-900">
+              Order Details #{orderDetails.id}
+            </h3>
+            <p className="mb-2 text-gray-700">
+              <strong>User ID:</strong> {orderDetails.userId || "N/A"}
+            </p>
+            <p className="mb-2 text-gray-700">
+              <strong>Payment Method:</strong> {orderDetails.paymentMethod}
+            </p>
+            <p className="mb-6 text-gray-700">
+              <strong>Status:</strong>{" "}
+              <span
+                className={`px-2 py-1 rounded text-sm font-semibold ${
+                  orderDetails.billStatus === "Delivered"
+                    ? "bg-green text-white" /* Màu xanh lá cây đậm hơn cho Delivered */
+                    : orderDetails.billStatus === "Pending"
+                      ? "bg-yellow-400 text-gray-800" /* Màu vàng cho Pending, chữ đen */
+                      : "bg-red-500 text-white" /* Màu đỏ cho các trạng thái khác (ví dụ: Cancelled) */
+                }`}
+              >
+                {orderDetails.billStatus}
+              </span>
+            </p>
+
+            <h4 className="text-xl font-semibold mb-4 text-gray-800">
+              Products:
+            </h4>
+            <ul className="space-y-4">
+              {orderDetails.billItems?.map((item, index) => (
+                <li
+                  key={index}
+                  className="flex items-center gap-4 border border-gray-200 rounded-lg p-3 shadow-sm"
+                >
+                  <img
+                    src={
+                      item.products?.image
+                        ? `http://localhost:8080${item.products.image}`
+                        : "https://via.placeholder.com/60"
+                    }
+                    alt="Product"
+                    className="w-16 h-16 object-cover rounded-md"
+                  />
+                  <div className="flex-1">
+                    <p className="text-gray-900 font-semibold text-lg">
+                      {item.products?.productName || "Unknown Product"}
+                    </p>
+                    <p className="text-gray-600">
+                      Quantity:{" "}
+                      <span className="font-medium">{item.quantity}</span>
+                    </p>
+                  </div>
+                  <p className="text-indigo-700 font-semibold text-lg whitespace-nowrap">
+                    {item.products?.productPrice
+                      ? Number(item.products.productPrice).toLocaleString(
+                          "vi-VN"
+                        )
+                      : "0"}{" "}
+                    ₫
+                  </p>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-6 text-xl font-bold text-green-700">
+              Total: {orderDetails.totalPrice?.toLocaleString("vi-VN")} ₫
+            </p>
+
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="mt-8 bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-colors duration-200 w-full"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

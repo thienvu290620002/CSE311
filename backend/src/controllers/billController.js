@@ -78,6 +78,19 @@ let createBill = async (req, res) => {
     });
   }
 };
+let autoUpdateBillStatus = async (req, res) => {
+  try {
+    let result = await BillService.autoUpdateBillStatus();
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error calling autoUpdateBillStatus from controller:", error);
+    return res.status(500).json({
+      errCode: -1,
+      errMessage: "Server error during auto update",
+      error: error.message,
+    });
+  }
+};
 let getCRUDBill = (req, res) => {
   return res.render("bill.ejs");
 };
@@ -118,4 +131,5 @@ module.exports = {
   updateBill: updateBill,
   deleteBill: deleteBill,
   getAllBillItemWithRecommendation: getAllBillItemWithRecommendation,
+  autoUpdateBillStatus: autoUpdateBillStatus,
 };
