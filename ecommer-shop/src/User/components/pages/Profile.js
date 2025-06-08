@@ -341,7 +341,7 @@ const Profile = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 overflow-x-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-gradient-to-br from-purple-700 to-indigo-800 text-white shadow-2xl p-5 md:p-6 space-y-6 md:rounded-tr-2xl md:rounded-br-2xl rounded-b-xl md:rounded-bl-none transform transition-all duration-500 ease-in-out">
+      <aside className="w-64 bg-gradient-to-br from-blue-700 to-blue-900 text-white shadow-2xl p-5 md:p-6 space-y-6 transform transition-all duration-500 ease-in-out">
         <h2 className="text-3xl font-extrabold text-white mb-6 border-b-2 border-purple-400 pb-3 text-center tracking-wide">
           My Account
         </h2>
@@ -352,8 +352,8 @@ const Profile = () => {
               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
           ${
             activeTab === "dashboard"
-              ? "bg-white text-purple-800 shadow-lg"
-              : "hover:bg-purple-600 hover:text-white"
+              ? "bg-blue-600 text-white shadow-md transform scale-105" // Màu active, đổ bóng, hiệu ứng nhẹ
+              : "text-blue-200 hover:bg-blue-600 hover:text-white" // Màu hover
           }`}
             >
               <FaUser className="text-xl" />{" "}
@@ -366,8 +366,8 @@ const Profile = () => {
               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
           ${
             activeTab === "orders"
-              ? "bg-white text-purple-800 shadow-lg"
-              : "hover:bg-purple-600 hover:text-white"
+              ? "bg-blue-600 text-white shadow-md transform scale-105" // Màu active, đổ bóng, hiệu ứng nhẹ
+              : "text-blue-200 hover:bg-blue-600 hover:text-white" // Màu hover
           }`}
             >
               <FaBox className="text-xl" />{" "}
@@ -380,8 +380,8 @@ const Profile = () => {
               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
           ${
             activeTab === "wishlist"
-              ? "bg-white text-purple-800 shadow-lg"
-              : "hover:bg-purple-600 hover:text-white"
+              ? "bg-blue-600 text-white shadow-md transform scale-105" // Màu active, đổ bóng, hiệu ứng nhẹ
+              : "text-blue-200 hover:bg-blue-600 hover:text-white" // Màu hover
           }`}
             >
               <FaHeart className="text-xl" />{" "}
@@ -403,12 +403,12 @@ const Profile = () => {
       <div className="flex-1 p-5 md:p-8 bg-gray-100 flex justify-center items-start">
         {activeTab === "dashboard" && (
           <div className="bg-white shadow-xl rounded-xl p-6 md:p-8 max-w-4xl w-full transform transition-all duration-500 ease-in-out">
-            <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center border-b-2 border-indigo-600 pb-3">
+            <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center border-b-2 border-blue-600 pb-3">
               Your Profile
             </h2>
             {/* Avatar Section */}
             <div className="flex flex-col items-center mb-8">
-              <div className="w-36 h-36 rounded-full border-4 border-indigo-500 overflow-hidden shadow-lg mb-4 flex items-center justify-center bg-gray-200">
+              <div className="w-36 h-36 rounded-full border-4 border-blue-600 overflow-hidden shadow-lg mb-4 flex items-center justify-center bg-gray-200">
                 <img
                   src={
                     newUserData.image?.startsWith("blob:")
@@ -423,7 +423,7 @@ const Profile = () => {
                 <div className="text-center">
                   <label
                     htmlFor="image-upload"
-                    className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors duration-300 shadow-md"
+                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-300 shadow-md"
                   >
                     Upload New Image
                   </label>

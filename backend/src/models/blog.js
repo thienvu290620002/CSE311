@@ -13,11 +13,11 @@ module.exports = (sequelize, DataTypes) => {
   }
   Blog.init(
     {
-      blogName: DataTypes.STRING,
-      blogContent: DataTypes.TEXT,
-      productID: DataTypes.INTEGER,
-      image: DataTypes.STRING,
+      title: DataTypes.STRING,
       date: DataTypes.DATE,
+      image: DataTypes.STRING,
+      description: DataTypes.TEXT,
+      category: DataTypes.STRING,
     },
     {
       sequelize,

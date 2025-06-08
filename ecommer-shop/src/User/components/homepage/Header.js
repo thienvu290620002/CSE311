@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 import axios from "axios";
 import swal from "sweetalert";
-import { useWishlist } from "../context/WishlistContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 const Header = () => {
   const [products, setProducts] = useState([]);

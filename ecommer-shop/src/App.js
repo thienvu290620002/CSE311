@@ -5,21 +5,21 @@ import {
   Navigate,
 } from "react-router-dom";
 import "./App.css";
-import Header from "./User/components/Header";
-import Footer from "./User/components/Footer";
-import Banner from "./User/components/Banner";
+import Header from "./User/components/homepage/Header";
+import Footer from "./User/components/homepage/Footer";
+import Banner from "./User/components/homepage/Banner";
 import Service from "./User/components/services/Service";
-import Category from "./User/components/Category";
+import Category from "./User/components/homepage/Category";
 import ProductDetail from "./User/components/pages/ProductDetail";
 import ShoppingCart from "./User/components/pages/ShoppingCart";
 import ProductList from "./User/components/pages/ProductList";
-import Blog from "./User/components/Blog";
+import Blog from "./User/components/homepage/Blog";
 import GoTop from "./User/components/services/goTop";
 import Login from "./User/components/services/Login";
 import Register from "./User/components/services/Register";
 import Profile from "./User/components/pages/Profile";
 import ScrollToTop from "./User/components/services/ScrollToTop";
-import AboutUS from "./User/components/AboutUs";
+import AboutUS from "./User/components/homepage/AboutUs";
 import WishList from "./User/components/pages/WishList";
 import { WishlistProvider } from "./User/context/WishlistContext";
 import CheckoutPage from "./User/components/pages/CheckoutPage";

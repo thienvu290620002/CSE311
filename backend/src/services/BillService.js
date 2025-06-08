@@ -226,52 +226,131 @@ const generateBillId = () => {
 //     }
 //   });
 // };
+// let createBill = async (data) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const billDiscount = data.discount || 0;
+//       let totalPrice = 0;
+
+//       const customBillId = generateBillId();
+
+//       // ✅ Thay đổi billStatus mặc định thành "Pending"
+//       let bill = await db.Bill.create({
+//         billId: customBillId,
+//         userId: data.userId,
+//         paymentMethod: data.paymentMethod,
+//         billStatus: "Pending", // <--- THAY ĐỔI Ở ĐÂY
+//         totalPrice: 0,
+//         createdAt: new Date(),
+//         updatedAt: new Date(),
+//       });
+
+//       // ... (phần còn lại của logic tạo bill item và cập nhật số lượng sản phẩm)
+
+//       for (let item of data.items) {
+//         const product = await db.Product.findOne({
+//           where: { productId: item.productId },
+//         });
+
+//         if (!product) {
+//           console.log("⚠️ Product not found for ID:", item.productId);
+//           continue;
+//         }
+
+//         if (product.quantity < item.quantity) {
+//           return resolve({
+//             errCode: 2,
+//             errMessage: `Sản phẩm ${product.productName} không đủ số lượng tồn kho!`,
+//           });
+//         }
+
+//         const itemTotalPrice = product.productPrice * item.quantity;
+//         const itemDiscount = item.discount || 0;
+//         const itemDiscountedPrice =
+//           itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
+
+//         totalPrice += itemDiscountedPrice;
+
+//         await db.Bill_Item.create({
+//           billId: customBillId,
+//           billItemId: "ITEM-" + nanoid(8),
+//           quantity: item.quantity,
+//           productId: item.productId,
+//           discount: billDiscount,
+//           totalPrice: itemDiscountedPrice,
+//           createdAt: new Date(),
+//           updatedAt: new Date(),
+//         });
+
+//         product.quantity -= item.quantity;
+//         await product.save();
+//       }
+
+//       bill.totalPrice = totalPrice;
+//       await bill.save();
+
+//       resolve({
+//         errCode: 0,
+//         message: "Bill created successfully",
+//         billId: customBillId,
+//       }); // Thêm errCode để đồng bộ với các response khác
+//     } catch (e) {
+//       console.error("Error creating bill:", e);
+//       reject({
+//         errCode: -1,
+//         errMessage: "Error from Server during bill creation",
+//       });
+//     }
+//   });
+// };
 let createBill = async (data) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const billDiscount = data.discount || 0;
-      let totalPrice = 0;
+  const t = await db.sequelize.transaction();
+  // console.log(data);
 
-      const customBillId = generateBillId();
+  try {
+    const billDiscount = data.discount || 0;
+    let totalPrice = 0;
+    const customBillId = generateBillId();
 
-      // ✅ Thay đổi billStatus mặc định thành "Pending"
-      let bill = await db.Bill.create({
+    let bill = await db.Bill.create(
+      {
         billId: customBillId,
         userId: data.userId,
         paymentMethod: data.paymentMethod,
-        billStatus: "Pending", // <--- THAY ĐỔI Ở ĐÂY
+        billStatus: "Pending",
         totalPrice: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+      },
+      { transaction: t }
+    );
+
+    for (let item of data.items) {
+      const product = await db.Product.findOne({
+        where: { productId: item.productId },
+        transaction: t,
+        lock: t.LOCK.UPDATE, // tránh race condition
       });
 
-      // ... (phần còn lại của logic tạo bill item và cập nhật số lượng sản phẩm)
+      if (!product || product.quantity < item.quantity) {
+        await t.rollback(); // Hủy bill nếu lỗi
+        return {
+          errCode: 2,
+          errMessage: `Sản phẩm ${
+            product?.productName || item.productId
+          } không đủ số lượng tồn kho!`,
+        };
+      }
 
-      for (let item of data.items) {
-        const product = await db.Product.findOne({
-          where: { productId: item.productId },
-        });
+      const itemTotalPrice = product.productPrice * item.quantity;
+      const itemDiscount = item.discount || 0;
+      const itemDiscountedPrice =
+        itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
 
-        if (!product) {
-          console.log("⚠️ Product not found for ID:", item.productId);
-          continue;
-        }
+      totalPrice += itemDiscountedPrice;
 
-        if (product.quantity < item.quantity) {
-          return resolve({
-            errCode: 2,
-            errMessage: `Sản phẩm ${product.productName} không đủ số lượng tồn kho!`,
-          });
-        }
-
-        const itemTotalPrice = product.productPrice * item.quantity;
-        const itemDiscount = item.discount || 0;
-        const itemDiscountedPrice =
-          itemTotalPrice - (itemTotalPrice * itemDiscount) / 100;
-
-        totalPrice += itemDiscountedPrice;
-
-        await db.Bill_Item.create({
+      await db.Bill_Item.create(
+        {
           billId: customBillId,
           billItemId: "ITEM-" + nanoid(8),
           quantity: item.quantity,
@@ -280,29 +359,33 @@ let createBill = async (data) => {
           totalPrice: itemDiscountedPrice,
           createdAt: new Date(),
           updatedAt: new Date(),
-        });
+        },
+        { transaction: t }
+      );
 
-        product.quantity -= item.quantity;
-        await product.save();
-      }
-
-      bill.totalPrice = totalPrice;
-      await bill.save();
-
-      resolve({
-        errCode: 0,
-        message: "Bill created successfully",
-        billId: customBillId,
-      }); // Thêm errCode để đồng bộ với các response khác
-    } catch (e) {
-      console.error("Error creating bill:", e);
-      reject({
-        errCode: -1,
-        errMessage: "Error from Server during bill creation",
-      });
+      product.quantity -= item.quantity;
+      await product.save({ transaction: t });
     }
-  });
+
+    bill.totalPrice = totalPrice;
+    await bill.save({ transaction: t });
+
+    await t.commit();
+    return {
+      errCode: 0,
+      message: "Bill created successfully",
+      billId: customBillId,
+    };
+  } catch (e) {
+    await t.rollback();
+    console.error("Error creating bill:", e);
+    return {
+      errCode: -1,
+      errMessage: "Error from Server during bill creation",
+    };
+  }
 };
+
 let autoUpdateBillStatus = () => {
   return new Promise(async (resolve, reject) => {
     try {

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Blog = () => {
   // State cho tìm kiếm và danh mục đã chọn
@@ -7,35 +8,52 @@ const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
 
   // Dữ liệu các bài viết (giả sử bạn có một mảng các bài viết với danh mục)
-  const blogPosts = [
-    {
-      id: 1,
-      title: "Revitalize Your Living Spaces: A Guide to Trends",
-      date: "JAN 02, 2024",
-      image: "../images/blog-1.jpg",
-      description:
-        "Discover how to transform your home into a stylish and functional space by following the top interior trends of 2024...",
-      category: "Bathroom",
-    },
-    {
-      id: 2,
-      title: "Small Spaces, Big Style: Interior Ideas That Work",
-      date: "FEB 10, 2024",
-      image: "../images/blog-2.jpg",
-      description:
-        "Learn how to make the most of small spaces with smart furniture choices and design tips.",
-      category: "Chair",
-    },
-    {
-      id: 3,
-      title: "How to Choose the Right Lighting for Every Room",
-      date: "MAR 15, 2024",
-      image: "../images/blog-3.jpg",
-      description:
-        "Explore the best lighting choices for different rooms to create the perfect ambiance.",
-      category: "Decor",
-    },
-  ];
+  // const blogPosts = [
+  //   {
+  //     id: 1,
+  //     title: "Revitalize Your Living Spaces: A Guide to Trends",
+  //     date: "JAN 02, 2024",
+  //     image: "../images/blog-1.jpg",
+  //     description:
+  //       "Discover how to transform your home into a stylish and functional space by following the top interior trends of 2024...",
+  //     category: "Bathroom",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Small Spaces, Big Style: Interior Ideas That Work",
+  //     date: "FEB 10, 2024",
+  //     image: "../images/blog-2.jpg",
+  //     description:
+  //       "Learn how to make the most of small spaces with smart furniture choices and design tips.",
+  //     category: "Chair",
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "How to Choose the Right Lighting for Every Room",
+  //     date: "MAR 15, 2024",
+  //     image: "../images/blog-3.jpg",
+  //     description:
+  //       "Explore the best lighting choices for different rooms to create the perfect ambiance.",
+  //     category: "Decor",
+  //   },
+  // ];
+
+  const [blogPosts, setBlogPosts] = useState([]);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/get-all-blog"
+        );
+        setBlogPosts(response.data); // Gán dữ liệu từ server
+      } catch (error) {
+        console.error("Lỗi khi fetch blogs:", error);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   // Hàm lọc bài viết theo từ khóa tìm kiếm và danh mục
   const filteredPosts = blogPosts.filter((post) => {

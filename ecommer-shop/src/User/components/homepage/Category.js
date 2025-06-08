@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useWishlist } from "../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import axios from "axios";
-import { UserContext } from "../context/UserContext";
+import { UserContext } from "../../context/UserContext";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
@@ -269,6 +269,12 @@ const Category = () => {
 
                   <div className="rounded-xl overflow-hidden bg-white lg:h-[385px] relative">
                     {/* Hiện trái tim ở góc phải nếu có trong wishlist */}
+                    {/* Banner Out of Stock góc trên phải */}
+                    {product.quantity === 0 && (
+                      <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                        Out of Stock
+                      </div>
+                    )}
                     {product.isInWishlist && (
                       <div className="absolute top-2 right-2 z-10">
                         <FaHeart size={24} color="red" />

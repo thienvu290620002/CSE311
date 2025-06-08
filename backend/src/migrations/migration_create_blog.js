@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("blog", {
+    await queryInterface.createTable("blogs", {
       // blogName: DataTypes.STRING,
       // blogContent: DataTypes.TEXT,
       // productID: DataTypes.INTEGER,
@@ -14,20 +14,20 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      blogName: {
-        type: Sequelize.STRING,
-      },
-      blogContent: {
-        type: Sequelize.TEXT,
-      },
-      productID: {
-        type: Sequelize.INTEGER,
-      },
-      image: {
+      title: {
         type: Sequelize.STRING,
       },
       date: {
         type: Sequelize.DATE,
+      },
+      image: {
+        type: Sequelize.STRING,
+      },
+      description: {
+        type: Sequelize.TEXT,
+      },
+      category: {
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: true,
@@ -40,6 +40,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("blog");
+    await queryInterface.dropTable("blogs");
   },
 };
